@@ -1,0 +1,68 @@
+version: '2.0'
+services:
+
+
+  importer:
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    container_name: gdz_importer
+    restart: always
+    volumes:
+      - $INPATH/:/inpath:ro
+      - $OUTPATH/:/outpath
+    mem_limit: 4GB
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT}
+
+  # https://hub.docker.com/_/elasticsearch/
+  elasticsearch:
+    image: elasticsearch:2.4.0
+    container_name: gdz-elasticsearch
+    restart: always
+    ports:
+          - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
+          - "9300:9300"
+    volumes:
+      - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
+    #  - /opt/solr/gdz/data/
+    mem_limit: 1GB
+    user: $USER_UID
+    env_file:
+      - .env
+
+  # https://hub.docker.com/_/solr/
+#  solr:
+#    build: solr:6.2.0
+#    container_name: gdz-be-solr
+#    restart: always
+#    ports:
+#      #- "$SOLR_PORT"
+#      - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
+#    volumes:
+#      - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
+#    #  - /opt/solr/gdz/data/
+#    mem_limit: 1GB
+#    user: $USER_UID
+#    env_file:
+#      - .env
+
+  redis:
+    build: redis:3.0
+    command: redis-server --appendonly yes
+    container_name: gdz-redis
+    restart: always
+    ports:
+      - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
+    volumes:
+      - $FCREPO_STORAGE/redis/:/data/
+      #- /data
+    user: $USER_UID
+    mem_limit: 1GB
+    env_file:
+      - .env

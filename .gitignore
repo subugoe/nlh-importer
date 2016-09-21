@@ -1,0 +1,9 @@
+.idea/
+.DS_Store
+*.iml
+env.sh
+.env
+tmp/*
+target/
+vertx/
+dependency-reduced-pom.xml
