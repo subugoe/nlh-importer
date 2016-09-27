@@ -6,7 +6,7 @@ services:
     build:                         # on mac osx based host
       context: ./docker/
       dockerfile: Dockerfile
-    container_name: gdz_importer
+    container_name: nlh_importer
     restart: always
     volumes:
       - $INPATH/:/inpath:ro
@@ -20,47 +20,49 @@ services:
       - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
       - ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT}
 
-  # https://hub.docker.com/_/elasticsearch/
-  elasticsearch:
-    image: elasticsearch:2.4.0
-    container_name: gdz-elasticsearch
-    restart: always
-    ports:
-          - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
-          - "9300:9300"
-    volumes:
-      - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
-    #  - /opt/solr/gdz/data/
-    mem_limit: 1GB
-    user: $USER_UID
-    env_file:
-      - .env
-
-  # https://hub.docker.com/_/solr/
-#  solr:
-#    build: solr:6.2.0
-#    container_name: gdz-be-solr
+#  # https://hub.docker.com/_/elasticsearch/
+#  elasticsearch:
+#    image: elasticsearch:2.4.0
+#    container_name: nlh-elasticsearch
 #    restart: always
 #    ports:
-#      #- "$SOLR_PORT"
-#      - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
+#          - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
+#          - "9300:9300"
 #    volumes:
-#      - $FCREPO_STORAGE/solr/:/opt/solr/gdz/data/
+#      - $STORAGE/solr/:/opt/solr/gdz/data/
 #    #  - /opt/solr/gdz/data/
 #    mem_limit: 1GB
 #    user: $USER_UID
 #    env_file:
 #      - .env
 
+  # https://hub.docker.com/_/solr/
+  solr:
+    build: docker/solr/
+    #image: solr:6.2.0
+    container_name: nlh-solr
+    restart: always
+    ports:
+      #- "$SOLR_PORT"
+      - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
+    volumes:
+      - $STORAGE/solr/:/opt/solr/nlh/data/
+      #- /Users/jpanzer/Documents/projects/test/nlh-importer/docker/solr/config/:/opt/solr/nlh/config/
+    #  - /opt/solr/gdz/data/
+    mem_limit: 1GB
+    user: $USER_UID
+    env_file:
+      - .env
+
   redis:
-    build: redis:3.0
+    build: docker/redis/
     command: redis-server --appendonly yes
-    container_name: gdz-redis
+    container_name: nlh-redis
     restart: always
     ports:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
-      - $FCREPO_STORAGE/redis/:/data/
+      - $STORAGE/redis/:/data/
       #- /data
     user: $USER_UID
     mem_limit: 1GB
