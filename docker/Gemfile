@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
 
-#gem 'rsolr', '~> 1.1', '>= 1.1.1'
+
+gem 'rsolr', '~> 1.1', '>= 1.1.2'
 gem 'elasticsearch', '~> 2.0'
 
 
