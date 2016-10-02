@@ -16,6 +16,7 @@ GEM
       faraday (>= 0.7.4, < 0.10)
     json_pure (2.0.2)
     logger (1.2.8)
+    mini_magick (4.5.1)
     mini_portile2 (2.1.0)
     multi_json (1.12.1)
     multipart-post (2.0.0)
@@ -28,6 +29,7 @@ GEM
       faraday_middleware
     orchard (0.2)
     pkg-config (1.1.7)
+    redis (3.3.1)
     rsolr (1.1.2)
       builder (>= 2.1.2)
 
@@ -38,7 +40,9 @@ DEPENDENCIES
   elasticsearch (~> 2.0)
   json_pure (~> 2.0, >= 2.0.2)
   logger (~> 1.2, >= 1.2.8)
+  mini_magick
   nokogiri (~> 1.6, >= 1.6.8)
   oai (~> 0.4.0)
   orchard (~> 0.2)
+  redis (~> 3.3, >= 3.3.1)
   rsolr (~> 1.1, >= 1.1.2)

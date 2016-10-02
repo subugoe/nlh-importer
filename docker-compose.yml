@@ -9,16 +9,21 @@ services:
     container_name: nlh_importer
     restart: always
     volumes:
-      - $INPATH/:/inpath:ro
-      - $OUTPATH/:/outpath
+      - $INPATH/:$IN:ro
+      - $OUTPATH/:$OUT
     mem_limit: 4GB
     env_file:
       - .env
     environment:
+      - DOMAIN=${DOMAIN}
       - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_EXTERNAL_PORT=${REDIS_EXTERNAL_PORT}
       - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
-      - ELASTICSEARCH_PORT=${ELASTICSEARCH_PORT}
+      - ELASTICSEARCH_EXTERNAL_PORT=${ELASTICSEARCH_EXTERNAL_PORT}
+      - SOLR_ADR=${SOLR_ADR}
+      - SOLR_HOST=${SOLR_HOST}
+      - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
+
 
 #  # https://hub.docker.com/_/elasticsearch/
 #  elasticsearch:
@@ -43,13 +48,10 @@ services:
     container_name: nlh-solr
     restart: always
     ports:
-      #- "$SOLR_PORT"
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - $STORAGE/solr/:/opt/solr/nlh/data/
-      #- /Users/jpanzer/Documents/projects/test/nlh-importer/docker/solr/config/:/opt/solr/nlh/config/
-    #  - /opt/solr/gdz/data/
-    mem_limit: 1GB
+      - ./storage/solr/:/opt/solr/nlh/data/
+    mem_limit: 2GB
     user: $USER_UID
     env_file:
       - .env
@@ -62,9 +64,9 @@ services:
     ports:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
-      - $STORAGE/redis/:/data/
-      #- /data
+      - ./storage/redis/:/data/
+      #- $STORAGE/redis/:/data/
     user: $USER_UID
-    mem_limit: 1GB
+    mem_limit: 2GB
     env_file:
       - .env

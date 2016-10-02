@@ -6,5 +6,10 @@ env.sh
 tmp/*
 target/
 vertx/
+storage/
 dependency-reduced-pom.xml
 mets_eai1_1021439846029300.xml
+in/
+out/
+**/*.log
+src/main/resources/start.rb

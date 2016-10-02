@@ -355,7 +355,9 @@
         <!-- only indexed  text fields -->
         <field name="metadata" type="text_ci" indexed="true" stored="false"/>
         <field name="default" type="text_ci" indexed="true" stored="false"/>
-        <field name="fulltext" type="text_ci" indexed="true" stored="false"/>
+
+        <!-- modify field stored for nlh -->
+        <field name="fulltext" type="text_ci" indexed="true" stored="true"/>
 
         <!-- only stored fields -->
         <field name="location" type="string" indexed="false" stored="true" multiValued="true"/>

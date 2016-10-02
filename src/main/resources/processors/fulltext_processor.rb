@@ -5,32 +5,63 @@ require 'rsolr'
 #require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
-#require 'redis'
+require 'redis'
 require 'json'
-require 'mets_mods_metadata'
+require 'lib/mets_mods_metadata'
+require 'fileutils'
 
 
-redis_config  = {
+redis_config = {
     'host' => ENV['REDIS_HOST'],
     'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
 }
-@redis = VertxRedis::RedisClient.create($vertx, redis_config)
-@solr  = RSolr.connect :url => ENV['SOLR_ADR']
+
+
+@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
+
+
+@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-MAX_ATTEMPTS  = ENV['MAX_ATTEMPTS'].to_i
+@file_logger       = Logger.new('nlh_fileNotFound.log')
+@file_logger.level = Logger::DEBUG
 
-@logger.debug "[index worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
+
+@inpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+@outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+
+#----------------
+
+
+@logger.debug "[fulltext_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+
+
+def copyFile(from, to, to_dir)
+
+  #@logger.debug "Fulltext - from: #{from}, to: #{to}"
+
+  begin
+    FileUtils.mkdir_p(to_dir)
+    FileUtils.cp(from, to)
+
+    @rredis.incr 'fulltextscopied'
+  rescue Exception => e
+    @file_logger.error "Could not copy from: '#{from}' to: '#{to}'\n\t#{e.message}"
+  end
+
+  return to
+
+end
 
 
 def addDocsToSolr(document)
 
-  #document.merge!({:pid => srand, :logid => srand})
-
-
-  @logger.debug "document: #{document}"
+  #@logger.debug "document: #{document}"
   #@logger.debug "document.class: #{document.class}"
 
   #return
@@ -38,35 +69,114 @@ def addDocsToSolr(document)
   begin
     @solr.add [document]
     @solr.commit
+
+    @rredis.incr 'fulltextsindexed'
   rescue Exception => e
-    @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace.join('\n\t')}")
+    @logger.debug document
+    @logger.error("Could not add fulltext child doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
   end
 
 end
 
 
+def getFulltext(path)
+
+  attempts = 0
+  fulltext = ""
+
+  begin
+    fulltext = File.open(path) { |f|
+      Nokogiri::XML(f) { |config|
+        #config.noblanks
+
+      }
+
+    }
+  rescue Exception => e
+    @logger.warn("Problem to open file #{path}")
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error("Could not open file #{path} #{e.message}")
+    return
+  end
+
+  return fulltext.root.text.gsub(/\s+/, " ").strip
+
+end
 
 # index, calculate hash, copy to storage, check
 
 
-# arr << {"fulltexturi" => fulltexturi, "id_parent_doc" => id_parent_doc, "imageindex" => imageindex, "doctype" => doctype, "context" => context}.to_json
-#-> "{\"fulltexturiuri\":\"http://nl.sub.uni-goettingen.de/tei/eai1:0F7D2C6057409748:0F7CC9AE5FE9BD20.xml\",\"parent\":\"aas03037038\",\"index\":\"\",\"doctype\":\"fulltext\",\"context\":\"nhl\"}"
+$vertx.execute_blocking(lambda { |future|
+
+  i = 0
+  while true do
+
+    res = @rredis.brpop("processFulltextURI")
+
+    #@logger.debug "fulltext: processing..."
+
+    if (res != '' && res != nil)
+
+      json = JSON.parse res[1]
+
+      match    = json['fulltexturi'].match(/(\S*)\/(\S*):(\S*):(\S*).(xml)/)
+      product  = match[2]
+      work     = match[3]
+      file     = match[4]
+      filename = match[4] + '.' + match[5]
+
+      # todo
+      # path = copyFile(product, work, file)
+      #checkfixity(product, work, file)
+
+      from     = "#{@inpath}/#{work}/#{filename}"
+      to       = "#{@outpath}/#{product}/#{work}/#{filename}"
+      to_dir   = "#{@outpath}/#{product}/#{work}"
+
+      fulltext     = getFulltext(from)
+
+      # todo remove path
+      # @logger.debug json['path']
+     # @logger.debug "#{i} #{work}"
+
+      id_parentdoc = json['id_parentdoc']
+      imageindex   = json['imageindex']
+      doctype      = json['doctype']
+      context      = json['context']
+
+      h = Hash.new
+      h.merge! ({
+          :pid          => product + '_' + work + '_' + file,
+          :id_parentdoc => id_parentdoc,
+          :image_index  => imageindex,
+          :doctype      => doctype,
+          :context      => context,
+          :fulltext     => fulltext
+      })
+
+      addDocsToSolr(h)
+      copyFile(from, to, to_dir)
+
+      i += 1
+    else
+      @logger.error "Get empty string or nil from redis"
+      sleep 20
+    end
 
 
+    # rescue Exception => e
+    #   @logger.debug(e.message) # "- #{e.backtrace.join('\n\t')}")
+    #   throw :stop
+    # end
 
-@redis.brpop("processFulltextURI", 30) { |res_err, res|
-  if res_err == nil
-    json             = JSON.parse res[1]
-    puts json['fulltexturi']
-    puts json['id_parentdoc']
-    puts json['imageindex']
-    puts json['doctype']
-    puts json['context']
-    puts "fulltext"
-
-    #addDocsToSolr(metsModsMetadata.to_solr_string) if metsModsMetadata != nil
-
-  else
-    @logger.error(res_err)
   end
+
+  # future.complete(doc.to_s)
+
+}) { |res_err, res|
+  #
 }
+
+
+
