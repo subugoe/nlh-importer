@@ -35,7 +35,7 @@ def dirname(path)
   s = s[(i+1)..(s.size-1)]
 
 
-  return s.gsub(/\s/, "_") #.downcase
+  return s.gsub(/\s/, "_")
 end
 
 
@@ -48,72 +48,22 @@ def filename(path)
   i = s.rindex('.')
   s = s[(0)..(i-1)]
 
-  return s # .gsub(/\s/, "")#.downcase
+  return s
 end
 
 
 def pushToQueue(arr, queue)
-
   @rredis.lpush(queue, arr)
-  #@redis.lpush_many(queue, arr)
-  # { |res_err, res|
-  #
-  #   if res_err != nil
-  #     @logger.error("Error: '#{res_err}'")
-  #   else
-  #     @logger.info "Pushed #{arr.size} paths to redis (#{queue})"
-  #   end
-  # }
-
 end
 
 
-
-=begin
-sum      = 0
-
-
-sum += response.count
-@logger.info("identifieres: #{sum}")
-
-arr = Array.new
-response.each do |record|
-  identifier = record.identifier
-  ppn        = parseId(identifier)
-  arr << {"ppn" => ppn}.to_json
-end
-push(arr)
-=end
-
-
-# todo change inpath to /Volumes/NLH/PROD/**/METS_Daten
 paths = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
 
 arr = Array.new
 paths.each {|path|
-  #file = filename path
-  arr << {"path" => path}.to_json # , "filename" => file}.to_json
+  arr << {"path" => path}.to_json
 }
 pushToQueue(arr, 'indexer')
 pushToQueue(arr, 'metscopier')
 @rredis.incrby('retrieved', arr.size)
-
-
-
-# converter_options = {
-#     'instances'                  => 1,
-#     'worker'                     => true,
-#     'workerPoolName'             => 'converter_worker_pool',
-#     'workerPoolSize'             => 1,
-#     'blockedThreadCheckInterval' => 15000,
-#     'warningExceptionTime'       => 45000
-# }
-
-#puts "paths.size: #{paths.size}"
-
-
-#c = $vertx.deploy_verticle("de.unigoettingen.sub.converter.ConvertVerticle", converter_options)
-
-
-
 

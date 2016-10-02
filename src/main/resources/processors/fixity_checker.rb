@@ -29,20 +29,6 @@ def checkfixity(to, fixity)
   return fixity == (Digest::MD5.file to).hexdigest
 end
 
-
-# def push_many(queue, arr)
-#
-#   @redis.lpush_many(queue, arr) { |res_err, res|
-#
-#     if res_err != nil
-#       @logger.error("Error: '#{res_err}'")
-#     else
-#       @logger.info "Pushed #{arr.size} URIs to redis (#{queue})"
-#     end
-#   }
-#
-# end
-
 $vertx.execute_blocking(lambda { |future|
 
   seconds = 20
@@ -53,13 +39,7 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        # "fixitychecker", [{'from' => from, 'to' => to, 'fixity' => fixity}]
-
-        #@redis.brpop("paths1", 20) { |res_err, res|
-
         res = @rredis.brpop("fixitychecker")
-
-        #@logger.debug "check_fixity: processing...  '#{res}'"
 
         if (res != '' && res != nil)
 

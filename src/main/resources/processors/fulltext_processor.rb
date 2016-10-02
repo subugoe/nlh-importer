@@ -43,8 +43,6 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 def copyFile(from, to, to_dir)
 
-  #@logger.debug "Fulltext - from: #{from}, to: #{to}"
-
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
@@ -60,11 +58,6 @@ end
 
 
 def addDocsToSolr(document)
-
-  #@logger.debug "document: #{document}"
-  #@logger.debug "document.class: #{document.class}"
-
-  #return
 
   begin
     @solr.add [document]
@@ -88,7 +81,6 @@ def getFulltext(path)
     fulltext = File.open(path) { |f|
       Nokogiri::XML(f) { |config|
         #config.noblanks
-
       }
 
     }
@@ -114,8 +106,6 @@ $vertx.execute_blocking(lambda { |future|
 
     res = @rredis.brpop("processFulltextURI")
 
-    #@logger.debug "fulltext: processing..."
-
     if (res != '' && res != nil)
 
       json = JSON.parse res[1]
@@ -126,19 +116,11 @@ $vertx.execute_blocking(lambda { |future|
       file     = match[4]
       filename = match[4] + '.' + match[5]
 
-      # todo
-      # path = copyFile(product, work, file)
-      #checkfixity(product, work, file)
-
       from     = "#{@inpath}/#{work}/#{filename}"
       to       = "#{@outpath}/#{product}/#{work}/#{filename}"
       to_dir   = "#{@outpath}/#{product}/#{work}"
 
       fulltext     = getFulltext(from)
-
-      # todo remove path
-      # @logger.debug json['path']
-     # @logger.debug "#{i} #{work}"
 
       id_parentdoc = json['id_parentdoc']
       imageindex   = json['imageindex']
@@ -163,12 +145,6 @@ $vertx.execute_blocking(lambda { |future|
       @logger.error "Get empty string or nil from redis"
       sleep 20
     end
-
-
-    # rescue Exception => e
-    #   @logger.debug(e.message) # "- #{e.backtrace.join('\n\t')}")
-    #   throw :stop
-    # end
 
   end
 

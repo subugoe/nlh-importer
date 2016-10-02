@@ -44,21 +44,6 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-# def copyFile(from, to, to_dir)
-#
-#   #@logger.debug "Image - from: #{from}, to: #{to}"
-#
-#   begin
-#     FileUtils.mkdir_p(to_dir)
-#     FileUtils.cp(from, to)
-#   rescue Exception => e
-#     @file_logger.error "Could not copy from: '#{from}' to: '#{to}'\n\t#{e.message}"
-#   end
-#
-#   return to
-#
-# end
-
 def convert(from, to, to_dir)
 
   begin
@@ -79,16 +64,6 @@ def convert(from, to, to_dir)
 
 end
 
-def checkfixity(product, work, file)
-
-end
-
-
-# index, calculate hash, copy to storage, check
-
-
-# e.g. http://nl.sub.uni-goettingen.de/image/eai1:0F7AD5E9926C04C8:0F7A4673C613AA00/full/full/0/default.jpg
-
 
 $vertx.execute_blocking(lambda { |future|
 
@@ -97,8 +72,6 @@ $vertx.execute_blocking(lambda { |future|
   while true do
 
     res = @rredis.brpop("processImageURI")
-
-    #@logger.debug "image: processing..."
 
     if (res != '' && res != nil)
 
@@ -115,22 +88,7 @@ $vertx.execute_blocking(lambda { |future|
       to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
       to_dir = "#{@outpath}/#{product}/#{work}"
 
-=begin
-    hsh = {"from" => from, "to" => to}.to_json
-
-    redis.lpush("image_paths", hsh) { |res_err, res|
-      # if (res_err != nil)
-      #   puts "error: '#{res_err}'"
-      # else
-      #   puts "res: '#{res}'"
-      # end
-    }
-=end
-
-
-      #copyFile(from, to, to_dir)
       convert(from, to, to_dir)
-      #checkfixity(product, work, file)
 
       # file size, resolution, ...
 

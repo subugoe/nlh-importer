@@ -68,13 +68,7 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        #@redis.brpop("paths1", 20) { |res_err, res|
         res = @rredis.brpop("metscopier")
-
-        #@logger.debug "copy_mets: processing... #{res}"
-
-        # {"  path" : "/Users/jpanzer/Documents/projects/test/nlh-importer/in/METS_Daten/mets_eai1_0F7AD82E731D8E58.xml",
-        #    "filename" : "mets_eai1_0F7AD82E731D8E58"}
 
         if (res != '' && res != nil)
           json = JSON.parse res[1]

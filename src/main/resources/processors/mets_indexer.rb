@@ -28,38 +28,18 @@ redis_config  = {
     'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
 }
 
-#@logger.debug "redis port: #{ENV['REDIS_HOST']}"
-#@logger.debug "redis port: #{ENV['REDIS_EXTERNAL_PORT']}"
-#@logger.debug "solr address: #{ENV['SOLR_ADR']}"
-
 MAX_ATTEMPTS  = ENV['MAX_ATTEMPTS'].to_i
 
-
-
 @redis  = VertxRedis::RedisClient.create($vertx, redis_config)
-
-
-
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
-
-#@logger.debug "@redis: #{@redis}"
-
 @solr   = RSolr.connect :url => ENV['SOLR_ADR']
-
-
-#sub_gdz_solr = RSolr.connect :url => ENV['SUB_GDZ_SOLR_ADR']
-
-#@logger.debug "@solr: #{@solr}"
 
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def modifyUrisInArray(images, object_uri)
-
-  # http://gdz.sub.uni-goettingen.de/tiff/HANS_DE_7_w44876/00000046.tif"
-
   arr = images.collect { |uri|
     switchToFedoraUri uri, object_uri
   }
@@ -74,15 +54,6 @@ end
 
 
 def addDocsToSolr(document)
-
-  #document.merge!({:pid => srand, :logid => srand})
-
-
-  #@logger.debug "document: #{document}"
-  #@logger.debug "document.class: #{document.class}"
-
-  #return
-
   begin
     @solr.add [document]
     @solr.commit
@@ -92,14 +63,10 @@ def addDocsToSolr(document)
   rescue Exception => e
     @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
   end
-
-
-
 end
 
 
 def getIdentifiers(mods, path)
-
 
   ids = Hash.new
 
@@ -119,7 +86,6 @@ end
 
 
 def getRecordIdentifiers(mods, path)
-
 
   ids = Hash.new
 
@@ -159,7 +125,6 @@ def getTitleInfos(modsTitleInfoElements)
     else
       titleInfo.subtitle = ' '
     end
-
 
     nonsort = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
     if (nonsort != "")
@@ -204,7 +169,6 @@ def getGenre(modsGenreElements)
     genre = Genre.new
 
     genre.genre = g.text
-
 
     genreArr << genre
   }
@@ -267,7 +231,6 @@ def getphysicalDescription(modsPhysicalDescriptionElements)
 
   physicalDescriptionArr = Array.new
 
-
   return physicalDescriptionArr
 end
 
@@ -277,7 +240,6 @@ def getNote(modsNoteElements)
 
   noteArr = Array.new
 
-
   return noteArr
 end
 
@@ -286,7 +248,6 @@ end
 def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
-
 
   return subjectArr
 end
@@ -341,7 +302,6 @@ end
 def processPresentationImages(meta, path)
 
   # todo remove this
-  #meta = MetsModsMetadata.new
 
   arr = Array.new
 
@@ -360,7 +320,6 @@ end
 def processFulltexts(meta, path)
 
   # todo remove this
-  #meta = MetsModsMetadata.new
 
   arr = Array.new
 
@@ -375,7 +334,6 @@ def processFulltexts(meta, path)
     # todo remove path
     arr << {"path" => path, "fulltexturi" => fulltexturi, "id_parentdoc" => id_parentdoc, "imageindex" => image_index, "doctype" => doctype, "context" => context}.to_json
 
-
     i += 1
   }
 
@@ -385,44 +343,9 @@ end
 
 
 def push_many(queue, arr)
-
   @rredis.lpush(queue, arr)
-  #@redis.lpush_many(queue, arr)
-  # { |res_err, res|
-  #
-  #   if res_err != nil
-  #     @logger.error("Error: '#{res_err}'")
-  #   else
-  #     @logger.info "Pushed #{arr.size} URIs to redis (#{queue})"
-  #   end
-  # }
-
-  @logger.info "Pushed #{arr.size} URIs to redis (to queue: #{queue})"
-
+  #@logger.info "Pushed #{arr.size} URIs to redis (to queue: #{queue})"
 end
-
-
-=begin
-def getPresentationImageUris(metsPresentationImageUriElements)
-  presentationImageUriArr = Array.new
-  metsPresentationImageUriElements.each { |image|
-
-    presentationImageUriArr << relatedItem
-  }
-
-  return presentationImageUriArr
-end
-=end
-
-=begin
-
-def parse
-  attempts = 0
-  doc      = ""
-  path     = '/Users/jpanzer/Documents/projects/test/nlh-importer/mets_eai1_1021439846029300.xml'
-  doc      = File.open(path) { |f| Nokogiri::XML(f) }
-
-=end
 
 
 def parse(path)
@@ -445,24 +368,18 @@ def parse(path)
   end
 
   mods   = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
+
+  # todo add rights info
   rights = doc.xpath('//dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
 
   meta = MetsModsMetadata.new
 
   meta.mods                = mods.to_xml
 
-  #puts mods.to_xml
-
-
-  # todo check multiple occurences of terms?
-  # todo check problems with relatedItems
-  # TODO check relatedItem (e.g. with Journals)
-
-
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
 
-  # todo purl
+  # todo purl?
 
   # structtype, logid, dmdid
   begin
@@ -487,7 +404,6 @@ def parse(path)
     else
       meta.bytitle = ''
     end
-
 
   rescue Exception => e
     @logger.error("Problems to resolve attributes of logical structMap (@TYPE, @DMDID, @ID, @ADMID or @LABEL) #{path} (#{e.message})")
@@ -612,7 +528,6 @@ def parse(path)
   begin
     metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-    #meta.addPresentationImageUri = [metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text]
     meta.addPresentationImageUri     = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processPresentationImages(meta, path)
 
@@ -640,7 +555,6 @@ def parse(path)
   begin
     metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-    #meta.addFulltextUri = [metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text]
     meta.addFulltextUri     = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processFulltexts(meta, path)
 
@@ -648,156 +562,8 @@ def parse(path)
     @logger.error("Problems to resolve full texts #{path} (#{e.message})")
   end
 
-
-=begin
-  # RightsInfo
-  begin
-    modsRelatedItemElements = doc.xpath('mets:fileSec/mets:fileGrp[@USE="DEFAULT"]/mets:file/mets:FLocat[@xlink:href]', 'mods' => 'http://www.loc.gov/METS/') # [0].text
-
-    meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
-  rescue Exception => e
-    @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
-  end
-=
-end
-
-
-=begin
-# Autor
-  begin
-    roleTerm = mods.xpath('//mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    if (roleTerm == "aut")
-      parent        = mods.xpath('//mods:roleTerm[@type="code"]/../..', 'mods' => 'http://www.loc.gov/mods/v3')
-      @work.creator = parent.xpath('//mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-      @logger.debug("creator: #{@work.creator}")
-end
-
-rescue Exception => e
-@logger.info("Mods creator info is nil for #{path} (#{e.message})")
-end
-=end
-=begin
-
-
-# Erscheinungsjahr
-  begin
-    originInfo = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3')
-    originInfo.each {|oi|
-      dateIssued        = mods.xpath('mods:originInfo/mods:dateIssued', 'mods' => 'http://www.loc.gov/mods/v3')
-      dateIssued.each{|di|
-        d = BiblDate.new()
-        di.text
-        keyDate = di.xpath('[@keyDate]', 'mods' => 'http://www.loc.gov/mods/v3')
-        encoding = di.xpath('[@encoding]', 'mods' => 'http://www.loc.gov/mods/v3')
-        oinfo = OriginInfo.new(issuance, eventType, edition)
-      }
-
-    }
-    dateIssued        = mods.xpath('mods:originInfo/mods:dateIssued', 'mods' => 'http://www.loc.gov/mods/v3')[0].text
-    @work.dateCreated = dateIssued
-    @logger.debug("dateCreated: #{@work.dateCreated}")
-  rescue Exception => e
-    @logger.info("Mods dateCreated info is nil for #{path} (#{e.message})")
-  end
-
-
-
-
-# Verlag
-  begin
-    roleTerm = mods.xpath('//mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    if (roleTerm == "edt")
-      parent          = mods.xpath('//mods:roleTerm[@type="code"]/../..', 'mods' => 'http://www.loc.gov/mods/v3')
-      @work.publisher = parent.xpath('//mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-      @logger.debug("publisher: #{@work.publisher}")
-    end
-  rescue Exception => e
-    @logger.info("Mods publisher info is nil for #{path} (#{e.message})")
-  end
-
-
-# todo scaned pages, OCR/TEI fulltexts
-
-
-
-
-# PURL
-# todo change uri
-
-
-#purl    = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@CONTENTIDS", 'mets' => 'http://www.loc.gov/METS/').first.value
-  @work.purl = "http://resolver.sub.uni-goettingen.de/purl?#{path}"
-  @logger.debug("purl: #{@work.purl}")
-
-
-# todo add sub opac uri
-
-
-# Physical Description
-  begin
-    physicalDescription = mods.xpath('//mods:physicalDescription/mods:extent', 'mods' => 'http://www.loc.gov/mods/v3').text
-
-    @logger.debug("physicalDescription: #{physicalDescription}")
-
-    # todo correct this
-
-    @work.physicalDescription = 1 # physicalDescription
-  rescue Exception => e
-    @logger.error("Mods physicalDescription info is nil for #{path} (#{e.message})")
-    @logger.error(e.backtrace)
-  end
-
-
-# Language
-  begin
-    languageTerm       = mods.xpath('//mods:languageTerm', 'mods' => 'http://www.loc.gov/mods/v3').text
-    @work.languageTerm = languageTerm
-    @logger.debug("languageTerm: #{@work.languageTerm}")
-  rescue Exception => e
-    puts e.message
-    @logger.info("Mods languageTerm info is nil for #{path} (#{e.message})")
-  end
-
-
-# todo put in default collectionm if no classification is set
-# Kollektionen
-
-  classifications = mods.xpath('//mods:classification', 'mods' => 'http://www.loc.gov/mods/v3')
-
-
-#todo refactor, externalize (also for other multivalue fields: identifiers, creators, ...)
-  arr             = Array.new
-  col             = ''
-  begin
-    classifications.each do |cl|
-      classification = cl.text
-      authority      = cl.attributes['authority'].value
-      c              = "#{authority}:#{classification}"
-      arr << c
-      @logger.debug("classification: #{c}")
-
-      col = findorcreateCollection("classification")
-
-    end
-  rescue Exception => e
-    @logger.info("Mods classification info is nil for #{path}, 'default' collection will be used (#{e.message})")
-    classification = 'default'
-    arr << classification
-
-    col = findorcreateCollection("classification")
-
-  end
-=end
-
-
   return meta
 end
-
-#$vertx.execute_blocking(lambda { |future|
-
-
-=begin
-=end
 
 
 $vertx.execute_blocking(lambda { |future|
@@ -810,10 +576,7 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        #@redis.brpop("paths1", 20) { |res_err, res|
         res = @rredis.brpop("indexer")
-
-        #@logger.debug "index: processing..."
 
         if (res != '' && res != nil)
           json             = JSON.parse res[1]
@@ -844,49 +607,4 @@ $vertx.execute_blocking(lambda { |future|
 #
 }
 
-
-=begin
-metsModsMetadata = parse()
-addDocsToSolr(metsModsMetadata.to_solr_string) if metsModsMetadata != nil
-=end
-
-#future.complete(doc.to_s)
-
-#}) { |res_err, res|
-#
-#}
-
-=begin
-def parseSolrDoc(doc, redis, logger)
-
-  documents = Array.new # [{:id=>1, :price=>1.00}, {:id=>2, :price=>10.50}]
-
-
-  incr("mets_sum", redis, logger)
-
-  ocrs = doc.xpath("//mets:fileGrp[@USE='GDZOCR']//mets:file", 'mets' => 'http://www.loc.gov/METS/')
-  incrby("ocr_sum", ocrs.size, redis) if ocrs != nil
-
-  logicalDivs = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
-  incrby("logical_sum", logicalDivs.size, redis) if logicalDivs != nil
-
-  tiffs = doc.xpath("//mets:fileGrp[@USE='PRESENTATION']//mets:file", 'mets' => 'http://www.loc.gov/METS/')
-  incrby("tiff_sum", tiffs.size, redis) if tiffs != nil
-
-end
-
-def incrby(queue, value, redis)
-  redis.incrby(queue, value)
-end
-
-def incr(queue, redis, logger)
-  count = redis.incr(queue)
-  logger.debug("#{count} doc's processed") if count%1000 == 0
-end
-
-
-def metsUri(ppn)
-  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
-end
-=end
 
