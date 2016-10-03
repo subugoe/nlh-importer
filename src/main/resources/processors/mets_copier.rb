@@ -10,7 +10,7 @@ require 'fileutils'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new('nlh_fileNotFound.log')
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
 
 redis_config = {
@@ -63,7 +63,8 @@ def copyFile(from, to, to_dir)
     @rredis.incr 'metscopied'
 
   rescue Exception => e
-    @file_logger.error "Could not copy from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @file_logger.error "Could not copy mets: '#{from}' to: '#{to}'\n\t#{e.message}"
+    pushToQueue("filenotfound", from)
   end
 
   return to

@@ -40,13 +40,16 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @logger.debug "[fulltext_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
+def pushToQueue(queue, hsh)
+  @rredis.lpush(queue, hsh.to_json)
+end
+
 
 def copyFile(from, to, to_dir)
 
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
-
 
     fixity = (Digest::MD5.file from).hexdigest
 
@@ -60,7 +63,8 @@ def copyFile(from, to, to_dir)
 
     @rredis.incr 'fulltextscopied'
   rescue Exception => e
-    @file_logger.error "Could not copy from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @file_logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    pushToQueue("filenotfound", from)
   end
 
   return to

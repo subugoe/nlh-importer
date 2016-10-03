@@ -43,6 +43,10 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
+def pushToQueue(queue, hsh)
+  @rredis.lpush(queue, hsh.to_json)
+end
+
 
 def convert(from, to, to_dir)
 
@@ -57,20 +61,21 @@ def convert(from, to, to_dir)
     end
 
 
-    fixity = (Digest::MD5.file from).hexdigest
-
-    hsh = Hash.new
-    hsh.merge!({"from" => from})
-    hsh.merge!({"to" => to})
-    hsh.merge!({"fixity" => fixity})
-
-    pushToQueue("fixitychecker", hsh)
+    # fixity = (Digest::MD5.file from).hexdigest
+    #
+    # hsh = Hash.new
+    # hsh.merge!({"from" => from})
+    # hsh.merge!({"to" => to})
+    # hsh.merge!({"fixity" => fixity})
+    #
+    # pushToQueue("fixitychecker", hsh)
 
 
     @rredis.incr 'imagescopied'
 
   rescue Exception => e
-    @file_logger.error "Could not convert file: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @file_logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
+    pushToQueue("filenotfound", from)
   end
 
 end
@@ -95,7 +100,7 @@ $vertx.execute_blocking(lambda { |future|
       format  = match[9]
 
 
-      from   = "#{@inpath}/#{file}.gif" # "#{format}"
+      from   = "#{@inpath}/#{work}/#{file}.gif" # "#{format}"
       to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
       to_dir = "#{@outpath}/#{product}/#{work}"
 
