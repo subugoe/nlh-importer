@@ -12,14 +12,42 @@ logger.level = Logger::DEBUG
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
 
-
 def getValueFromQueue(queue)
-  @rredis.get(queue).to_i || 0
+  @rredis.get(queue).to_i #|| 0
+end
+
+def getLengthOfQueue(queue)
+  @rredis.llen(queue).to_i #|| 0
+end
+
+
+def printQueues
+
+
+  puts '--- input ---'
+  puts "path=#{getLengthOfQueue('path')}"
+  puts "processImageURI=#{getLengthOfQueue('processImageURI')}"
+  puts "processFulltextURI=#{getLengthOfQueue('processFulltextURI')}"
+  puts "indexer=#{getLengthOfQueue('indexer')}"
+  puts "metscopier=#{getLengthOfQueue('metscopier')}"
+  puts "fixitychecker=#{getLengthOfQueue('fixitychecker')}"
+
+
+  puts '--- processing ---'
+  puts "fixitieschecked=#{getValueFromQueue('fixitieschecked')}"
+  puts "fulltextscopied=#{getValueFromQueue('fulltextscopied')}"
+  puts "fulltextsindexed=#{getValueFromQueue('fulltextsindexed')}"
+  puts "imagescopied=#{getValueFromQueue('imagescopied')}"
+  puts "metscopied=#{getValueFromQueue('metscopied')}"
+  puts "indexed=#{getValueFromQueue('indexed')}"
+  puts "retrieved=#{getValueFromQueue('retrieved')}"
+
+
 end
 
 checked = getValueFromQueue 'fixitieschecked'
 
-fulltexts_copied = getValueFromQueue 'fulltextscopied'
+fulltexts_copied  = getValueFromQueue 'fulltextscopied'
 fulltexts_indexed = getValueFromQueue 'fulltextsindexed'
 
 images_copied = getValueFromQueue 'imagescopied'
