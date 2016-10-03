@@ -7,23 +7,28 @@ logger       = Logger.new(STDOUT) # 'gdz_object.log')
 logger.level = Logger::DEBUG
 
 
-logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+#logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
 
-checked = @rredis.get 'fixitieschecked'
 
-fulltexts_copied = @rredis.get 'fulltextscopied'
-fulltexts_indexed = @rredis.get 'fulltextsindexed'
+def getValueFromQueue(queue)
+  @rredis.get(queue).to_i || 0
+end
 
-images_copied = @rredis.get 'imagescopied'
+checked = getValueFromQueue 'fixitieschecked'
 
-mets_copied = @rredis.get 'metscopied'
+fulltexts_copied = getValueFromQueue 'fulltextscopied'
+fulltexts_indexed = getValueFromQueue 'fulltextsindexed'
 
-indexed = @rredis.get 'indexed'
+images_copied = getValueFromQueue 'imagescopied'
 
-retrieved = @rredis.get 'retrieved'
+mets_copied = getValueFromQueue 'metscopied'
+
+indexed = getValueFromQueue 'indexed'
+
+retrieved = getValueFromQueue 'retrieved'
 
 
 puts "paths retrieved: '#{retrieved}'"
@@ -35,5 +40,6 @@ puts "fulltexts copied: '#{fulltexts_copied}'"
 
 puts "images copied: '#{images_copied}'"
 
+ok = (checked == mets_copied + fulltexts_copied + images_copied)
 puts "fixities checked: '#{checked}' - all files checked? #{checked == mets_copied + fulltexts_copied + images_copied}"
 

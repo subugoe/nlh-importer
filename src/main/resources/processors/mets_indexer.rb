@@ -536,21 +536,6 @@ def parse(path)
   end
 
 
-  # thumbs images
-=begin
-  begin
-    metsThumbImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='THUMB']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
-
-    #meta.addThumbImageUri = [metsThumbImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text]
-    meta.addThumbImageUri     = metsThumbImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-    processThumbs(meta)
-
-  rescue Exception => e
-    @logger.error("Problems to resolve thumbs images #{path} (#{e.message})")
-  end
-=end
-
-
   # full texts
   begin
     metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')

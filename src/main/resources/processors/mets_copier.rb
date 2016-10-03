@@ -49,6 +49,19 @@ def copyFile(from, to, to_dir)
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
+
+    fixity = (Digest::MD5.file from).hexdigest
+
+    hsh = Hash.new
+    hsh.merge!({"from" => from})
+    hsh.merge!({"to" => to})
+    hsh.merge!({"fixity" => fixity})
+
+    pushToQueue("fixitychecker", hsh)
+
+
+    @rredis.incr 'metscopied'
+
   rescue Exception => e
     @file_logger.error "Could not copy from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -90,17 +103,6 @@ $vertx.execute_blocking(lambda { |future|
 
           copyFile(from, to, to_dir)
 
-          fixity = (Digest::MD5.file from).hexdigest
-
-          hsh = Hash.new
-          hsh.merge!({"from" => from})
-          hsh.merge!({"to" => to})
-          hsh.merge!({"fixity" => fixity})
-
-          pushToQueue("fixitychecker", hsh)
-
-
-          @rredis.incr 'metscopied'
 
           seconds = seconds / 2 if seconds > 20
 

@@ -54,20 +54,20 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repos
 RUN jruby -S gem install --no-rdoc --no-ri bundler
 
 
-
-COPY lib/*.jar $VERTICLE_HOME/lib/
-#COPY start.rb $VERTICLE_HOME/
-
-COPY Gemfile /
 WORKDIR /
 
+COPY lib/*.jar $VERTICLE_HOME/lib/
+COPY start.rb $VERTICLE_HOME/
+
+COPY Gemfile /
+COPY Gemfile.lock /
 
 RUN jruby -S bundle install
 
 WORKDIR $VERTICLE_HOME
 ENTRYPOINT ["sh", "-c"]
-#CMD ["vertx run -cp $VERTICLE_HOME/lib/*  $VERTICLE_NAME"]
-CMD ["tail -f /bin/true"]
+CMD ["vertx run -cp $VERTICLE_HOME/lib/*  $VERTICLE_NAME"]
+#CMD ["tail -f /bin/true"]
 
 
 

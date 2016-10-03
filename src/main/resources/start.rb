@@ -48,7 +48,7 @@ image_processor_options = {
     'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'image_worker_pool',
-    'workerPoolSize'             => 2,
+    'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -93,6 +93,14 @@ checker_options = {
 @rredis.del 'metscopied'
 @rredis.del 'indexed'
 @rredis.del 'retrieved'
+
+
+@rredis.del 'fixitychecker'
+@rredis.del 'path'
+@rredis.del 'processImageURI'
+@rredis.del 'processFulltextURI'
+@rredis.del 'indexer'
+@rredis.del 'metscopier'
 
 
 a = $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)

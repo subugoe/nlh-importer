@@ -56,6 +56,17 @@ def convert(from, to, to_dir)
       convert << "#{to}"
     end
 
+
+    fixity = (Digest::MD5.file from).hexdigest
+
+    hsh = Hash.new
+    hsh.merge!({"from" => from})
+    hsh.merge!({"to" => to})
+    hsh.merge!({"fixity" => fixity})
+
+    pushToQueue("fixitychecker", hsh)
+
+
     @rredis.incr 'imagescopied'
 
   rescue Exception => e
