@@ -11,6 +11,7 @@ services:
     volumes:
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
+      - ./log:$LOG
     mem_limit: 4GB
     env_file:
       - .env
