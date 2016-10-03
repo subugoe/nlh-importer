@@ -26,7 +26,7 @@ redis_config = {
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new('nlh_fileNotFound.log')
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i

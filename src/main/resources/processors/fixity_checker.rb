@@ -13,7 +13,7 @@ require 'digest'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new('nlh_fixity.log')
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fixity.log")
 @file_logger.level = Logger::DEBUG
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
