@@ -54,13 +54,17 @@ RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repos
 RUN jruby -S gem install --no-rdoc --no-ri bundler
 
 
+RUN mkdir -p $VERTICLE_HOME/lib
+
 WORKDIR /
 
+COPY Gemfile $VERTICLE_HOME/Gemfile
+COPY Gemfile.lock $VERTICLE_HOME/Gemfile.lock
 COPY lib/*.jar $VERTICLE_HOME/lib/
-COPY start.rb $VERTICLE_HOME/
+COPY start.rb $VERTICLE_HOME/start.rb
 
-COPY Gemfile /
-COPY Gemfile.lock /
+WORKDIR $VERTICLE_HOME
+
 
 RUN jruby -S bundle install
 
