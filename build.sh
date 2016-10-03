@@ -1,4 +1,4 @@
-source .env
+source env.sh
 
 docker-compose stop
 docker-compose rm -f
