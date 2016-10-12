@@ -12,7 +12,7 @@ logger.level = Logger::DEBUG
 
 logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
 retriever_options = {
     'instances'                  => 1,
@@ -96,10 +96,11 @@ checker_options = {
 
 
 @rredis.del 'fixitychecker'
-@rredis.del 'path'
+@rredis.del 'metspath'
 @rredis.del 'processImageURI'
 @rredis.del 'processFulltextURI'
-@rredis.del 'indexer'
+@rredis.del 'processPdfFromImageURI'
+@rredis.del 'metsindexer'
 @rredis.del 'metscopier'
 
 
@@ -109,6 +110,8 @@ c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processo
 d = $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
 e = $vertx.deploy_verticle("processors/mets_copier.rb", copier_options)
 f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
+
+g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
 
 
