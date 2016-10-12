@@ -309,6 +309,10 @@
         <!-- related image index position of fulltext (solr doc) -->
         <field name="image_index" type="string" indexed="true" stored="true"/>
 
+        <field name="product" type="string" indexed="true" stored="true"/>
+        <field name="work" type="string" indexed="true" stored="true"/>
+        <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+
         <!-- sort fields -->
         <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
@@ -338,8 +342,11 @@
         <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
         <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
 
+        <field name="facet_product" type="text_ci" indexed="true" stored="true"/>
+
+
         <!-- indexed and stored text fields -->
-        <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true" />
+        <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="publisher" type="text_ci" indexed="true" stored="true"/>
         <field name="place_publish" type="text_ci" indexed="true" stored="true"/>
         <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
@@ -349,7 +356,7 @@
         <!-- added for nlh -->
         <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
         <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
-        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true" />
+        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <!-- only indexed  text fields -->
@@ -482,6 +489,13 @@
     <copyField source="zdb" dest="default"/>
     <copyField source="*_s" dest="default"/>
 
+    <!-- added for nlh -->
+    <copyField source="publisher_digitization" dest="default"/>
+    <copyField source="place_digitization" dest="default"/>
+    <copyField source="subtitle" dest="default"/>
+    <copyField source="nonsort" dest="default"/>
+
+
     <copyField source="title" dest="metadata"/>
     <copyField source="publisher" dest="metadata"/>
     <copyField source="place_publish" dest="metadata"/>
@@ -490,11 +504,10 @@
     <copyField source="zdb" dest="metadata"/>
 
     <!-- added for nlh -->
-    <copyField source="publisher_digitization" dest="default"/>
-    <copyField source="place_digitization" dest="default"/>
-
     <copyField source="publisher_digitization" dest="metadata"/>
     <copyField source="place_digitization" dest="metadata"/>
+    <copyField source="subtitle" dest="metadata"/>
+    <copyField source="nonsort" dest="metadata"/>
 
 
     <!--
@@ -526,6 +539,8 @@
 
     <copyField source="place_digitization" dest="facet_place_digitization"/>
     <copyField source="publisher_digitization" dest="facet_publisher_digitization"/>
+
+    <copyField source="product" dest="facet_product"/>
 
 
 </schema>
