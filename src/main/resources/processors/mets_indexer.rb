@@ -23,17 +23,17 @@ require 'lib/record_info'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-redis_config  = {
+redis_config = {
     'host' => ENV['REDIS_HOST'],
     'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
 }
 
-MAX_ATTEMPTS  = ENV['MAX_ATTEMPTS'].to_i
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @redis  = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+@solr = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -62,6 +62,14 @@ def addDocsToSolr(document)
 
   rescue Exception => e
     @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
+  end
+end
+
+def checkEmptyString(str)
+  if (str == "") || (str == nil)
+    return ' '
+  else
+    return str
   end
 end
 
@@ -116,22 +124,18 @@ def getTitleInfos(modsTitleInfoElements)
   modsTitleInfoElements.each { |ti|
     titleInfo = TitleInfo.new
 
-    title = ti.xpath('mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
+    titleInfo.title = ti.xpath('mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
 
-
-    subtitle = ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
-    if (subtitle != "")
-      titleInfo.subtitle = subtitle
-    else
-      titleInfo.subtitle = ' '
-    end
+    titleInfo.subtitle = checkEmptyString ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     nonsort = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
-    if (nonsort != "")
-      titleInfo.nonsort = "#{nonsort} #{title}"
+    if nonsort == ""
+      nonsort = titleInfo.title
     else
-      titleInfo.nonsort = title
+      nonsort = nonsort + ' ' if (nonsort[-1] != " ")
+      nonsort = nonsort + titleInfo.title
     end
+    titleInfo.nonsort = nonsort
 
     titleInfoArr << titleInfo
   }
@@ -179,7 +183,9 @@ end
 
 def getOriginInfo(modsOriginInfoElements)
 
-  originInfoArr = Array.new
+  originalInfoArr = Array.new
+  editionInfoArr  = Array.new
+
   modsOriginInfoElements.each { |oi|
 
     originInfo = OriginInfo.new
@@ -204,10 +210,15 @@ def getOriginInfo(modsOriginInfoElements)
       originInfo.date_issued = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
     end
 
-    originInfoArr << originInfo
+    if (originInfo.edition == '[Electronic ed.]')
+      editionInfoArr << originInfo
+    else
+      originalInfoArr << originInfo
+    end
+
   }
 
-  return originInfoArr
+  return {:original => originalInfoArr, :edition => editionInfoArr}
 
 end
 
@@ -255,15 +266,20 @@ end
 
 def getRelatedItem(modsRelatedItemElements)
 
+#  subtitle = ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
+#  subtitle = ' ' if subtitle == ""
+#  titleInfo.subtitle = subtitle
+
+
   relatedItemArr = Array.new
   modsRelatedItemElements.each { |ri|
     relatedItem = RelatedItem.new
 
-    relatedItem.title             = ri.xpath('mods:titleInfo[not(@type="abbreviated")]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
-    relatedItem.title_abbreviated = ri.xpath('mods:titleInfo[@type="abbreviated"]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
-    relatedItem.title_partnumber  = ri.xpath('mods:titleInfo/mods:partNumber', 'mods' => 'http://www.loc.gov/mods/v3').text
-    relatedItem.note              = ri.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3').text
-    relatedItem.type              = ri.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
+    relatedItem.title             = checkEmptyString ri.xpath('mods:titleInfo[not(@type="abbreviated")]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
+    relatedItem.title_abbreviated = checkEmptyString ri.xpath('mods:titleInfo[@type="abbreviated"]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
+    relatedItem.title_partnumber  = checkEmptyString ri.xpath('mods:titleInfo/mods:partNumber', 'mods' => 'http://www.loc.gov/mods/v3').text
+    relatedItem.note              = checkEmptyString ri.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3').text
+    relatedItem.type              = checkEmptyString ri.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     relatedItemArr << relatedItem
   }
@@ -301,15 +317,34 @@ end
 # calculate hash, copy to storage, check
 def processPresentationImages(meta, path)
 
-  # todo remove this
+  arr    = Array.new
+  id_arr = Array.new
 
-  arr = Array.new
+  presentation_image_uris = meta.presentation_image_uris
 
-  meta.presentation_image_uris.each { |image_uri|
 
-    # todo remove path
+
+  # https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+
+  firstUri                = presentation_image_uris[0]
+
+  match   = firstUri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+  product = match[2]
+  work    = match[3]
+
+  meta.product = product
+  meta.work    = work
+
+  presentation_image_uris.each { |image_uri|
+
+    match   = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    nlh_id  = match[2]
+    id_arr << nlh_id
+
     arr << {"path" => path, "image_uri" => image_uri}.to_json
   }
+
+  meta.addNlh_id = id_arr
 
   push_many("processImageURI", arr)
 
@@ -318,8 +353,6 @@ end
 
 # index, calculate hash, copy to storage, check
 def processFulltexts(meta, path)
-
-  # todo remove this
 
   arr = Array.new
 
@@ -331,7 +364,6 @@ def processFulltexts(meta, path)
     doctype      = "fulltext"
     context      = "nhl"
 
-    # todo remove path
     arr << {"path" => path, "fulltexturi" => fulltexturi, "id_parentdoc" => id_parentdoc, "imageindex" => image_index, "doctype" => doctype, "context" => context}.to_json
 
     i += 1
@@ -348,7 +380,7 @@ def push_many(queue, arr)
 end
 
 
-def parse(path)
+def parsePath(path)
 
   attempts = 0
   doc      = ""
@@ -374,7 +406,7 @@ def parse(path)
 
   meta = MetsModsMetadata.new
 
-  meta.mods                = mods.to_xml
+  meta.mods = mods.to_xml
 
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
@@ -433,7 +465,9 @@ def parse(path)
   begin
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addOriginInfo = getOriginInfo(modsOriginInfoElements)
+    originInfoArr        = getOriginInfo(modsOriginInfoElements)
+    meta.addOriginalInfo = originInfoArr[:original]
+    meta.addEditionInfo  = originInfoArr[:edition]
   rescue Exception => e
     @logger.error("Problems to resolve mods:originInfo #{path} (#{e.message})")
   end
@@ -528,7 +562,7 @@ def parse(path)
   begin
     metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-    meta.addPresentationImageUri     = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+    meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processPresentationImages(meta, path)
 
   rescue Exception => e
@@ -540,7 +574,7 @@ def parse(path)
   begin
     metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-    meta.addFulltextUri     = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+    meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processFulltexts(meta, path)
 
   rescue Exception => e
@@ -553,6 +587,7 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
+
   seconds = 20
 
   catch (:stop) do
@@ -561,11 +596,12 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        res = @rredis.brpop("indexer")
+        res = @rredis.brpop("metsindexer")
 
         if (res != '' && res != nil)
+
           json             = JSON.parse res[1]
-          metsModsMetadata = parse(json['path'])
+          metsModsMetadata = parsePath(json['path'])
 
           addDocsToSolr(metsModsMetadata.to_solr_string) if metsModsMetadata != nil
 
