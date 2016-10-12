@@ -7,10 +7,15 @@ class MetsModsMetadata
                 :type_of_resources,
                 :genres,
 
-                :origin_infos,
+                :original_infos,
+                :edition_infos,
                 :languages,
                 :physical_descriptions,
                 :notes,
+
+                :product,
+                :work,
+                :nlh_ids,
 
                 :subjects,
                 :related_items,
@@ -42,11 +47,13 @@ class MetsModsMetadata
     @type_of_resources  = Array.new
     @genres             = Array.new
 
-    @origin_infos          = Array.new
+    @original_infos        = Array.new
+    @edition_infos         = Array.new
     @languages             = Array.new
     @physical_descriptions = Array.new
     @notes                 = Array.new
 
+    @nlh_ids       = Array.new
     @subjects      = Array.new
     @related_items = Array.new
     @record_infos  = Array.new
@@ -84,9 +91,14 @@ class MetsModsMetadata
     @genres += name
   end
 
-  def addOriginInfo=(originInfo)
-    @origin_infos += originInfo
+  def addOriginalInfo=(originInfo)
+    @original_infos += originInfo
   end
+
+  def addEditionInfo=(originInfo)
+    @edition_infos += originInfo
+  end
+
 
   def addLanguage=(language)
     @languages += language
@@ -98,6 +110,10 @@ class MetsModsMetadata
 
   def addNote=(note)
     @notes += note
+  end
+
+  def addNlh_id=(nlh_id)
+    @nlh_ids += nlh_id
   end
 
   def addSubject=(subject)
@@ -128,7 +144,6 @@ class MetsModsMetadata
     @fulltext_uris += fulltextUri
 
   end
-
 
   def to_s
     @identifier
@@ -163,13 +178,24 @@ class MetsModsMetadata
 
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
 
-    @origin_infos.each { |originInfo|
-      h.merge! originInfo.to_solr_string
-    }
+
+    # originInfo: edition
+    h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:year_digitization_start => @edition_infos.collect { |origin_info| origin_info.date_captured_start }})
+    h.merge! ({:year_digitization_end => @edition_infos.collect { |origin_info| origin_info.date_captured_end }})
+    h.merge! ({:publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisher }})
+
+    # originInfo: original
+    h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:year_publish => @original_infos.collect { |origin_info| origin_info.date_issued }})
+    h.merge! ({:publisher => @original_infos.collect { |origin_info| origin_info.publisher }})
 
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})
 
+    h.merge! ({:product => @product})
+    h.merge! ({:work => @work})
+    h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids}})
 
     # @physicalDescriptions.each { |pd|
     #   h.merge! pd.to_solr_string
@@ -183,9 +209,12 @@ class MetsModsMetadata
     #   h.merge! s.to_solr_string
     # }
 
-    @related_items.each { |relInfo|
-      h.merge! relInfo.to_solr_string
-    }
+
+    h.merge! ({:parentdoc_title => @related_items.collect { |rel_item| rel_item.title }})
+    h.merge! ({:parentdoc_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
+    h.merge! ({:parentdoc_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
+    h.merge! ({:parentdoc_note => @related_items.collect { |rel_item| rel_item.note }})
+    h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
 
 
     @record_infos.each { |recInfo|
@@ -198,7 +227,7 @@ class MetsModsMetadata
     }
 
     h.merge! ({:presentation_url => @presentation_image_uris})
-#    h.merge! ({:thumbs_url => @thumb_image_uris})
+    #    h.merge! ({:thumbs_url => @thumb_image_uris})
     h.merge! ({:fulltext_url => @fulltext_uris})
 
     #h.merge! ({:presentation_url => @presentationImageURIs.collect { |uri| uri }})
