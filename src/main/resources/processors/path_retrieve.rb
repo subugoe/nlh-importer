@@ -22,8 +22,8 @@ redis_config  = {
 
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
-
+#inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+inpath = ENV['INPATH'] + ENV['METS_IN_SUB_PATH']
 
 
 def dirname(path)
@@ -56,14 +56,15 @@ def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
-
 paths = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
 
 arr = Array.new
 paths.each {|path|
   arr << {"path" => path}.to_json
 }
-pushToQueue(arr, 'indexer')
+
+pushToQueue(arr, 'metsindexer')
 pushToQueue(arr, 'metscopier')
+
 @rredis.incrby('retrieved', arr.size)
 
