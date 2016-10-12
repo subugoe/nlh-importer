@@ -26,7 +26,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
 def checkfixity(to, fixity)
-  return fixity == (Digest::MD5.file to).hexdigest
+    return fixity == (Digest::MD5.file to).hexdigest
 end
 
 $vertx.execute_blocking(lambda { |future|
