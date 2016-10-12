@@ -18,12 +18,11 @@ redis_config = {
 }
 
 
+@redis = VertxRedis::RedisClient.create($vertx, redis_config)
 
-@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
 
-
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
-@solr        = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -35,8 +34,11 @@ redis_config = {
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
-@inpath  = ENV['IN'] + ENV['IMAGE_IM_SUB_PATH']
-@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+#@inpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+#@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+
+@inpath      = ENV['INPATH'] + ENV['IMAGE_IN_SUB_PATH']
+@outpath     = ENV['OUTPATH'] + ENV['IMAGE_OUT_SUB_PATH']
 
 #----------------
 
@@ -87,18 +89,24 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("processImageURI")
+    res = @rredis.brpoplpush("processImageURI", "processPdfFromImageURI") # ⇒ nil, [String, String]
+    # {"path":"/Users/jpanzer/Documents/projects/test/nlh-importer/in/METS_Daten/mets_eai1_0F7AD82E731D8E58.xml",
+    #     "image_uri":"http://nl.sub.uni-goettingen.de/image/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0/full/full/0/default.jpg"}
+
+
+    # res = @rredis.brpop("processImageURI") # ⇒ nil, String
+    # ["processImageURI", "{\"path\":\"/Users/jpanzer/Documents/projects/test/nlh-importer/in/METS_Daten/mets_eai1_0F7AD82E731D8E58.xml\",
+    #               \"image_uri\":\"http://nl.sub.uni-goettingen.de/image/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0/full/full/0/default.jpg\"}"]
 
     if (res != '' && res != nil)
 
-      json = JSON.parse res[1]
+      json = JSON.parse(res)
 
       match   = json['image_uri'].match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
       product = match[2]
       work    = match[3]
       file    = match[4]
       format  = match[9]
-
 
       from   = "#{@inpath}/#{work}/#{file}.gif" # "#{format}"
       to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
