@@ -22,8 +22,10 @@ redis_config  = {
 
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-#inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
-inpath = ENV['INPATH'] + ENV['METS_IN_SUB_PATH']
+
+
+inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+
 
 
 def dirname(path)

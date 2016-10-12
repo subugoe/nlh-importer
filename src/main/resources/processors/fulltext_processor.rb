@@ -35,6 +35,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @inpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
+
 #----------------
 
 

@@ -34,11 +34,9 @@ redis_config = {
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
-#@inpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
-#@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@inpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 
-@inpath      = ENV['INPATH'] + ENV['IMAGE_IN_SUB_PATH']
-@outpath     = ENV['OUTPATH'] + ENV['IMAGE_OUT_SUB_PATH']
 
 #----------------
 
@@ -61,17 +59,6 @@ def convert(from, to, to_dir)
       convert << "-crop" << "100%x100%"
       convert << "#{to}"
     end
-
-
-    # fixity = (Digest::MD5.file from).hexdigest
-    #
-    # hsh = Hash.new
-    # hsh.merge!({"from" => from})
-    # hsh.merge!({"to" => to})
-    # hsh.merge!({"fixity" => fixity})
-    #
-    # pushToQueue("fixitychecker", hsh)
-
 
     @rredis.incr 'imagescopied'
 
