@@ -30,15 +30,19 @@ class OriginInfo
 
       '[Albany]'                            => 'Albany',
 
+      '[Baltimore]'                         => 'Baltimore',
 
       'Boston'                              => 'Boston [N.E.]',
       '[Boston]'                            => 'Boston [N.E.]',
       'Boston?'                             => 'Boston [N.E.]',
       'Printed at Boston'                   => 'Boston [N.E.]',
       'Boston N.E.'                         => 'Boston [N.E.]',
+      'Boston N.E'                          => 'Boston [N.E.]',
+      'Boston, N.E'                         => 'Boston [N.E.]',
       'Boston in N.E'                       => 'Boston [N.E.]',
       'Boston, in N.E'                      => 'Boston [N.E.]',
       'Boston in New-England'               => 'Boston [N.E.]',
+      'Boston, in New-England'              => 'Boston [N.E.]',
       'Boston, New-England'                 => 'Boston [N.E.]',
       'Boston; New-England'                 => 'Boston [N.E.]',
       'Bostoniæ [Boston]'                   => 'Boston [N.E.]',
@@ -48,23 +52,33 @@ class OriginInfo
 
       'Charleston [S.C.]'                   => 'Charlestown [S.C.]',
       'Charleston, S.C.'                    => 'Charlestown [S.C.]',
+      'Charleston, S.C'                     => 'Charlestown [S.C.]',
+      '[Charleston, S.C.]'                  => 'Charlestown [S.C.]',
       'Charles-Town [S.C.]'                 => 'Charlestown [S.C.]',
+      'South-Carolina. Charles-Town'        => 'Charlestown [S.C.]',
 
 
       'Printed at Exeter [N.H.]'            => 'Exeter [N.H.]',
       'Exeter, N.H'                         => 'Exeter [N.H.]',
       '[Exeter, N.H.]'                      => 'Exeter [N.H.]',
 
+      'Germantown, Pa'                      => 'Germantown [Pa.]',
+      'Germantown [Pa.]'                    => 'Germantown [Pa.]',
+
       '[Hartford]'                          => 'Hartford',
       'Hartford?'                           => 'Hartford',
 
       'Lancaster, Pa'                       => 'Lancaster [Pa.]',
+      'Lancaster [Pa.]'                     => 'Lancaster [Pa.]',
       'Lancäster [Pa.]'                     => 'Lancaster [Pa.]',
+
+      'Lexington, Ky'                       => 'Lexington [Ky]',
 
       'New Bern, N.C.'                      => 'New Bern [N.C.]',
 
 
       'Newbury-Port [Mass.]'                => 'Newburyport [Mass.]',
+      'Newburyport, Mass'                   => 'Newburyport [Mass.]',
       '[Newburyport, Mass.]'                => 'Newburyport [Mass.]',
       '[Newburyport, Conn.]'                => 'Newburyport [Mass.]',
       'Printed at Newburyport [Mass.]'      => 'Newburyport [Mass.]',
@@ -73,7 +87,9 @@ class OriginInfo
       '[New Haven]'                         => 'New Haven',
       'New Haven?'                          => 'New Haven',
 
+      'New London, Conn'                    => 'New-London [Conn.]',
       '[New-London, Conn.]'                 => 'New-London [Conn.]',
+      '[New London, Conn.]'                 => 'New-London [Conn.]',
       'N. London [i.e., New London, Conn.]' => 'New-London [Conn.]',
 
       'Newport, R.I'                        => 'Newport [R.I.]',
@@ -82,15 +98,25 @@ class OriginInfo
 
 
       'New-York'                            => 'New York',
+      'New York?'                           => 'New York',
+      '(New-York'                           => 'New York',
       'New-York?'                           => 'New York',
+      '[New York]'                          => 'New York',
 
+      '[Norwich, Conn.]'                    => 'Norwich [Conn.]',
+
+      'Pennsylvania?'                       => 'Pennsylvania',
 
       '[Philadelphia]'                      => 'Philadelphia',
       'Philadelphia?'                       => 'Philadelphia',
 
       '[Portsmouth, N.H.]'                  => 'Portsmouth [N.H.]',
       'Portsmouth, N.H.'                    => 'Portsmouth [N.H.]',
+      'Portsmouth, N.H'                     => 'Portsmouth [N.H.]',
       'Portsmouth, New-Hampshire'           => 'Portsmouth [N.H.]',
+      'Portsmouth New-Hampshire'            => 'Portsmouth [N.H.]',
+
+      'Printed at Portland [Me.]'           => 'Portland [Me.]',
 
 
       '[Providence]'                        => 'Providence',
@@ -100,6 +126,8 @@ class OriginInfo
 
       '[Salem, Mass.]'                      => 'Salem [Mass.]',
       'Salem, Mass'                         => 'Salem [Mass.]',
+
+      'Warren (Rhode-Island)'               => 'Warren [R.I.]',
 
       'Watertown, Mass'                     => 'Watertown [Mass.]',
 
@@ -111,8 +139,9 @@ class OriginInfo
       'Woodbridge, in New-Jersey'           => 'Woodbridge [N.J.]',
 
       'Printed at Worcester [Mass.]'        => 'Worcester [Mass.]',
-      'Printed at Worcester, Massachusetts' => 'Worcester [Mass.]'
-
+      '[Worcester, Mass.]'                  => 'Worcester [Mass.]',
+      'Printed at Worcester, Massachusetts' => 'Worcester [Mass.]',
+      'Worcester, (Massachusetts)'          => 'Worcester [Mass.]'
 
   }
 
