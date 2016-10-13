@@ -12,4 +12,6 @@ mets_eai1_1021439846029300.xml
 in/
 out/
 **/*.log
-src/main/resources/start.rb
+**/*.jar
+#src/main/resources/start.rb
+docker/start.rb
