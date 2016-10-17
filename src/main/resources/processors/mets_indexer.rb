@@ -1,5 +1,5 @@
 require 'vertx/vertx'
-require 'vertx-redis/redis_client'
+#require 'vertx-redis/redis_client'
 
 require 'rsolr'
 #require 'elasticsearch'
@@ -15,6 +15,8 @@ require 'lib/genre'
 require 'lib/language'
 require 'lib/related_item'
 require 'lib/record_info'
+require 'lib/physical_description'
+require 'lib/subject'
 
 
 @logger       = Logger.new(STDOUT)
@@ -27,8 +29,8 @@ redis_config = {
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@redis  = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+#@redis  = VertxRedis::RedisClient.create($vertx, redis_config)
+@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 

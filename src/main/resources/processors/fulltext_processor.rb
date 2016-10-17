@@ -1,5 +1,5 @@
 require 'vertx/vertx'
-require 'vertx-redis/redis_client'
+#require 'vertx-redis/redis_client'
 
 require 'rsolr'
 #require 'elasticsearch'
@@ -17,9 +17,7 @@ redis_config = {
 }
 
 
-@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
-
-
+#@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
