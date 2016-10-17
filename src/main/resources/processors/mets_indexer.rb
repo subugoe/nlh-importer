@@ -292,6 +292,19 @@ def getNote(modsNoteElements)
 
   noteArr = Array.new
 
+
+  modsNoteElements.each { |note|
+    n       = Note.new
+
+    # :type, :note
+
+    n.type  = checkEmptyString note["type"]
+    n.value = checkEmptyString note.text
+
+    noteArr << n
+  }
+
+
   return noteArr
 end
 
