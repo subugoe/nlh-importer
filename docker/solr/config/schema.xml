@@ -313,6 +313,22 @@
         <field name="work" type="string" indexed="true" stored="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_desc_extent" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_desc_digitalOrigin" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+
+        <field name="subject_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_date" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_geographic" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_topic" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_temporal" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_country" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_state" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_city" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
+
         <!-- sort fields -->
         <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
@@ -337,12 +353,21 @@
         <field name="year_publish" type="tint" indexed="true" stored="true"/>
 
         <!-- added for nlh -->
+
+
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
         <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
 
         <field name="facet_product" type="text_ci" indexed="true" stored="true"/>
+
+        <field name="facet_subject_name" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_geographic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_topic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_country" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_state" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_city" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
 
         <!-- indexed and stored text fields -->
@@ -495,6 +520,9 @@
     <copyField source="subtitle" dest="default"/>
     <copyField source="nonsort" dest="default"/>
 
+    <copyField source="subject_name" dest="default"/>
+    <copyField source="subject_title" dest="default"/>
+
 
     <copyField source="title" dest="metadata"/>
     <copyField source="publisher" dest="metadata"/>
@@ -509,6 +537,8 @@
     <copyField source="subtitle" dest="metadata"/>
     <copyField source="nonsort" dest="metadata"/>
 
+    <copyField source="subject_name" dest="metadata"/>
+    <copyField source="subject_title" dest="metadata"/>
 
     <!--
        <copyField source="METADATA" dest="DEFAULT"/>
@@ -531,16 +561,23 @@
     <!-- copy fields into facetfields -->
     <copyField source="creator" dest="facet_creator"/>
     <copyField source="person" dest="facet_person"/>
-    <copyField source="place_publish" dest="facet_place_publish"/>
-    <copyField source="publisher" dest="facet_publisher"/>
+    <!--<copyField source="place_publish" dest="facet_place_publish"/>-->
+    <!--<copyField source="publisher" dest="facet_publisher"/>-->
 
     <!-- added for nlh -->
 
 
-    <copyField source="place_digitization" dest="facet_place_digitization"/>
-    <copyField source="publisher_digitization" dest="facet_publisher_digitization"/>
+    <!--<copyField source="place_digitization" dest="facet_place_digitization"/>-->
+    <!--<copyField source="publisher_digitization" dest="facet_publisher_digitization"/>-->
 
     <copyField source="product" dest="facet_product"/>
+
+    <copyField source="subject_name" dest="facet_subject_name"/>
+    <copyField source="subject_geographic" dest="facet_subject_geographic"/>
+    <copyField source="subject_topic" dest="facet_subject_topic"/>
+    <copyField source="subject_country" dest="facet_subject_country"/>
+    <copyField source="subject_state" dest="facet_subject_state"/>
+    <copyField source="subject_city" dest="facet_subject_city"/>
 
 
 </schema>

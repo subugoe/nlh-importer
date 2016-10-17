@@ -180,34 +180,79 @@ class MetsModsMetadata
 
 
     # originInfo: edition
-    h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.place }})
+    h.merge! ({:facet_place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacete }})
     h.merge! ({:year_digitization_start => @edition_infos.collect { |origin_info| origin_info.date_captured_start }})
     h.merge! ({:year_digitization_end => @edition_infos.collect { |origin_info| origin_info.date_captured_end }})
     h.merge! ({:publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisher }})
+    h.merge! ({:facet_publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisherFacete }})
 
     # originInfo: original
-    h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.place }})
+    h.merge! ({:facet_place_publish => @original_infos.collect { |origin_info| origin_info.placeFacete }})
     h.merge! ({:year_publish => @original_infos.collect { |origin_info| origin_info.date_issued }})
     h.merge! ({:publisher => @original_infos.collect { |origin_info| origin_info.publisher }})
+    h.merge! ({:facet_publisher => @original_infos.collect { |origin_info| origin_info.publisherFacete }})
 
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})
 
     h.merge! ({:product => @product})
     h.merge! ({:work => @work})
-    h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids}})
+    h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids }})
 
-    # @physicalDescriptions.each { |pd|
-    #   h.merge! pd.to_solr_string
-    # }
-    #
+
+    # :form, :reformattingQuality, :extent, :digitalOrigin
+    h.merge! ({:phys_desc_form => @physical_descriptions.collect { |pd| pd.form }})
+    h.merge! ({:phys_desc_reformattingQuality => @physical_descriptions.collect { |pd| pd.reformattingQuality }})
+    h.merge! ({:phys_desc_extent => @physical_descriptions.collect { |pd| pd.extent }})
+    h.merge! ({:phys_desc_digitalOrigin => @physical_descriptions.collect { |pd| pd.digitalOrigin }})
+
+
     # @notes.each { |note|
     #   h.merge! note.to_solr_string
     # }
     #
-    # @subjects.each { |s|
-    #   h.merge! s.to_solr_string
-    # }
+
+    # :subject_name, :subject_date, :subject_title, :subject_geographic, :subject_topic, :subject_temporal, :subject_country, :subject_state, :subject_city
+    # @subjects
+
+    name     = Array.new
+    date     = Array.new
+    title    = Array.new
+    temporal = Array.new
+
+    geographic = Set.new
+    topic      = Set.new
+    country    = Set.new
+    state      = Set.new
+    city       = Set.new
+
+    @subjects.each { |subject|
+
+      name << subject.name
+      date << subject.date
+      title << subject.title
+      temporal << subject.temporal
+
+      geographic.merge subject.geographic.to_a
+      topic.merge subject.topic.to_a
+
+      country.merge subject.country.to_a
+      state.merge subject.state.to_a
+      city.merge subject.city.to_a
+    }
+
+    h.merge! ({:subject_name => name})
+    h.merge! ({:subject_date => date})
+    h.merge! ({:subject_title => title})
+    h.merge! ({:subject_temporal => temporal})
+
+    h.merge! ({:subject_geographic => geographic})
+    h.merge! ({:subject_topic => topic})
+    h.merge! ({:subject_country => country})
+    h.merge! ({:subject_state => state})
+    h.merge! ({:subject_city => city})
 
 
     h.merge! ({:parentdoc_title => @related_items.collect { |rel_item| rel_item.title }})
