@@ -26,7 +26,11 @@ class OriginInfo
   # end
 
 
-  SWITCHES = {
+  # todo not yet implemented
+  PUBLISHER = Hash.new
+
+  # todo not yet implemented
+  PLACES = {
 
       '[Albany]'                            => 'Albany',
 
@@ -146,15 +150,26 @@ class OriginInfo
   }
 
 
-  def placeFacete
+  def placeFacet
 
-    switch = SWITCHES[@place]
+    switch = PLACES[@place]
     if switch == nil
       return @place
     else
       return switch
     end
   end
+
+  def publisherFacet
+
+    switch = PUBLISHER[@plublisher]
+    if switch == nil
+      return @publisher
+    else
+      return switch
+    end
+  end
+
 
 end
 
