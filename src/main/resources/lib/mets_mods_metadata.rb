@@ -184,58 +184,131 @@ class MetsModsMetadata
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
-    # todo change to each-loop like in subject
-    h.merge! ({:title => @title_infos.collect { |title| title.title }})
-    h.merge! ({:subtitle => @title_infos.collect { |title| title.subtitle }})
-    h.merge! ({:nonsort => @title_infos.collect { |title| title.nonsort }})
+    title    = Array.new
+    subtitle = Array.new
+    nonsort  = Array.new
 
-    h.merge! ({:creator => @names.collect { |name| name.displayform }})
-    h.merge! ({:creator_type => @names.collect { |name| name.type }})
+    @title_infos.each { |ti|
+      title << ti.title
+      subtitle << ti.subtitle
+      nonsort << ti.nonsort
+    }
 
-    #h.merge! ({:creator_type => @corporateNames.collect { |name| name.type }})
-    #h.merge! ({:creator => @personalNames.collect { |name| name.displayform }})
+    h.merge! ({:title => title})
+    h.merge! ({:subtitle => subtitle})
+    h.merge! ({:nonsort => nonsort})
+
+
+    # ---
+    displayform = Array.new
+    type        = Array.new
+
+    @names.each { |name|
+
+      displayform << name.displayform
+      type << name.type
+    }
+
+    h.merge! ({:creator => displayform})
+    h.merge! ({:creator_type => type})
+
+
+    # ---
 
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
 
 
+    # ---
+
     # originInfo: edition
-    # todo change to each-loop like in subject
-    h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.place }})
-    h.merge! ({:facet_place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacet }})
-    h.merge! ({:year_digitization_start => @edition_infos.collect { |origin_info| origin_info.date_captured_start }})
-    h.merge! ({:year_digitization_end => @edition_infos.collect { |origin_info| origin_info.date_captured_end }})
-    h.merge! ({:publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisher }})
-    h.merge! ({:facet_publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisherFacet }})
+    place               = Array.new
+    placeFacet          = Array.new
+    date_captured_start = Array.new
+    date_captured_end   = Array.new
+    publisher           = Array.new
+    publisherFacet      = Array.new
+
+    @edition_infos.each { |ei|
+
+      place << ei.place
+      placeFacet << ei.placeFacet
+      date_captured_start << ei.date_captured_start
+      date_captured_end << ei.date_captured_end
+      publisher << ei.publisher
+      publisherFacet << ei.publisherFacet
+    }
+
+    h.merge! ({:place_digitization => place})
+    h.merge! ({:facet_place_digitization => placeFacet})
+    h.merge! ({:year_digitization_start => date_captured_start})
+    h.merge! ({:year_digitization_end => date_captured_end})
+    h.merge! ({:publisher_digitization => publisher})
+    h.merge! ({:facet_publisher_digitization => publisherFacet})
 
     # originInfo: original
-    # todo change to each-loop like in subject
-    h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.place }})
-    h.merge! ({:facet_place_publish => @original_infos.collect { |origin_info| origin_info.placeFacet }})
-    h.merge! ({:year_publish => @original_infos.collect { |origin_info| origin_info.date_issued }})
-    h.merge! ({:publisher => @original_infos.collect { |origin_info| origin_info.publisher }})
-    h.merge! ({:facet_publisher => @original_infos.collect { |origin_info| origin_info.publisherFacet }})
+    place          = Array.new
+    placeFacet     = Array.new
+    date_issued    = Array.new
+    publisher      = Array.new
+    publisherFacet = Array.new
+
+
+    @original_infos.each { |oi|
+
+      place << oi.place
+      placeFacet << oi.placeFacet
+      date_issued << oi.date_issued
+      publisher << oi.publisher
+      publisherFacet << oi.publisherFacet
+    }
+
+    h.merge! ({:place_publish => place})
+    h.merge! ({:facet_place_publish => placeFacet})
+    h.merge! ({:year_publish => date_issued})
+    h.merge! ({:publisher => publisher})
+    h.merge! ({:facet_publisher => publisherFacet})
 
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})
 
-    # todo change to each-loop like in subject
+
     h.merge! ({:product => @product})
     h.merge! ({:work => @work})
     h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids }})
 
 
-    # :form, :reformattingQuality, :extent, :digitalOrigin
-    # todo change to each-loop like in subject
-    h.merge! ({:phys_desc_form => @physical_descriptions.collect { |pd| pd.form }})
-    h.merge! ({:phys_desc_reformattingQuality => @physical_descriptions.collect { |pd| pd.reformattingQuality }})
-    h.merge! ({:phys_desc_extent => @physical_descriptions.collect { |pd| pd.extent }})
-    h.merge! ({:phys_desc_digitalOrigin => @physical_descriptions.collect { |pd| pd.digitalOrigin }})
+    # ---
+    form                = Array.new
+    reformattingQuality = Array.new
+    extent              = Array.new
+    digitalOrigin       = Array.new
+
+    @physical_descriptions.each { |pd|
+
+      form << pd.form
+      reformattingQuality << pd.reformattingQuality
+      extent << pd.extent
+      digitalOrigin << pd.digitalOrigin
+    }
+
+    h.merge! ({:phys_desc_form => form})
+    h.merge! ({:phys_desc_reformattingQuality => reformattingQuality})
+    h.merge! ({:phys_desc_extent => extent})
+    h.merge! ({:phys_desc_digitalOrigin => digitalOrigin})
 
 
-    # @notes.each { |note|
-    # todo change to each-loop like in subject
-    h.merge! ({:note_type => @notes.collect { |note| note.type }})
-    h.merge! ({:note => @notes.collect { |note| note.value }})
+    # ---
+    type  = Array.new
+    value = Array.new
+
+    @notes.each { |n|
+
+      type << n.type
+      value << n.value
+    }
+
+    h.merge! ({:note_type => type})
+    h.merge! ({:note => value})
 
 
     # :subject_name, :subject_date, :subject_title, :subject_geographic, :subject_topic, :subject_temporal, :subject_country, :subject_state, :subject_city
