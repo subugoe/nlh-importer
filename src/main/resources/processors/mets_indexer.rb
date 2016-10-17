@@ -17,7 +17,7 @@ require 'lib/related_item'
 require 'lib/record_info'
 require 'lib/physical_description'
 require 'lib/subject'
-
+require 'lib/note'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -144,16 +144,42 @@ end
 
 def getName(modsNameElements)
 
+  #persNameArr = Array.new
+  #corpNameArr = Array.new
   nameArr = Array.new
-  modsNameElements.each { |n|
-    name = Name.new
 
-    name.displayform = n.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
+  # corp = modsNameElements.select {|name| name['type'] == 'corporate'}
+  # pers = modsNameElements.select {|name| name['type'] == 'personal'}
+  #
+  # pers.each { |n|
+  #   name = Name.new
+  #
+  #   name.displayform = n.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
+  #
+  #   persNameArr << name
+  # }
+  #
+  # corp.each { |n|
+  #   name = Name.new
+  #
+  #   name.displayform = n.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
+  #
+  #   corpNameArr << name
+  # }
 
-    nameArr << name
+  modsNameElements.each { |name|
+
+    n = Name.new
+
+    n.type        = checkEmptyString name['type']
+    n.displayform = checkEmptyString name.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    nameArr << n
   }
 
+  #return {:personal => persNameArr, :corporate => corpNameArr}
   return nameArr
+
 end
 
 # todo - not implemented yet
@@ -513,7 +539,12 @@ def parsePath(path)
   begin
     modsNameElements = mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addName = getName(modsNameElements)
+    #namesHash = getName(modsNameElements)
+    #meta.addPersonalNames  = namesHash[:personal]
+    #meta.addCorporateNames = namesHash[:corporate]
+
+    meta.names = getName(modsNameElements)
+
   rescue Exception => e
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
   end
