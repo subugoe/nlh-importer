@@ -181,18 +181,18 @@ class MetsModsMetadata
 
     # originInfo: edition
     h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.place }})
-    h.merge! ({:facet_place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:facet_place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacet }})
     h.merge! ({:year_digitization_start => @edition_infos.collect { |origin_info| origin_info.date_captured_start }})
     h.merge! ({:year_digitization_end => @edition_infos.collect { |origin_info| origin_info.date_captured_end }})
     h.merge! ({:publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisher }})
-    h.merge! ({:facet_publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisherFacete }})
+    h.merge! ({:facet_publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisherFacet }})
 
     # originInfo: original
     h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.place }})
-    h.merge! ({:facet_place_publish => @original_infos.collect { |origin_info| origin_info.placeFacete }})
+    h.merge! ({:facet_place_publish => @original_infos.collect { |origin_info| origin_info.placeFacet }})
     h.merge! ({:year_publish => @original_infos.collect { |origin_info| origin_info.date_issued }})
     h.merge! ({:publisher => @original_infos.collect { |origin_info| origin_info.publisher }})
-    h.merge! ({:facet_publisher => @original_infos.collect { |origin_info| origin_info.publisherFacete }})
+    h.merge! ({:facet_publisher => @original_infos.collect { |origin_info| origin_info.publisherFacet }})
 
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})

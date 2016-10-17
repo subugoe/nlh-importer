@@ -236,10 +236,26 @@ def getLanguage(modsLanguageElements)
 end
 
 
-# todo - not implemented yet
 def getphysicalDescription(modsPhysicalDescriptionElements)
 
   physicalDescriptionArr = Array.new
+
+  modsPhysicalDescriptionElements.each { |physdesc|
+    pd    = PhysicalDescription.new
+
+    # e.g.  => [{"marcform"=>"electronic"}, {"marccategory"=>"electronic resource"}, {"marcsmd"=>"remote"}, {"gmd"=>"electronic resource "}]
+    #pd.forms = physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').map {|el| {el['authority'] => el.text}}
+
+    forms = Hash.new
+    physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').each { |el| forms.merge! el['authority'] => el.text }
+
+    pd.form                = forms['marccategory']
+    pd.reformattingQuality = physdesc.xpath('mods:reformattingQuality', 'mods' => 'http://www.loc.gov/mods/v3').text
+    pd.extent              = physdesc.xpath('mods:extent', 'mods' => 'http://www.loc.gov/mods/v3').text
+    pd.digitalOrigin       = physdesc.xpath('mods:digitalOrigin', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    physicalDescriptionArr << pd
+  }
 
   return physicalDescriptionArr
 end
@@ -258,6 +274,28 @@ end
 def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
+
+  modsSubjectElements.each { |subject|
+    s          = Subject.new
+
+    # :name, :date, :title, :geographic, :topic, :temporal, :country, :state, :city
+
+
+    s.name     = checkEmptyString subject.xpath('mods:name[@type="personal"]/mods:namePart[not(@type)]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    s.date     = checkEmptyString subject.xpath('mods:name[@type="personal"]/mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    s.title    = checkEmptyString subject.xpath('mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
+    s.temporal = checkEmptyString subject.xpath('mods:temporal', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    s.geographic = subject.xpath('mods:geographic', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+    s.topic      = subject.xpath('mods:topic', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+    hg           = subject.xpath('mods:hierarchicalGeographic', 'mods' => 'http://www.loc.gov/mods/v3')
+    s.country    = hg.xpath('mods:country', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+    s.state      = hg.xpath('mods:state', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+    s.city       = hg.xpath('mods:city', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+
+    subjectArr << s
+  }
+
 
   return subjectArr
 end
@@ -322,7 +360,6 @@ def processPresentationImages(meta, path)
   presentation_image_uris = meta.presentation_image_uris
 
 
-
   # https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
 
   firstUri                = presentation_image_uris[0]
@@ -336,8 +373,8 @@ def processPresentationImages(meta, path)
 
   presentation_image_uris.each { |image_uri|
 
-    match   = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    nlh_id  = match[2]
+    match  = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    nlh_id = match[2]
     id_arr << nlh_id
 
     arr << {"path" => path, "image_uri" => image_uri}.to_json
