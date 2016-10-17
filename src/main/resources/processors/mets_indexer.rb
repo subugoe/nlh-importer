@@ -540,9 +540,9 @@ def parsePath(path)
   begin
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    originInfoArr        = getOriginInfo(modsOriginInfoElements)
-    meta.addOriginalInfo = originInfoArr[:original]
-    meta.addEditionInfo  = originInfoArr[:edition]
+    originInfoHash       = getOriginInfo(modsOriginInfoElements)
+    meta.addOriginalInfo = originInfoHash[:original]
+    meta.addEditionInfo  = originInfoHash[:edition]
   rescue Exception => e
     @logger.error("Problems to resolve mods:originInfo #{path} (#{e.message})")
   end
@@ -633,7 +633,7 @@ def parsePath(path)
 
     meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message}) #{e.stack_trace}")
   end
 
   #---
