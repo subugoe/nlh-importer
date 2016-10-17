@@ -3,6 +3,8 @@ class MetsModsMetadata
   attr_accessor :identifiers,
                 :record_identifiers,
                 :title_infos,
+                #:personalNames,
+                #:corporateNames,
                 :names,
                 :type_of_resources,
                 :genres,
@@ -43,6 +45,8 @@ class MetsModsMetadata
     @identifiers        = Hash.new
     @record_identifiers = Hash.new
     @title_infos        = Array.new
+    #@personalNames      = Array.new
+    #@corporateNames     = Array.new
     @names              = Array.new
     @type_of_resources  = Array.new
     @genres             = Array.new
@@ -78,7 +82,17 @@ class MetsModsMetadata
     @title_infos += titleInfo
   end
 
-  def addName=(name)
+
+  # def addPersonalName(name)
+  #   @personalNames += name
+  # end
+  #
+  # def addCorporateName(name)
+  #   @corporateNames += name
+  # end
+
+
+  def addName(name)
     @names += name
   end
 
@@ -170,16 +184,22 @@ class MetsModsMetadata
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
+    # todo change to each-loop like in subject
     h.merge! ({:title => @title_infos.collect { |title| title.title }})
     h.merge! ({:subtitle => @title_infos.collect { |title| title.subtitle }})
     h.merge! ({:nonsort => @title_infos.collect { |title| title.nonsort }})
 
     h.merge! ({:creator => @names.collect { |name| name.displayform }})
+    h.merge! ({:creator_type => @names.collect { |name| name.type }})
+
+    #h.merge! ({:creator_type => @corporateNames.collect { |name| name.type }})
+    #h.merge! ({:creator => @personalNames.collect { |name| name.displayform }})
 
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
 
 
     # originInfo: edition
+    # todo change to each-loop like in subject
     h.merge! ({:place_digitization => @edition_infos.collect { |origin_info| origin_info.place }})
     h.merge! ({:facet_place_digitization => @edition_infos.collect { |origin_info| origin_info.placeFacet }})
     h.merge! ({:year_digitization_start => @edition_infos.collect { |origin_info| origin_info.date_captured_start }})
@@ -188,6 +208,7 @@ class MetsModsMetadata
     h.merge! ({:facet_publisher_digitization => @edition_infos.collect { |origin_info| origin_info.publisherFacet }})
 
     # originInfo: original
+    # todo change to each-loop like in subject
     h.merge! ({:place_publish => @original_infos.collect { |origin_info| origin_info.place }})
     h.merge! ({:facet_place_publish => @original_infos.collect { |origin_info| origin_info.placeFacet }})
     h.merge! ({:year_publish => @original_infos.collect { |origin_info| origin_info.date_issued }})
@@ -197,12 +218,14 @@ class MetsModsMetadata
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})
 
+    # todo change to each-loop like in subject
     h.merge! ({:product => @product})
     h.merge! ({:work => @work})
     h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids }})
 
 
     # :form, :reformattingQuality, :extent, :digitalOrigin
+    # todo change to each-loop like in subject
     h.merge! ({:phys_desc_form => @physical_descriptions.collect { |pd| pd.form }})
     h.merge! ({:phys_desc_reformattingQuality => @physical_descriptions.collect { |pd| pd.reformattingQuality }})
     h.merge! ({:phys_desc_extent => @physical_descriptions.collect { |pd| pd.extent }})
@@ -210,9 +233,10 @@ class MetsModsMetadata
 
 
     # @notes.each { |note|
-    #   h.merge! note.to_solr_string
-    # }
-    #
+    # todo change to each-loop like in subject
+    h.merge! ({:note_type => @notes.collect { |note| note.type }})
+    h.merge! ({:note => @notes.collect { |note| note.value }})
+
 
     # :subject_name, :subject_date, :subject_title, :subject_geographic, :subject_topic, :subject_temporal, :subject_country, :subject_state, :subject_city
     # @subjects
