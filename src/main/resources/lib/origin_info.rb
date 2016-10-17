@@ -164,9 +164,10 @@ class OriginInfo
 
     switch = PUBLISHER[@plublisher]
     if switch == nil
-      return @publisher
+      # todo better solution required
+      return @publisher.gsub(/(Printed and sold by )|(Printed by )/, '')
     else
-      return switch
+      return switch #.gsub(/(Printed and sold by )|(Printed by )/, '')
     end
   end
 
