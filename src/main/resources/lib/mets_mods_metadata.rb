@@ -379,7 +379,7 @@ class MetsModsMetadata
 
     h.merge! ({:dmdid => @dmdid})
     #h.merge! ({:logid => @logid})
-    #h.merge! ({:mods => @mods})
+    h.merge! ({:mods => @mods})
     h.merge! ({:bytitle => @bytitle})
     h.merge! ({:docstrct => @docstrct})
 
