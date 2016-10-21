@@ -53,8 +53,8 @@ def convert(from, to, to_dir)
 
     MiniMagick::Tool::Convert.new do |convert|
       convert << "#{from}"
-      convert << "-density" << "300"
-      convert << "-crop" << "100%x100%"
+      # convert << "-density" << "300"
+      # convert << "-crop" << "100%x100%"
       convert << "#{to}"
     end
 
