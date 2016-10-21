@@ -434,10 +434,11 @@ def processFulltexts(meta, path)
   i = 1
   meta.fulltext_uris.each { |fulltexturi|
 
+    # move definition in propery file
     id_parentdoc = meta.record_identifiers.first[1]
     image_index  = i
     doctype      = "fulltext"
-    context      = "nhl"
+    context      = "nlh"
 
     arr << {"path" => path, "fulltexturi" => fulltexturi, "id_parentdoc" => id_parentdoc, "imageindex" => image_index, "doctype" => doctype, "context" => context}.to_json
 
