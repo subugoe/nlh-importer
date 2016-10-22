@@ -71,90 +71,27 @@ def copyFile(from, to, to_dir)
 end
 
 
-def addDocsToSolr(document)
-
-  begin
-    @solr.add [document]
-    @solr.commit
-
-    @rredis.incr 'fulltextsindexed'
-  rescue Exception => e
-    @logger.debug document
-    @logger.error("Could not add fulltext child doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
-  end
-
-end
-
-
-def getFulltext(path)
-
-  attempts = 0
-  fulltext = ""
-
-  begin
-    fulltext = File.open(path) { |f|
-      Nokogiri::XML(f) { |config|
-        #config.noblanks
-      }
-
-    }
-  rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
-    attempts = attempts + 1
-    retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} #{e.message}")
-    return
-  end
-
-  return fulltext.root.text.gsub(/\s+/, " ").strip
-
-end
 
 # index, calculate hash, copy to storage, check
 
 
 $vertx.execute_blocking(lambda { |future|
 
-  i = 0
   while true do
 
     res = @rredis.brpop("processFulltextURI")
 
     if (res != '' && res != nil)
 
-      json = JSON.parse res[1]
+      json   = JSON.parse res[1]
 
-      match    = json['fulltexturi'].match(/(\S*)\/(\S*):(\S*):(\S*).(xml)/)
-      product  = match[2]
-      work     = match[3]
-      file     = match[4]
-      filename = match[4] + '.' + match[5]
+      # arr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+      from   = json['from']
+      to     = json['to']
+      to_dir = json['to_dir']
 
-      from     = "#{@inpath}/#{work}/#{filename}"
-      to       = "#{@outpath}/#{product}/#{work}/#{filename}"
-      to_dir   = "#{@outpath}/#{product}/#{work}"
-
-      fulltext     = getFulltext(from)
-
-      id_parentdoc = json['id_parentdoc']
-      imageindex   = json['imageindex']
-      doctype      = json['doctype']
-      context      = json['context']
-
-      h = Hash.new
-      h.merge! ({
-          :pid          => product + '_' + work + '_' + file,
-          :id_parentdoc => id_parentdoc,
-          :image_index  => imageindex,
-          :doctype      => doctype,
-          :context      => context,
-          :fulltext     => fulltext
-      })
-
-      addDocsToSolr(h)
       copyFile(from, to, to_dir)
 
-      i += 1
     else
       @logger.error "Get empty string or nil from redis"
       sleep 20

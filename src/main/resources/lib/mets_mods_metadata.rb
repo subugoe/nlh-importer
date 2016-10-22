@@ -38,6 +38,8 @@ class MetsModsMetadata
                 :thumb_image_uris,
                 :fulltext_uris,
 
+                :fulltexts,
+
                 :dateindexed,
                 :datemodified
 
@@ -66,6 +68,8 @@ class MetsModsMetadata
     @presentation_image_uris = Array.new
     @thumb_image_uris        = Array.new
     @fulltext_uris           = Array.new
+
+    @fulltexts = Array.new
 
   end
 
@@ -156,8 +160,12 @@ class MetsModsMetadata
 
   def addFulltextUri=(fulltextUri)
     @fulltext_uris += fulltextUri
-
   end
+
+  def addFulltext=(fulltext)
+    @fulltexts += fulltext
+  end
+
 
   def to_s
     @identifier
@@ -371,6 +379,9 @@ class MetsModsMetadata
     h.merge! ({:presentation_url => @presentation_image_uris})
     #    h.merge! ({:thumbs_url => @thumb_image_uris})
     h.merge! ({:fulltext_url => @fulltext_uris})
+
+    h.merge! ({:fulltext => @fulltexts})
+
 
     #h.merge! ({:presentation_url => @presentationImageURIs.collect { |uri| uri }})
     #h.merge! ({:thumbs_url => @thumbImageURIs.collect { |uri| uri }})

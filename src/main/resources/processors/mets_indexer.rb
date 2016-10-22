@@ -34,6 +34,9 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
+@teiinpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+@teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -425,27 +428,56 @@ def processPresentationImages(meta, path)
 
 end
 
+def getFulltext(path)
+
+  attempts = 0
+  fulltext = ""
+
+  begin
+    fulltext = File.open(path) { |f|
+      Nokogiri::XML(f) { |config|
+        #config.noblanks
+      }
+
+    }
+  rescue Exception => e
+    @logger.warn("Problem to open file #{path}")
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error("Could not open file #{path} #{e.message}")
+    return
+  end
+
+  return fulltext.root.text.gsub(/\s+/, " ").strip
+
+end
 
 # index, calculate hash, copy to storage, check
 def processFulltexts(meta, path)
 
-  arr = Array.new
+  fulltextUriArr = Array.new
+  fulltextArr    = Array.new
 
-  i = 1
   meta.fulltext_uris.each { |fulltexturi|
 
-    # move definition in propery file
-    id_parentdoc = meta.record_identifiers.first[1]
-    image_index  = i
-    doctype      = "fulltext"
-    context      = "nlh"
+    match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(xml)/)
 
-    arr << {"path" => path, "fulltexturi" => fulltexturi, "id_parentdoc" => id_parentdoc, "imageindex" => image_index, "doctype" => doctype, "context" => context}.to_json
+    product  = match[2]
+    work     = match[3]
+    filename = match[4] + '.' + match[5]
 
-    i += 1
+    from   = "#{@teiinpath}/#{work}/#{filename}"
+    to     = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+    to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+
+    fulltextArr << getFulltext(from)
+
+    fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
   }
 
-  push_many("processFulltextURI", arr)
+  meta.addFulltext = fulltextArr
+  push_many("processFulltextURI", fulltextUriArr)
 
 end
 
@@ -557,7 +589,7 @@ def parsePath(path)
     #meta.addPersonalNames  = namesHash[:personal]
     #meta.addCorporateNames = namesHash[:corporate]
 
-    meta.names = getName(modsNameElements)
+    meta.names       = getName(modsNameElements)
 
   rescue Exception => e
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
@@ -590,7 +622,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:language #{path} (#{e.message})")
   end
 
-  # PhysicalDescription:   todo - not implemented yet
+  # PhysicalDescription:
   begin
     modsPhysicalDescriptionElements = mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -600,7 +632,7 @@ def parsePath(path)
   end
 
 
-  # Note:   todo - not implemented yet
+  # Note:
   begin
     modsNoteElements = mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -609,7 +641,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:note #{path} (#{e.message})")
   end
 
-  # Subject:   todo - not implemented yet
+  # Subject:
   begin
     modsSubjectElements = mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
