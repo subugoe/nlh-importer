@@ -322,40 +322,42 @@ def getSubject(modsSubjectElements)
     subject = Subject.new
 
 
-    geographic = su.xpath('mods:hierarchicalGeographic', 'mods' => 'http://www.loc.gov/mods/v3')
     personal   = su.xpath('mods:name[@type="personal"]/mods:namePart', 'mods' => 'http://www.loc.gov/mods/v3')
     corporate  = su.xpath('mods:name[@type="corporate"]/mods:namePart', 'mods' => 'http://www.loc.gov/mods/v3')
     topic      = su.xpath('mods:geographic|mods:topic|mods:temporal', 'mods' => 'http://www.loc.gov/mods/v3')
+    geographic = su.xpath('mods:hierarchicalGeographic', 'mods' => 'http://www.loc.gov/mods/v3')
 
-    if !geographic.empty?
-
-      subject.type    = 'geographic'
-      subject.subject = geographic.children.collect { |s| s.text }.join("/")
-    end
 
     if !personal.empty?
 
-      subject.type = 'personal'
-      title        = personal.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
+      subject.type    = 'personal'
+      #parent       = personal.xpath('../..', 'mods' => 'http://www.loc.gov/mods/v3')
+      #additional   = parent.xpath('mods:titleInfo/mods:title|mods:geographic|mods:topic|mods:temporal|mods:titleInfo/mods:title',
+      #                            'mods' => 'http://www.loc.gov/mods/v3')
+      #addit = additional.collect { |s| s.text }.join("; ")
 
       str             = personal.collect { |s| s.text }.join("; ")
-      str             = str.join("; " + title.text) if (!title.empty?)
+      #   str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
-    end
 
-    if !corporate.empty?
+    elsif !corporate.empty?
 
-      subject.type = 'corporate'
-      title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
+      subject.type    = 'corporate'
+      #     title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
 
       str             = corporate.collect { |s| s.text }.join("; ")
-      str             = str.join("; " + title.text) if (!title.empty?)
+      #    str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
-    end
 
-    if !topic.empty?
+    elsif !geographic.empty?
+
+      subject.type    = 'geographic'
+      subject.subject = geographic.children.collect { |s| s.text }.join("/")
+    
+
+    elsif !topic.empty?
 
       subject.type    = 'topic'
       subject.subject = topic.collect { |s| s.child.text }.join("/")
