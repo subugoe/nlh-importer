@@ -5,6 +5,7 @@ require 'rubygems'
 
 require 'logger'
 require 'redis'
+require 'rsolr'
 
 logger       = Logger.new(STDOUT)
 logger.level = Logger::DEBUG
@@ -13,6 +14,9 @@ logger.level = Logger::DEBUG
 logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+
+@solr = RSolr.connect :url => ENV['SOLR_ADR']
+
 
 retriever_options = {
     'instances'                  => 1,
@@ -85,6 +89,13 @@ checker_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+def cleanupSolr
+  @solr.update :data => '<delete><query>*:*</query></delete>'
+  @solr.update :data => '<commit/>'
+end
+
+
+cleanupSolr
 
 @rredis.del 'fixitieschecked'
 @rredis.del 'fulltextscopied'
