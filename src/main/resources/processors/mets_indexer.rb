@@ -318,25 +318,52 @@ def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
 
-  modsSubjectElements.each { |subject|
-    s          = Subject.new
-
-    # :name, :date, :title, :geographic, :topic, :temporal, :country, :state, :city
+  modsSubjectElements.each { |su|
+    subject = Subject.new
 
 
-    s.name     = checkEmptyString subject.xpath('mods:name[@type="personal"]/mods:namePart[not(@type)]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    s.date     = checkEmptyString subject.xpath('mods:name[@type="personal"]/mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    s.title    = checkEmptyString subject.xpath('mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
-    s.temporal = checkEmptyString subject.xpath('mods:temporal', 'mods' => 'http://www.loc.gov/mods/v3').text
+    geographic = su.xpath('mods:hierarchicalGeographic', 'mods' => 'http://www.loc.gov/mods/v3')
+    personal   = su.xpath('mods:name[@type="personal"]/mods:namePart', 'mods' => 'http://www.loc.gov/mods/v3')
+    corporate  = su.xpath('mods:name[@type="corporate"]/mods:namePart', 'mods' => 'http://www.loc.gov/mods/v3')
+    topic      = su.xpath('mods:geographic|mods:topic|mods:temporal', 'mods' => 'http://www.loc.gov/mods/v3')
 
-    s.geographic = subject.xpath('mods:geographic', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
-    s.topic      = subject.xpath('mods:topic', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
-    hg           = subject.xpath('mods:hierarchicalGeographic', 'mods' => 'http://www.loc.gov/mods/v3')
-    s.country    = hg.xpath('mods:country', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
-    s.state      = hg.xpath('mods:state', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
-    s.city       = hg.xpath('mods:city', 'mods' => 'http://www.loc.gov/mods/v3').map { |el| el.text }
+    if !geographic.empty?
 
-    subjectArr << s
+      subject.type    = 'geographic'
+      subject.subject = geographic.children.collect { |s| s.text }.join("/")
+    end
+
+    if !personal.empty?
+
+      subject.type = 'personal'
+      title        = personal.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
+
+      str             = personal.collect { |s| s.text }.join("; ")
+      str             = str.join("; " + title.text) if (!title.empty?)
+      subject.subject = str
+
+    end
+
+    if !corporate.empty?
+
+      subject.type = 'corporate'
+      title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
+
+      str             = corporate.collect { |s| s.text }.join("; ")
+      str             = str.join("; " + title.text) if (!title.empty?)
+      subject.subject = str
+
+    end
+
+    if !topic.empty?
+
+      subject.type    = 'topic'
+      subject.subject = topic.collect { |s| s.child.text }.join("/")
+
+    end
+
+    subjectArr << subject
+
   }
 
 

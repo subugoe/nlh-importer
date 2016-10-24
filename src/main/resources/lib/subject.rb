@@ -1,6 +1,7 @@
 class Subject
 
-  attr_accessor :topic, :geographic, :temporal, :country, :state, :city, :name, :date, :title
+  attr_accessor :type, :subject # , :topic, :geographic, :temporal, :country, :state, :city, :name, :date, :title
+
 
   # def initialize
   #   @topic      = Set.new

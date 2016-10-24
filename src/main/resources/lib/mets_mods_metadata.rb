@@ -322,42 +322,28 @@ class MetsModsMetadata
     # :subject_name, :subject_date, :subject_title, :subject_geographic, :subject_topic, :subject_temporal, :subject_country, :subject_state, :subject_city
     # @subjects
 
-    name     = Array.new
-    date     = Array.new
-    title    = Array.new
-    temporal = Array.new
+    type       = Array.new
+    subject    = Array.new
+    topic      = Array.new
+    geographic = Array.new
 
-    geographic = Set.new
-    topic      = Set.new
-    country    = Set.new
-    state      = Set.new
-    city       = Set.new
+    @subjects.each { |subj|
 
-    @subjects.each { |subject|
+      t = subj.type
+      s = subj.subject
 
-      name << subject.name
-      date << subject.date
-      title << subject.title
-      temporal << subject.temporal
+      type << t
+      subject << s
 
-      geographic.merge subject.geographic.to_a
-      topic.merge subject.topic.to_a
+      topic << s if t == 'topic'
+      geographic << s if t == 'geographic'
 
-      country.merge subject.country.to_a
-      state.merge subject.state.to_a
-      city.merge subject.city.to_a
     }
 
-    h.merge! ({:subject_name => name})
-    h.merge! ({:subject_date => date})
-    h.merge! ({:subject_title => title})
-    h.merge! ({:subject_temporal => temporal})
-
-    h.merge! ({:subject_geographic => geographic})
-    h.merge! ({:subject_topic => topic})
-    h.merge! ({:subject_country => country})
-    h.merge! ({:subject_state => state})
-    h.merge! ({:subject_city => city})
+    h.merge! ({:subject_type => type})
+    h.merge! ({:subject => subject})
+    h.merge! ({:facet_subject_topic => topic})
+    h.merge! ({:facet_subject_geographic => geographic})
 
 
     # rights_owner, rights_owner_site_url, rights_owner_contact, rights_license,  rights_reference
