@@ -18,6 +18,7 @@ require 'lib/record_info'
 require 'lib/physical_description'
 require 'lib/subject'
 require 'lib/note'
+require 'lib/right'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -349,8 +350,8 @@ def getRelatedItem(modsRelatedItemElements)
 #  subtitle = ' ' if subtitle == ""
 #  titleInfo.subtitle = subtitle
 
-
   relatedItemArr = Array.new
+
   modsRelatedItemElements.each { |ri|
     relatedItem = RelatedItem.new
 
@@ -481,6 +482,32 @@ def processFulltexts(meta, path)
 
 end
 
+def metsRigthsMDElements(metsRightsMDElements)
+
+  rightsInfoArr = Array.new
+
+  metsRightsMDElements.each { |right|
+
+    ri = Right.new
+
+    rights          = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
+    ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text
+    ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
+    ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
+    ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
+
+
+    links        = right.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
+    ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text
+
+    rightsInfoArr << ri
+
+  }
+
+  return rightsInfoArr
+
+
+end
 
 def push_many(queue, arr)
   @rredis.lpush(queue, arr)
@@ -507,10 +534,7 @@ def parsePath(path)
     return
   end
 
-  mods   = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
-
-  # todo add rights info
-  rights = doc.xpath('//dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
+  mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
 
   meta = MetsModsMetadata.new
 
@@ -519,7 +543,6 @@ def parsePath(path)
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
 
-  # todo purl?
 
   # structtype, logid, dmdid
   begin
@@ -691,8 +714,19 @@ def parsePath(path)
     processFulltexts(meta, path)
 
   rescue Exception => e
-    @logger.error("Problems to resolve full texts #{path} (#{e.message})")
+    @logger.error("Problems to resolve full texts #{path} (#{e.message})\n#{e.stack_trace}")
   end
+
+  # rights info
+  begin
+    metsRightsMDElements = doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/')
+
+    meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
+
+  rescue Exception => e
+    @logger.error("Problems to resolve rights info #{path} (#{e.message})")
+  end
+
 
   return meta
 end

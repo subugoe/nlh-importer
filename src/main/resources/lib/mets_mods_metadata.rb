@@ -147,7 +147,7 @@ class MetsModsMetadata
   end
 
   def addRightInfo=(rightInfo)
-    @rightInfos += rightInfo
+    @right_infos += rightInfo
   end
 
   def addPresentationImageUri=(presentationImageUri)
@@ -360,6 +360,14 @@ class MetsModsMetadata
     h.merge! ({:subject_city => city})
 
 
+    # rights_owner, rights_owner_site_url, rights_owner_contact, rights_license,  rights_reference
+    h.merge! ({:rights_owner => @right_infos.collect { |rights| rights.owner }})
+    h.merge! ({:rights_owner_site_url => @right_infos.collect { |rights| rights.ownerSiteURL }})
+    h.merge! ({:rights_owner_contact => @right_infos.collect { |rights| rights.ownerContact }})
+    h.merge! ({:rights_license => @right_infos.collect { |rights| rights.license }})
+    h.merge! ({:rights_reference => @right_infos.collect { |rights| rights.reference }})
+
+
     h.merge! ({:parentdoc_title => @related_items.collect { |rel_item| rel_item.title }})
     h.merge! ({:parentdoc_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
     h.merge! ({:parentdoc_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
@@ -367,14 +375,10 @@ class MetsModsMetadata
     h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
 
 
-    @record_infos.each { |recInfo|
-      h.merge! recInfo.to_solr_string
-    }
+    # @record_infos.each { |recInfo|
+    #   h.merge! recInfo.to_solr_string
+    # }
 
-
-    @right_infos.each { |gightInfo|
-      h.merge! gightInfo.to_solr_string
-    }
 
     h.merge! ({:presentation_url => @presentation_image_uris})
     #    h.merge! ({:thumbs_url => @thumb_image_uris})
