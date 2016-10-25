@@ -355,7 +355,7 @@ def getSubject(modsSubjectElements)
 
       subject.type    = 'geographic'
       subject.subject = geographic.children.collect { |s| s.text }.join("/")
-    
+
 
     elsif !topic.empty?
 

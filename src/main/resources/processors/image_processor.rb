@@ -19,8 +19,8 @@ redis_config = {
 
 
 #@redis = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -32,10 +32,11 @@ redis_config = {
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
-@inpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
-@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@inpath     = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+@outpath    = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@originpath = ENV['IN_ORIG']
 
-
+@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 #----------------
 
 
@@ -93,7 +94,14 @@ $vertx.execute_blocking(lambda { |future|
       file    = match[4]
       format  = match[9]
 
-      from   = "#{@inpath}/#{work}/#{file}.gif" # "#{format}"
+
+      if @from_orig
+        release = @rredis.get work
+        from    = "#{@originpath}/#{release}/#{work}/#{file}.tif" # "#{format}"
+      else
+        from = "#{@inpath}/#{work}/#{file}.gif" # "#{format}"
+      end
+
       to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
       to_dir = "#{@outpath}/#{product}/#{work}"
 

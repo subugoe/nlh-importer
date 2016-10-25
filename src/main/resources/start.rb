@@ -28,6 +28,16 @@ retriever_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+mapper_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'mapper_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
 indexer_options = {
     'instances'                  => 1,
     'worker'                     => false,
