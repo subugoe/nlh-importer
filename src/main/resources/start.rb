@@ -39,7 +39,7 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 1,
+    'instances'                  => 4,
     'worker'                     => false,
     #'workerPoolName'             => 'index_worker_pool',
     #'workerPoolSize'             => 1,
