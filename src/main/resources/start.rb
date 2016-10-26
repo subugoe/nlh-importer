@@ -105,7 +105,7 @@ def cleanupSolr
 end
 
 
-cleanupSolr
+#cleanupSolr
 
 @rredis.del 'fixitieschecked'
 @rredis.del 'fulltextscopied'
