@@ -34,7 +34,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @inpath     = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
 @outpath    = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@originpath = ENV['IN_ORIG']
+@originpath = ENV['ORIG']
 
 @from_orig = ENV['GET_IMAGES_FROM_ORIG']
 #----------------
