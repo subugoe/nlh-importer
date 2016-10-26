@@ -46,6 +46,31 @@ def pushToQueue(queue, hsh)
   @rredis.lpush(queue, hsh.to_json)
 end
 
+def copyFile(from, to, to_dir)
+
+  begin
+    FileUtils.mkdir_p(to_dir)
+    FileUtils.cp(from, to)
+
+    fixity = (Digest::MD5.file from).hexdigest
+
+    hsh = Hash.new
+    hsh.merge!({"from" => from})
+    hsh.merge!({"to" => to})
+    hsh.merge!({"fixity" => fixity})
+
+    pushToQueue("fixitychecker", hsh)
+
+
+    @rredis.incr 'fulltextscopied'
+  rescue Exception => e
+    @file_logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    pushToQueue("filenotfound", from)
+  end
+
+  return to
+
+end
 
 def convert(from, to, to_dir)
 
@@ -105,7 +130,9 @@ $vertx.execute_blocking(lambda { |future|
       to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
       to_dir = "#{@outpath}/#{product}/#{work}"
 
-      convert(from, to, to_dir)
+
+      #convert(from, to, to_dir)
+      copyFile(from, to, to_dir)
 
       # file size, resolution, ...
 
