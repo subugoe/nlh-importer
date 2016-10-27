@@ -66,10 +66,10 @@ def copyFile(from, to, to_dir)
     pushToQueue("fixitychecker", hsh)
 
 
-    @rredis.incr 'fulltextscopied'
+    @rredis.incr 'imagescopied'
   rescue Exception => e
-    @file_logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
-    pushToQueue("imagescopied", from)
+    @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    pushToQueue("filenotfound", from)
   end
 
   return to
