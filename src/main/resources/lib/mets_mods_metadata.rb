@@ -18,6 +18,7 @@ class MetsModsMetadata
                 :product,
                 :work,
                 :nlh_ids,
+                :image_format,
 
                 :subjects,
                 :related_items,
@@ -71,6 +72,7 @@ class MetsModsMetadata
 
     @fulltexts = Array.new
 
+    @image_format = ENV['IMAGE_OUT_FORMAT']
   end
 
   def addIdentifiers=(identifiersHash)
@@ -178,6 +180,8 @@ class MetsModsMetadata
   def to_solr_string
 
     h = Hash.new
+
+    h.merge!({:image_format => @image_format})
 
     h.merge! ({:isnlh => true})
     h.merge! ({:iswork => true})
@@ -366,9 +370,9 @@ class MetsModsMetadata
     # }
 
 
-    h.merge! ({:presentation_url => @presentation_image_uris})
+    #h.merge! ({:presentation_url => @presentation_image_uris})
     #    h.merge! ({:thumbs_url => @thumb_image_uris})
-    h.merge! ({:fulltext_url => @fulltext_uris})
+    #h.merge! ({:fulltext_url => @fulltext_uris})
 
     h.merge! ({:fulltext => @fulltexts})
 
