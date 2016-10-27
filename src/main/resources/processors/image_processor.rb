@@ -69,7 +69,7 @@ def copyFile(from, to, to_dir)
     @rredis.incr 'fulltextscopied'
   rescue Exception => e
     @file_logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
-    pushToQueue("filenotfound", from)
+    pushToQueue("imagescopied", from)
   end
 
   return to
