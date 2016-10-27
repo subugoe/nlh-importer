@@ -718,7 +718,8 @@ def parsePath(path)
 
     meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message}) #{e.stack_trace}")
+    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
+
   end
 
   #---
@@ -743,7 +744,7 @@ def parsePath(path)
     processFulltexts(meta, path)
 
   rescue Exception => e
-    @logger.error("Problems to resolve full texts #{path} (#{e.message})\n#{e.stack_trace}")
+    @logger.error("Problems to resolve full texts #{path} (#{e.message})")
   end
 
   # rights info
