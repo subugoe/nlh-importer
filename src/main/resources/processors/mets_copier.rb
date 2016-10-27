@@ -63,7 +63,6 @@ def copyFile(from, to, to_dir)
 
   rescue Exception => e
     @file_logger.error "Could not copy mets: '#{from}' to: '#{to}'\n\t#{e.message}"
-    pushToQueue("filenotfound", from)
   end
 
   return to

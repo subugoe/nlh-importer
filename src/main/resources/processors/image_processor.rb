@@ -69,7 +69,6 @@ def copyFile(from, to, to_dir)
     @rredis.incr 'imagescopied'
   rescue Exception => e
     @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
-    pushToQueue("filenotfound", from)
   end
 
   return to
@@ -94,7 +93,6 @@ def convert(from, to, to_dir)
 
   rescue Exception => e
     @file_logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
-    pushToQueue("filenotfound", from)
   end
 
 end

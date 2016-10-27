@@ -38,6 +38,9 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @teiinpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger.level = Logger::DEBUG
+
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -474,7 +477,7 @@ def getFulltext(path)
     @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} #{e.message}")
+    @file_logger.error("Could not open file #{path} #{e.message}")
     return
   end
 
@@ -541,6 +544,10 @@ end
 def push_many(queue, arr)
   @rredis.lpush(queue, arr)
   #@logger.info "Pushed #{arr.size} URIs to redis (to queue: #{queue})"
+end
+
+def pushToQueue(queue, hsh)
+  @rredis.lpush(queue, hsh.to_json)
 end
 
 
@@ -719,7 +726,6 @@ def parsePath(path)
     meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
   rescue Exception => e
     @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
-
   end
 
   #---
@@ -738,13 +744,14 @@ def parsePath(path)
 
   # full texts
   begin
-    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' | @USE='TEI]/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
     meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processFulltexts(meta, path)
 
   rescue Exception => e
     @logger.error("Problems to resolve full texts #{path} (#{e.message})")
+
   end
 
   # rights info
