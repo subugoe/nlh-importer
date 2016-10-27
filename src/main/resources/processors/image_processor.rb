@@ -113,26 +113,30 @@ $vertx.execute_blocking(lambda { |future|
 
       json = JSON.parse(res)
 
-      match   = json['image_uri'].match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-      product = match[2]
-      work    = match[3]
-      file    = match[4]
-      format  = match[9]
+      match      = json['image_uri'].match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      product    = match[2]
+      work       = match[3]
+      file       = match[4]
+      format     = match[9]
 
 
       if @from_orig
         release = @rredis.get work
-        from    = "#{@originpath}/#{release}/#{work}/#{file}.tif" # "#{format}"
+        from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
       else
-        from = "#{@inpath}/#{work}/#{file}.gif" # "#{format}"
+        from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
       end
 
-      to     = "#{@outpath}/#{product}/#{work}/#{file}.jpg"
+      to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_in_format}"
       to_dir = "#{@outpath}/#{product}/#{work}"
 
 
-      #convert(from, to, to_dir)
-      copyFile(from, to, to_dir)
+      if @image_in_format == @image_out_format
+        copyFile(from, to, to_dir)
+      else
+        convert(from, to, to_dir)
+      end
+
 
       # file size, resolution, ...
 
