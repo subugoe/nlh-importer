@@ -737,7 +737,7 @@ def parsePath(path)
 
   # full texts
   begin
-    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
     meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processFulltexts(meta, path)
