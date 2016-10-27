@@ -17,10 +17,14 @@ redis_config = {
     'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
 }
 
+@image_in_format = ENV['IMAGE_IN_FORMAT']
+@image_out_format = ENV['IMAGE_OUT_FORMAT']
+
+
 
 #@redis = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
-@solr        = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis       = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@solr         = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -83,6 +87,8 @@ def convert(from, to, to_dir)
       # convert << "-crop" << "100%x100%"
       convert << "#{to}"
     end
+
+    @logger.debug "from: #{from} to: #{to}"
 
     @rredis.incr 'imagescopied'
 

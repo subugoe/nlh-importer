@@ -107,6 +107,7 @@ end
 
 #cleanupSolr
 
+if false #true
 @rredis.del 'fixitieschecked'
 @rredis.del 'fulltextscopied'
 @rredis.del 'fulltextsindexed'
@@ -123,19 +124,19 @@ end
 @rredis.del 'processPdfFromImageURI'
 @rredis.del 'metsindexer'
 @rredis.del 'metscopier'
+end
 
+z = $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
+a = $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
 
-#z = $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-#a = $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-
-b = $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-#c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
-d = $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
+#b = $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+#d = $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
 #e = $vertx.deploy_verticle("processors/mets_copier.rb", copier_options)
-#f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
 
-#g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
+# c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
+# f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
+# g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
 
 
