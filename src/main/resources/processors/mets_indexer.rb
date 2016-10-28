@@ -429,8 +429,9 @@ end
 # calculate hash, copy to storage, check
 def processPresentationImages(meta, path)
 
-  arr    = Array.new
+  path_arr    = Array.new
   id_arr = Array.new
+  page_arr = Array.new
 
   presentation_image_uris = meta.presentation_image_uris
 
@@ -443,21 +444,26 @@ def processPresentationImages(meta, path)
   product = match[2]
   work    = match[3]
 
+
   meta.product = product
   meta.work    = work
 
   presentation_image_uris.each { |image_uri|
 
     match  = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    nlh_id = match[2]
-    id_arr << nlh_id
+    id_arr << match[2]
 
-    arr << {"path" => path, "image_uri" => image_uri}.to_json
+    match2  = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    page_arr << match2[4]
+
+    path_arr << {"path" => path, "image_uri" => image_uri}.to_json
+
   }
 
   meta.addNlh_id = id_arr
+  meta.addPage = page_arr
 
-  push_many("processImageURI", arr)
+  push_many("processImageURI", path_arr)
 
 end
 
@@ -744,7 +750,7 @@ def parsePath(path)
 
   # full texts
   begin
-    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' | @USE='TEI]/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
     meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
     processFulltexts(meta, path)

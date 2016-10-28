@@ -17,6 +17,7 @@ class MetsModsMetadata
 
                 :product,
                 :work,
+                :pages,
                 :nlh_ids,
                 :image_format,
 
@@ -60,6 +61,7 @@ class MetsModsMetadata
     @physical_descriptions = Array.new
     @notes                 = Array.new
 
+    @pages       = Array.new
     @nlh_ids       = Array.new
     @subjects      = Array.new
     @related_items = Array.new
@@ -130,6 +132,10 @@ class MetsModsMetadata
 
   def addNote=(note)
     @notes += note
+  end
+
+  def addPage=(page)
+    @pages += page
   end
 
   def addNlh_id=(nlh_id)
@@ -286,7 +292,8 @@ class MetsModsMetadata
 
     h.merge! ({:product => @product})
     h.merge! ({:work => @work})
-    h.merge! ({:nlh_id => @nlh_ids.collect { |nlh_ids| nlh_ids }})
+    h.merge! ({:page => @pages})
+    h.merge! ({:nlh_id => @nlh_ids})
 
 
     # ---

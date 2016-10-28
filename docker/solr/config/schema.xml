@@ -311,6 +311,7 @@
 
         <field name="product" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
+        <field name="page" type="string" indexed="true" stored="true"  multiValued="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
 
