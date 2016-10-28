@@ -131,7 +131,7 @@ $vertx.execute_blocking(lambda { |future|
         from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
       end
 
-      to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_in_format}"
+      to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_out_format}"
       to_dir = "#{@outpath}/#{product}/#{work}"
 
 
