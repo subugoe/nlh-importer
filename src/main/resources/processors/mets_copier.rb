@@ -49,14 +49,14 @@ def copyFile(from, to, to_dir)
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
 
-    fixity = (Digest::MD5.file from).hexdigest
-
-    hsh = Hash.new
-    hsh.merge!({"from" => from})
-    hsh.merge!({"to" => to})
-    hsh.merge!({"fixity" => fixity})
-
-    pushToQueue("fixitychecker", hsh)
+    # fixity = (Digest::MD5.file from).hexdigest
+    #
+    # hsh = Hash.new
+    # hsh.merge!({"from" => from})
+    # hsh.merge!({"to" => to})
+    # hsh.merge!({"fixity" => fixity})
+    #
+    # pushToQueue("fixitychecker", hsh)
 
 
     @rredis.incr 'metscopied'
@@ -65,7 +65,7 @@ def copyFile(from, to, to_dir)
     @file_logger.error "Could not copy mets: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
-  return to
+  # return to
 
 end
 
