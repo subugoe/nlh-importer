@@ -453,10 +453,10 @@ def processPresentationImages(meta, path)
 
   presentation_image_uris.each { |image_uri|
 
-    match  = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    match = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
     id_arr << match[2]
 
-    match2  = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
     page_arr << match2[4]
 
     path_arr << {"path" => path, "image_uri" => image_uri}.to_json
@@ -464,7 +464,7 @@ def processPresentationImages(meta, path)
   }
 
   meta.addNlh_id = id_arr
-  meta.addPage = page_arr
+  meta.addPage   = page_arr
 
   push_many("processImageURI", path_arr)
 
@@ -476,12 +476,18 @@ def getFulltext(path)
   fulltext = ""
 
   begin
-    fulltext = File.open(path) { |f|
-      Nokogiri::XML(f) { |config|
-        #config.noblanks
+    if @from_orig == 'true'
+      return File.read(path)
+    else
+      fulltext = File.open(path) { |f|
+        Nokogiri::XML(f) { |config|
+          #config.noblanks
+        }
       }
 
-    }
+      return fulltext.root.text.gsub(/\s+/, " ").strip
+    end
+
   rescue Exception => e
     @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
@@ -490,7 +496,6 @@ def getFulltext(path)
     return
   end
 
-  return fulltext.root.text.gsub(/\s+/, " ").strip
 
 end
 
@@ -502,14 +507,24 @@ def processFulltexts(meta, path)
 
   meta.fulltext_uris.each { |fulltexturi|
 
-    match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(xml)/)
+    # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+    match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
     product  = match[2]
     work     = match[3]
-    filename = match[4] + '.' + match[5]
+    file     = match[4]
+    filename = match[4] + '.tei.xml'
 
-    from   = "#{@teiinpath}/#{work}/#{filename}"
-    to     = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+    if @from_orig == 'true'
+      release = @rredis.hget('mapping', work)
+      from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+      to     = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+    else
+      from = "#{@teiinpath}/#{work}/#{filename}"
+      to     = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+    end
+
+
     to_dir = "#{@teioutpath}/#{product}/#{work}"
 
 
