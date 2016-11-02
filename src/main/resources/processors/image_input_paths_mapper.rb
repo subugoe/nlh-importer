@@ -23,7 +23,7 @@ redis_config = {
 inpath = ENV['ORIG']
 #inpath = "/Volumes/NLH/ORIG/ZDB-1-EAI/va006/raid/scan_process_001"
 
-puts inpath
+#puts inpath
 
 # ---
 

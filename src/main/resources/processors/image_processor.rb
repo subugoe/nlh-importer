@@ -124,8 +124,8 @@ $vertx.execute_blocking(lambda { |future|
       format     = match[9]
 
 
-      if @from_orig
-        release = @rredis.get work
+      if @from_orig == 'true'
+        release = @rredis.hget('mapping', work)
         from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
       else
         from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
