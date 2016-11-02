@@ -31,12 +31,15 @@ redis_config = {
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 #@redis  = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
 @teiinpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+@originpath = ENV['ORIG']
+
+@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
@@ -429,8 +432,8 @@ end
 # calculate hash, copy to storage, check
 def processPresentationImages(meta, path)
 
-  path_arr    = Array.new
-  id_arr = Array.new
+  path_arr = Array.new
+  id_arr   = Array.new
   page_arr = Array.new
 
   presentation_image_uris = meta.presentation_image_uris

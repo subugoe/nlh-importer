@@ -13,11 +13,9 @@ logger.level = Logger::DEBUG
 
 logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
-
-@prepare = ENV['PREPARE']
 
 retriever_options = {
     'instances'                  => 1,
@@ -108,7 +106,7 @@ end
 
 #cleanupSolr
 
-if @prepare
+if ENV['PREPARE'] == 'true'
   @rredis.del 'fixitieschecked'
   @rredis.del 'fulltextscopied'
   @rredis.del 'fulltextsindexed'

@@ -22,7 +22,7 @@ redis_config = {
 
 
 #@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
