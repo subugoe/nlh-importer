@@ -16,10 +16,13 @@ class MetsModsMetadata
                 :notes,
 
                 :product,
+                :collection,
                 :work,
                 :pages,
                 :nlh_ids,
                 :image_format,
+
+                :volumes,
 
                 :subjects,
                 :related_items,
@@ -45,6 +48,7 @@ class MetsModsMetadata
                 :dateindexed,
                 :datemodified
 
+
   def initialize
     @identifiers        = Hash.new
     @record_identifiers = Hash.new
@@ -61,7 +65,9 @@ class MetsModsMetadata
     @physical_descriptions = Array.new
     @notes                 = Array.new
 
-    @pages       = Array.new
+    @volumes =Array.new
+
+    @pages         = Array.new
     @nlh_ids       = Array.new
     @subjects      = Array.new
     @related_items = Array.new
@@ -140,6 +146,10 @@ class MetsModsMetadata
 
   def addNlh_id=(nlh_id)
     @nlh_ids += nlh_id
+  end
+
+  def addVolume=(volume)
+    @volumes += volume
   end
 
   def addSubject=(subject)
@@ -293,8 +303,30 @@ class MetsModsMetadata
 
 
     h.merge! ({:product => @product})
-    h.merge! ({:work => @work})
-    h.merge! ({:page => @pages})
+    if @doctype == "work"
+      h.merge! ({:work => @work})
+      h.merge! ({:page => @pages})
+    elsif @doctype == "collection"
+      h.merge! ({:collection => @collection})
+
+      # add volume info
+      id       = Array.new
+      type = Array.new
+      label = Array.new
+
+      @volumes.each { |vol|
+
+        id << vol.id
+        type << vol.type
+        label << vol.label
+
+      }
+
+      h.merge! ({:volume_id => id})
+      h.merge! ({:volume_type => type})
+      h.merge! ({:volume_label => label})
+
+    end
     h.merge! ({:nlh_id => @nlh_ids})
 
 
@@ -379,11 +411,14 @@ class MetsModsMetadata
     # }
 
 
-    #h.merge! ({:presentation_url => @presentation_image_uris})
-    #    h.merge! ({:thumbs_url => @thumb_image_uris})
-    #h.merge! ({:fulltext_url => @fulltext_uris})
+    if @iswork == "true"
+      h.merge! ({:fulltext => @fulltexts})
 
-    h.merge! ({:fulltext => @fulltexts})
+      #h.merge! ({:presentation_url => @presentation_image_uris})
+      #    h.merge! ({:thumbs_url => @thumb_image_uris})
+      #h.merge! ({:fulltext_url => @fulltext_uris})
+
+    end
 
 
     #h.merge! ({:presentation_url => @presentationImageURIs.collect { |uri| uri }})

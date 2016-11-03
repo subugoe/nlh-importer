@@ -538,6 +538,46 @@ def processFulltexts(meta, path)
 
 end
 
+
+def getVolumes(meta, logicalDivs)
+  volumeArr = Array.new
+  id_arr    = Array.new
+
+
+  i = 0
+  logicalDivs.each { |div|
+    volume = Volume.new
+
+
+    volume.id    = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first.text
+    volume.type  = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first.text
+    volume.label = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first.text
+
+    mptrs = div.xpath("mets:mptr[@LOCTYPE='URL']", 'mets' => 'http://www.loc.gov/METS/')
+
+    volume_uri   = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
+    # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
+    match        = volume_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+    product      = match[2]
+    volume       = match[3]
+    #prefix = match[2]
+    #format = match[2]
+
+    meta.product = product if i == 0
+
+    id_arr << volume
+    volumeArr << volume
+
+    i += 1
+  }
+
+  meta.addVolume = volumeArr
+  meta.addNlh_id = id_arr
+
+end
+
+
 def metsRigthsMDElements(metsRightsMDElements)
 
   rightsInfoArr = Array.new
@@ -572,6 +612,10 @@ end
 
 def pushToQueue(queue, hsh)
   @rredis.lpush(queue, hsh.to_json)
+end
+
+def checkwork(doc)
+  doc.xpath("//mets:fileSec", 'mets' => 'http://www.loc.gov/METS/').first
 end
 
 
@@ -752,31 +796,6 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
   end
 
-  #---
-
-  # presentation images
-  begin
-    metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
-
-    meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-    processPresentationImages(meta, path)
-
-  rescue Exception => e
-    @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
-  end
-
-
-  # full texts
-  begin
-    metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
-
-    meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-    processFulltexts(meta, path)
-
-  rescue Exception => e
-    @logger.error("Problems to resolve full texts #{path} (#{e.message})")
-
-  end
 
   # rights info
   begin
@@ -786,6 +805,48 @@ def parsePath(path)
 
   rescue Exception => e
     @logger.error("Problems to resolve rights info #{path} (#{e.message})")
+  end
+
+
+  if checkwork(doc) != nil
+
+    meta.iswork  = true
+    meta.doctype = "work"
+
+    # presentation images
+    begin
+      metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+
+      meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+      processPresentationImages(meta, path)
+
+    rescue Exception => e
+      @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
+    end
+
+
+    # full texts
+    begin
+      metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+
+      meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+      processFulltexts(meta, path)
+
+    rescue Exception => e
+      @logger.error("Problems to resolve full texts #{path} (#{e.message})")
+
+    end
+
+  else
+
+
+    meta.iswork  = false
+    # todo collection or anchor?
+    meta.doctype = "collection"
+
+    logicalDivs = docpart.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
+    getVolumes(meta, logicalDivs)
+
   end
 
 
