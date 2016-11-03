@@ -47,6 +47,8 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
+@context = ENV['CONTEXT']
+
 
 def modifyUrisInArray(images, object_uri)
   arr = images.collect { |uri|
@@ -151,6 +153,7 @@ def getTitleInfos(modsTitleInfoElements)
 
   return titleInfoArr
 end
+
 
 def getName(modsNameElements)
 
@@ -297,7 +300,6 @@ def getphysicalDescription(modsPhysicalDescriptionElements)
 end
 
 
-# todo - not implemented yet
 def getNote(modsNoteElements)
 
   noteArr = Array.new
@@ -319,7 +321,6 @@ def getNote(modsNoteElements)
 end
 
 
-# todo - not implemented yet
 def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
@@ -518,10 +519,10 @@ def processFulltexts(meta, path)
     if @from_orig == 'true'
       release = @rredis.hget('mapping', work)
       from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-      to     = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+      to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
     else
       from = "#{@teiinpath}/#{work}/#{filename}"
-      to     = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+      to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
     end
 
 
@@ -638,9 +639,12 @@ def parsePath(path)
     return
   end
 
+
   mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
 
   meta = MetsModsMetadata.new
+
+  meta.context = @context
 
   meta.mods = mods.to_xml
 
