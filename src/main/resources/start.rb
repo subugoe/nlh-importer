@@ -17,6 +17,16 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
+pdf_retriever_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'retrieve_pdfs_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
 retriever_options = {
     'instances'                  => 1,
     'worker'                     => true,
@@ -51,6 +61,16 @@ fulltext_processor_options = {
     'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'fulltext_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
+pdf_converter_options = {
+    'instances'                  => 4,
+    'worker'                     => true,
+    'workerPoolName'             => 'pdf_worker_pool',
     'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
@@ -125,17 +145,25 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'metscopier'
 
 
-  z = $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-  a = $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
+  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", retrieve_pdfs_worker_pool)
 
 else
 
-  b = $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-  d = $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-  e = $vertx.deploy_verticle("processors/mets_copier.rb", copier_options)
+  $vertx.deploy_verticle("processors/pdf_converter.rb", indexer_options)
+
+  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+
+  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
+  $vertx.deploy_verticle("processors/mets_copier.rb", copier_options)
 
 
-  # c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
+  if ENV['FULLTEXTS_EXIST'] == 'true'
+    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
+  end
+
   # f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
   # g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
