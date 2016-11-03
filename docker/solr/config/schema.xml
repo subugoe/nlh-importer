@@ -310,10 +310,15 @@
         <field name="image_index" type="string" indexed="true" stored="true"/>
 
         <field name="product" type="string" indexed="true" stored="true"/>
+        <field name="collection" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
         <field name="page" type="string" indexed="true" stored="true"  multiValued="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
+
+        <field name="volume_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="volume_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="volume_label" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
