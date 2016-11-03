@@ -9,6 +9,11 @@ class MetsModsMetadata
                 :type_of_resources,
                 :genres,
 
+                :isnlh,
+                :iswork,
+                :context,
+                :doctype,
+
                 :original_infos,
                 :edition_infos,
                 :languages,
@@ -199,18 +204,14 @@ class MetsModsMetadata
 
     h.merge!({:image_format => @image_format})
 
+    # todo remove is... fields
     h.merge! ({:isnlh => true})
-    h.merge! ({:iswork => true})
+    h.merge! ({:iswork => @iswork})
 
-    h.merge! ({:context => "nlh"})
-    h.merge! ({:doctype => "work"})
+    h.merge! ({:context => @context})
+    h.merge! ({:doctype => @doctype})
 
 
-    # todo remove next two line eand reindex !!!
-    #(@identifiers.collect { |k, v| {k => "#{k} #{v}"} }).each { |a| h.merge!(a) }
-    #(@identifiers.collect { |k, v| {"id_#{k.to_s}_s" => "#{k} #{v}"} }).each { |a| h.merge!(a) }
-
-    #(@identifiers.collect { |k, v| {:identifier => "#{k} #{v}"} }).each { |a| h.merge!(a) }
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
