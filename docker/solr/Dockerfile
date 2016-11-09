@@ -20,8 +20,9 @@ ENV SOLR_SHA256 c5fa5cb996fe1432e09bb2f6053ffbeb095436db4a77e9c6488b531db726b04d
  
 ENV SOLR_HOME /opt/solr/
 
-ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx1024M -XX:MaxPermSize=768M"
-
+#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M"
+#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx3072M -XX:MaxPermSize=1024M"
+#ENV JAVA_OPTS -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M
 
 RUN mkdir -p /opt/solr/nlh/data
 RUN wget -nv --output-document=/opt/solr.tgz http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
@@ -33,6 +34,15 @@ RUN rm /opt/solr.tgz*
 RUN mkdir -p /opt/solr/server/solr/lib
 RUN sed -i -e 's/#SOLR_PORT=8983/SOLR_PORT=8983/' /opt/solr/bin/solr.in.sh
 RUN sed -i -e '/-Dsolr.clustering.enabled=true/ a SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=60"' /opt/solr/bin/solr.in.sh
+
+#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M"
+ENV JAVA_OPTS "-Xms512m -Xmx3g -XX:MaxPermSize=1g"
+
+#RUN cp /opt/solr/bin/solr.in.sh /opt/solr/bin/solr.in.sh.orig
+#RUN sed -e 's/SOLR_HEAP=".*"/SOLR_HEAP="2048m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh
+#RUN sed -e 's/#SOLR_JAVA_MEM=".*"/SOLR_JAVA_MEM="-Xms512m -Xmx2048m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh
+COPY config/solr.in.sh /opt/solr/bin/solr.in.sh
+
 
 RUN mkdir -p /opt/solr/nlh/conf
 COPY  config/sub/solr.xml  /opt/solr/solr.xml
@@ -55,6 +65,7 @@ COPY  config/_schema_analysis_synonyms_english.json /opt/solr/nlh/conf/_schema_a
 COPY  config/admin-extra.menu-bottom.html /opt/solr/nlh/conf/admin-extra.menu-bottom.html
 COPY  config/admin-extra.menu-top.html /opt/solr/nlh/conf/admin-extra.menu-top.html
 COPY  config/admin-extra.html /opt/solr/nlh/conf/admin-extra.html
+
 
 RUN rm -rf  /opt/solr/example/
 
