@@ -97,16 +97,25 @@ converter_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-copier_options = {
+mets_copier_options = {
     'instances'                  => 4,
     'worker'                     => true,
-    'workerPoolName'             => 'copier_worker_pool',
+    'workerPoolName'             => 'mets_copier_worker_pool',
     'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+pdf_copier_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'pdf_copier_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
 
 checker_options = {
     'instances'                  => 4,
@@ -145,19 +154,21 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'metscopier'
 
 
+  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
   $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
   $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", retrieve_pdfs_worker_pool)
+  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", pdf_retriever_options)
+
 
 else
 
-  $vertx.deploy_verticle("processors/pdf_converter.rb", indexer_options)
+  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
 
   $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
 
   $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
   $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-  $vertx.deploy_verticle("processors/mets_copier.rb", copier_options)
+  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
 
   if ENV['FULLTEXTS_EXIST'] == 'true'
@@ -169,4 +180,3 @@ else
 
 
 end
-
