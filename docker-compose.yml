@@ -13,7 +13,7 @@ services:
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
       - ./log:$LOG
-    mem_limit: 4GB
+    mem_limit: 3GB
     env_file:
       - .env
     environment:
@@ -27,19 +27,21 @@ services:
       - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
 
 
-#  # https://hub.docker.com/_/elasticsearch/
+  # https://hub.docker.com/_/elasticsearch/
 #  elasticsearch:
-#    image: elasticsearch:2.4.0
+#    image: elasticsearch:2.4.1
 #    container_name: nlh-elasticsearch
 #    restart: always
 #    ports:
-#          - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
-#          - "9300:9300"
+#      - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
+#      - "9300:9300"
 #    volumes:
-#      - $STORAGE/solr/:/opt/solr/gdz/data/
-#    #  - /opt/solr/gdz/data/
+#    #  - $STORAGE/solr/:/opt/solr/gdz/data/
+#      #- /opt/solr/gdz/data/
+#      #- /usr/share/elasticsearch/data/elasticsearch
+#      - ./data:/usr/share/elasticsearch/data
 #    mem_limit: 1GB
-#    user: $USER_UID
+#    #user: $USER_UID
 #    env_file:
 #      - .env
 
@@ -53,7 +55,7 @@ services:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
       - ./storage/solr/:/opt/solr/nlh/data/
-    mem_limit: 2GB
+    mem_limit: 3GB
     user: $USER_UID
     env_file:
       - .env
