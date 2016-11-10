@@ -93,6 +93,7 @@ $vertx.execute_blocking(lambda { |future|
 
     json  = JSON.parse(res)
 
+
     # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
     match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
 

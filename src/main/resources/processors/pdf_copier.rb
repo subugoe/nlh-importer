@@ -33,32 +33,48 @@ inpath = ENV['ORIG']
 outpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 product = ENV['PRODUCT']
 
+
+
+
+def pushToQueue(arr, queue)
+  @rredis.lpush(queue, arr)
+end
+
+
 def copyFile(from, to, to_dir)
 
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
 
-    # fixity = (Digest::MD5.file from).hexdigest
-    #
-    # hsh = Hash.new
-    # hsh.merge!({"from" => from})
-    # hsh.merge!({"to" => to})
-    # hsh.merge!({"fixity" => fixity})
-    #
-    # pushToQueue("fixitychecker", hsh)
-
-
     @rredis.incr 'pdfscopied'
-
   rescue Exception => e
-    @file_logger.error "Could not copy pdf: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @file_logger.error "Could not copy PDF from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
-
-  # return to
 
 end
 
+def convert(from, to, to_dir)
+
+  begin
+    FileUtils.mkdir_p(to_dir)
+
+    MiniMagick::Tool::Convert.new do |convert|
+      convert << "#{from}"
+      # convert << "-density" << "300"
+      # convert << "-crop" << "100%x100%"
+      convert << "#{to}"
+    end
+
+    @logger.debug "from: #{from} to: #{to}"
+
+    @rredis.incr 'pdfsconverted'
+
+  rescue Exception => e
+    @file_logger.error "Could not convert PDF: '#{from}' to: '#{to}'\n\t#{e.message}"
+  end
+
+end
 
 
 
@@ -78,10 +94,10 @@ $vertx.execute_blocking(lambda { |future|
           json = JSON.parse res[1]
           uri  = json['path']
 
-          match1   = path.match(/([\s\S]*)\/([\s\S]*).(pdf|PDF)/)
-          match2 = path.match(/([\s\S]*)\/([\s\S]*.[pdf|PDF])/)
-          from = match1[0]
+          match1   = uri.match(/([\s\S]*)\/([\s\S]*).(pdf|PDF)/)
+          match2 = uri.match(/([\s\S]*)\/([\s\S]*.[pdf|PDF])/)
 
+          from = match1[0]
           origName = match2[2]
           name = origName.gsub(' ', '').downcase
 

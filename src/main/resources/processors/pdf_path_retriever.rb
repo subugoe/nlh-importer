@@ -40,5 +40,7 @@ paths.each {|path|
   arr << {"path" => path}.to_json
 }
 
+
+
 pushToQueue(arr, 'pdfpath')
 
