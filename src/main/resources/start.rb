@@ -27,6 +27,16 @@ pdf_retriever_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+tei_retriever_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'retrieve_teis_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
 retriever_options = {
     'instances'                  => 1,
     'worker'                     => true,
@@ -117,6 +127,16 @@ pdf_copier_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+tei_copier_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'tei_copier_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
 checker_options = {
     'instances'                  => 4,
     'worker'                     => true,
@@ -127,13 +147,13 @@ checker_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-def cleanupSolr
-  @solr.update :data => '<delete><query>*:*</query></delete>'
-  @solr.update :data => '<commit/>'
-end
+# def cleanupSolr
+#   @solr.update :data => '<delete><query>*:*</query></delete>'
+#   @solr.update :data => '<commit/>'
+# end
 
 
-#cleanupSolr
+# cleanupSolr
 
 if ENV['PREPARE'] == 'true'
   @rredis.del 'fixitieschecked'
@@ -154,32 +174,31 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'metscopier'
 
 
-  #$vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", pdf_retriever_options)
+  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 
-  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
-  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
+#  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
+  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
-  #$vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-
+#  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 
 
 else
 
-  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
-
-  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-
-  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
+#  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
+#  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+#  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
+#  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
 
-  if ENV['FULLTEXTS_EXIST'] == 'true'
+  if false # ENV['FULLTEXTS_EXIST'] == 'true'
     c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
   end
 
-  # f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
-  # g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
+# f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
+# g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
 
 end
+179,1        Ende
