@@ -23,10 +23,7 @@ redis_config  = {
 @logger.debug "[pdf_path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-
 inpath = ENV['ORIG']
-
-
 
 
 def pushToQueue(arr, queue)
