@@ -272,11 +272,6 @@
         <field name="logid" type="string" indexed="true" stored="true" required="false"/>
         <field name="dmdid" type="string" indexed="true" stored="true"/>
         <field name="id_parentdoc" type="string" indexed="true" multiValued="true"/>
-        <field name="issn" type="string" indexed="true" stored="true"/>
-        <field name="zdb" type="string" indexed="true" stored="true"/>
-        <field name="vd" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="vd17" type="string" indexed="true" stored="true"/>
-        <field name="vd18" type="string" indexed="true" stored="true"/>
         <field name="mods" type="string" indexed="true" stored="true"/>
         <field name="identifier" type="string" indexed="true" stored="true" multiValued="true"/>
 
@@ -304,15 +299,17 @@
         <field name="isnlh" type="boolean" indexed="true"/>
         <!-- {'fulltext' | 'work' | 'collection' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
+
         <!-- {'nlh' | 'gdz' | 'digizeit' | ...} -->
         <field name="context" type="string" indexed="true" stored="true"/>
+
         <!-- related image index position of fulltext (solr doc) -->
         <field name="image_index" type="string" indexed="true" stored="true"/>
 
         <field name="product" type="string" indexed="true" stored="true"/>
         <field name="collection" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
-        <field name="page" type="string" indexed="true" stored="true"  multiValued="true"/>
+        <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
 
@@ -466,102 +463,36 @@
           is added to the index.  It's used either to index the same field differently,
           or to add multiple fields to the same field for easier/faster searching.  -->
 
+
     <!-- for TYPO3 Extension find -->
     <copyField source="pid" dest="id"/>
 
-    <!-- copy new fields into old fields for downward compatibility -->
-    <!--
-       <copyField source="pid" dest="PPN"/>
-       <copyField source="pid" dest="IDDOC"/>
-       <copyField source="logid" dest="DMDID"/>
-       <copyField source="dmdid" dest="DMDID"/>
-       <copyField source="issn" dest="ISSN"/>
-       <copyField source="zdb" dest="ZDB"/>
-       <copyField source="iswork" dest="ISWORK"/>
-       <copyField source="title" dest="TITLE"/>
-       <copyField source="publisher" dest="PUBLISHER"/>
-       <copyField source="placepublish" dest="PLACEPUBLISH"/>
-       <copyField source="yearpublish" dest="YEARPUBLISH"/>
-       <copyField source="creator" dest="CREATOR"/>
-       <copyField source="person" dest="CREATOR"/>
-       <copyField source="location" dest="LOCATION"/>
-       <copyField source="currentno" dest="CURRENTNO"/>
-       <copyField source="currentnosort" dest="CURRENTNOSORT"/>
-       <copyField source="fulltext" dest="FULLTEXT"/>
-       <copyField source="default" dest="DEFAULT"/>
-       <copyField source="dc" dest="DC"/>
-       <copyField source="pre" dest="PRE"/>
-       <copyField source="suc" dest="SUC"/>
-       <copyField source="mw" dest="MW"/>
-       <copyField source="docstrct" dest="DOCSTRCT"/>
-       <copyField source="idparentdoc" dest="IDPARENTDOC"/>
-    -->
 
-    <!-- not compatible with old index
-       <copyField source="bytitle" dest="BYTITLE"/>
-       <copyField source="bycreator" dest="BYCREATOR"/>
-       <copyField source="dateindexed" dest="DATEINDEXED"/>
-       <copyField source="datemodified" dest="DATEMODIFIED"/>
-       <copyField source="structrun" dest="STRUCTRUN"/>
-       <copyField source="acl" dest="ACL"/>
-
-    //-->
-
-
-    <!-- copy fields into default for search -->
-    <copyField source="metadata" dest="default"/>
-    <copyField source="fulltext" dest="default"/>
-    <copyField source="title" dest="default"/>
-    <copyField source="publisher" dest="default"/>
-    <copyField source="place_publish" dest="default"/>
-    <copyField source="creator" dest="default"/>
-    <copyField source="issn" dest="default"/>
-    <copyField source="zdb" dest="default"/>
-    <copyField source="*_s" dest="default"/>
-
-    <!-- added for nlh -->
-    <copyField source="publisher_digitization" dest="default"/>
-    <copyField source="place_digitization" dest="default"/>
-    <copyField source="subtitle" dest="default"/>
-    <copyField source="nonsort" dest="default"/>
-
-    <copyField source="subject" dest="default"/>
 
 
 
     <copyField source="title" dest="metadata"/>
-    <copyField source="publisher" dest="metadata"/>
-    <copyField source="place_publish" dest="metadata"/>
-    <copyField source="creator" dest="metadata"/>
-    <copyField source="issn" dest="metadata"/>
-    <copyField source="zdb" dest="metadata"/>
-
-    <!-- added for nlh -->
-    <copyField source="publisher_digitization" dest="metadata"/>
-    <copyField source="place_digitization" dest="metadata"/>
     <copyField source="subtitle" dest="metadata"/>
     <copyField source="nonsort" dest="metadata"/>
-
+    <copyField source="publisher" dest="metadata"/>
+    <copyField source="place_publish" dest="metadata"/>
+    <copyField source="year_publish" dest="metadata"/>
+    <copyField source="creator" dest="metadata"/>
+    <copyField source="genre" dest="metadata"/>
+    <copyField source="work" dest="metadata"/>
+    <copyField source="page" dest="metadata"/>
+    <copyField source="pid" dest="metadata"/>
+    <copyField source="publisher_digitization" dest="metadata"/>
+    <copyField source="place_digitization" dest="metadata"/>
+    <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
+    <copyField source="facet_subject_geographic" dest="metadata"/>
+    <copyField source="rights_owner" dest="metadata"/>
 
+    <!-- copy fields into default for search -->
+    <copyField source="metadata" dest="default"/>
+    <copyField source="fulltext" dest="default"/>
 
-    <!--
-       <copyField source="METADATA" dest="DEFAULT"/>
-       <copyField source="FULLTEXT" dest="DEFAULT"/>
-       <copyField source="TITLE" dest="DEFAULT"/>
-       <copyField source="PUBLISHER" dest="DEFAULT"/>
-       <copyField source="PLACEPUBLISH" dest="DEFAULT"/>
-       <copyField source="CREATOR" dest="DEFAULT"/>
-       <copyField source="ISSN" dest="DEFAULT"/>
-       <copyField source="ZDB" dest="DEFAULT"/>
-
-       <copyField source="TITLE" dest="METADATA"/>
-       <copyField source="PUBLISHER" dest="METADATA"/>
-       <copyField source="PLACEPUBLISH" dest="METADATA"/>
-       <copyField source="CREATOR" dest="METADATA"/>
-       <copyField source="ISSN" dest="METADATA"/>
-       <copyField source="ZDB" dest="METADATA"/>
-    -->
 
     <!-- copy fields into facetfields -->
     <copyField source="creator" dest="facet_creator"/>
@@ -577,7 +508,6 @@
     <!--<copyField source="publisher_digitization" dest="facet_publisher_digitization"/>-->
 
     <copyField source="product" dest="facet_product"/>
-
 
 
 </schema>
