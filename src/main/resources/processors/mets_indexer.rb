@@ -139,14 +139,16 @@ def getTitleInfos(modsTitleInfoElements)
 
     titleInfo.subtitle = checkEmptyString ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    nonsort = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
-    if nonsort == ""
-      nonsort = titleInfo.title
-    else
-      nonsort = nonsort + ' ' if (nonsort[-1] != " ")
-      nonsort = nonsort + titleInfo.title
-    end
-    titleInfo.nonsort = nonsort
+    titleInfo.nonsort  = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    # if nonsort == ""
+    #   nonsort = titleInfo.title
+    # else
+    #   nonsort = nonsort + ' ' if (nonsort[-1] != " ")
+    #   nonsort = nonsort + titleInfo.title
+    # end
+    #
+    #titleInfo.nonsort = nonsort
 
     titleInfoArr << titleInfo
   }

@@ -227,7 +227,7 @@ class MetsModsMetadata
 
     h.merge! ({:title => title})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:nonsort => nonsort})
+    h.merge! ({:bytitle => nonsort + title})
 
 
     # ---
@@ -430,7 +430,7 @@ class MetsModsMetadata
     h.merge! ({:dmdid => @dmdid})
     #h.merge! ({:logid => @logid})
     h.merge! ({:mods => @mods})
-    h.merge! ({:bytitle => @bytitle})
+    #h.merge! ({:bytitle => @bytitle})
     h.merge! ({:docstrct => @docstrct})
 
     return h
