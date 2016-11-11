@@ -23,35 +23,8 @@ redis_config  = {
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-
 inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 
-
-
-def dirname(path)
-  path = path.to_s
-
-  i = path.rindex('/')
-  s = path[0..(i-1)]
-  i = s.rindex('/')
-  s = s[(i+1)..(s.size-1)]
-
-
-  return s.gsub(/\s/, "_")
-end
-
-
-def filename(path)
-  path = path.to_s
-
-  i = path.rindex('/')
-  s = path[(i+1)..(path.size-1)]
-
-  i = s.rindex('.')
-  s = s[(0)..(i-1)]
-
-  return s
-end
 
 
 def pushToQueue(arr, queue)
