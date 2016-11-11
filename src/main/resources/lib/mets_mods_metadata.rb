@@ -230,19 +230,39 @@ class MetsModsMetadata
     h.merge! ({:bytitle => nonsort + title})
 
 
-    # ---
-    displayform = Array.new
-    type        = Array.new
+    # --- :displayform, :type, :role, :namepart, :date
+
+    creator_displayform = Array.new
+    creator_type        = Array.new
+    creator_bycreator   = Array.new
+
+    person_displayform = Array.new
+    person_type        = Array.new
+    person_byperson    = Array.new
+
 
     @names.each { |name|
 
-      displayform << name.displayform
-      type << name.type
+      if name.type == 'aut'
+        creator_displayform << name.displayform
+        creator_type << name.type
+        creator_bycreator << name.namepart
+      else
+        person_displayform << name.displayform
+        person_type << name.type
+        person_byperson << name.namepart
+
+      end
+
     }
 
-    h.merge! ({:creator => displayform})
-    h.merge! ({:creator_type => type})
+    h.merge! ({:creator => creator_displayform})
+    h.merge! ({:creator_type => creator_type})
+    h.merge! ({:bycreator => creator_bycreator.join '; '})
 
+    h.merge! ({:person => creator_displayform})
+    h.merge! ({:person_type => creator_type})
+    h.merge! ({:byperson => creator_bycreator.join '; '})
 
     # ---
 
@@ -311,8 +331,8 @@ class MetsModsMetadata
       h.merge! ({:collection => @collection})
 
       # add volume info
-      id       = Array.new
-      type = Array.new
+      id    = Array.new
+      type  = Array.new
       label = Array.new
 
       @volumes.each { |vol|
