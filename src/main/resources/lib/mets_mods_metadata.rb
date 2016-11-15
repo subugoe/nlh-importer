@@ -225,9 +225,9 @@ class MetsModsMetadata
       nonsort << ti.nonsort
     }
 
-    h.merge! ({:title => title})
+    h.merge! ({:title => nonsort + title})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => nonsort + title})
+    h.merge! ({:bytitle => title})
 
 
     # --- :displayform, :type, :role, :namepart, :date
@@ -258,11 +258,11 @@ class MetsModsMetadata
 
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
-    h.merge! ({:bycreator => creator_bycreator.join '; '})
+    h.merge! ({:bycreator => creator_bycreator.join('; ')})
 
     h.merge! ({:person => creator_displayform})
     h.merge! ({:person_type => creator_type})
-    h.merge! ({:byperson => creator_bycreator.join '; '})
+    h.merge! ({:byperson => creator_bycreator.join('; ')})
 
     # ---
 
