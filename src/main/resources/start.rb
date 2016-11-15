@@ -98,7 +98,7 @@ image_processor_options = {
 }
 
 converter_options = {
-    'instances'                  => 1,
+    'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'converter_worker_pool',
     'workerPoolSize'             => 1,
@@ -118,7 +118,7 @@ mets_copier_options = {
 }
 
 pdf_copier_options = {
-    'instances'                  => 1,
+    'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'pdf_copier_worker_pool',
     'workerPoolSize'             => 1,
@@ -128,7 +128,7 @@ pdf_copier_options = {
 }
 
 tei_copier_options = {
-    'instances'                  => 1,
+    'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'tei_copier_worker_pool',
     'workerPoolSize'             => 1,
@@ -176,15 +176,14 @@ if ENV['PREPARE'] == 'true'
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
 #  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", pdf_retriever_options)
-  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
-
-#  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
-  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
-
+#  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 
 
 else
+
+#  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
+#  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
 #  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
 #  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
@@ -192,7 +191,7 @@ else
 #  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
 
-  if false # ENV['FULLTEXTS_EXIST'] == 'true'
+  if ENV['FULLTEXTS_EXIST'] == 'true'
     c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
   end
 
