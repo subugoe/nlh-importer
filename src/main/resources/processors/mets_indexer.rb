@@ -704,7 +704,9 @@ def parsePath(path)
   begin
     modsTitleInfoElements = mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3')
 
-    meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
+    unless modsTitleInfoElements.empty?
+      meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:titleInfo #{path} (#{e.message})")
   end
@@ -714,9 +716,11 @@ def parsePath(path)
   begin
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    originInfoHash       = getOriginInfo(modsOriginInfoElements)
-    meta.addOriginalInfo = originInfoHash[:original]
-    meta.addEditionInfo  = originInfoHash[:edition]
+    unless modsOriginInfoElements.empty?
+      originInfoHash       = getOriginInfo(modsOriginInfoElements)
+      meta.addOriginalInfo = originInfoHash[:original]
+      meta.addEditionInfo  = originInfoHash[:edition]
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:originInfo #{path} (#{e.message})")
   end
@@ -730,8 +734,9 @@ def parsePath(path)
     #meta.addPersonalNames  = namesHash[:personal]
     #meta.addCorporateNames = namesHash[:corporate]
 
-    meta.names       = getName(modsNameElements)
-
+    unless modsNameElements.empty?
+      meta.names = getName(modsNameElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
   end
@@ -740,7 +745,9 @@ def parsePath(path)
   begin
     modsTypeOfResourceElements = mods.xpath('mods:typeOfResource', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
+    unless modsTypeOfResourceElements.empty?
+      meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:typeOfResource #{path} (#{e.message})")
   end
@@ -749,7 +756,9 @@ def parsePath(path)
   begin
     modsGenreElements = mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addGenre = getGenre(modsGenreElements)
+    unless modsGenreElements.empty?
+      meta.addGenre = getGenre(modsGenreElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:genre #{path} (#{e.message})")
   end
@@ -758,7 +767,9 @@ def parsePath(path)
   begin
     modsLanguageElements = mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addLanguage = getLanguage(modsLanguageElements)
+    unless modsLanguageElements.empty?
+      meta.addLanguage = getLanguage(modsLanguageElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:language #{path} (#{e.message})")
   end
@@ -767,7 +778,9 @@ def parsePath(path)
   begin
     modsPhysicalDescriptionElements = mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
+    unless modsPhysicalDescriptionElements.empty?
+      meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:physicalDescription #{path} (#{e.message})")
   end
@@ -777,7 +790,9 @@ def parsePath(path)
   begin
     modsNoteElements = mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addNote = getNote(modsNoteElements)
+    unless modsNoteElements.empty?
+      meta.addNote = getNote(modsNoteElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:note #{path} (#{e.message})")
   end
@@ -786,7 +801,9 @@ def parsePath(path)
   begin
     modsSubjectElements = mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addSubject = getSubject(modsSubjectElements)
+    unless modsSubjectElements.empty?
+      meta.addSubject = getSubject(modsSubjectElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:subject #{path} (#{e.message})")
   end
@@ -795,7 +812,9 @@ def parsePath(path)
   begin
     modsRelatedItemElements = mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
+    unless modsRelatedItemElements.empty?
+      meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
   end
@@ -805,7 +824,9 @@ def parsePath(path)
   begin
     modsRecordInfoElements = mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
+    unless modsRecordInfoElements.empty?
+      meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
   end
@@ -815,8 +836,9 @@ def parsePath(path)
   begin
     metsRightsMDElements = doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/')
 
-    meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
-
+    unless metsRightsMDElements.empty?
+      meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
+    end
   rescue Exception => e
     @logger.error("Problems to resolve rights info #{path} (#{e.message})")
   end
@@ -831,9 +853,10 @@ def parsePath(path)
     begin
       metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-      meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-      processPresentationImages(meta, path)
-
+      unless metsPresentationImageUriElements.empty?
+        meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+        processPresentationImages(meta, path)
+      end
     rescue Exception => e
       @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
     end
@@ -843,9 +866,10 @@ def parsePath(path)
     begin
       metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-      meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-      processFulltexts(meta, path)
-
+      unless metsFullTextUriElements.empty?
+        meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+        processFulltexts(meta, path)
+      end
     rescue Exception => e
       @logger.error("Problems to resolve full texts #{path} (#{e.message})")
 
@@ -859,8 +883,10 @@ def parsePath(path)
     meta.doctype = "collection"
 
     logicalDivs = docpart.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
-    getVolumes(meta, logicalDivs)
 
+    unless logicalDivs.empty?
+      getVolumes(meta, logicalDivs)
+    end
   end
 
 
