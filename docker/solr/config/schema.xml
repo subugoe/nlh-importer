@@ -338,7 +338,7 @@
         <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
         <field name="byperson" type="string" indexed="true" omitNorms="true"/>
-        <field name="current_nosort" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
 
         <!-- modified for nlh -->
         <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
@@ -360,6 +360,8 @@
         <!-- added for nlh -->
 
         <field name="facet_creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
@@ -373,18 +375,24 @@
 
         <!-- indexed and stored text fields -->
         <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
         <field name="publisher" type="text_ci" indexed="true" stored="true"/>
         <field name="place_publish" type="text_ci" indexed="true" stored="true"/>
+
         <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
         <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
-        <!-- added for nlh -->
+
         <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
         <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
-        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
+
+
         <field name="creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <!-- only indexed  text fields -->
         <field name="metadata" type="text_ci" indexed="true" stored="false"/>
@@ -473,7 +481,7 @@
 
     <copyField source="title" dest="metadata"/>
     <copyField source="subtitle" dest="metadata"/>
-    <copyField source="nonsort" dest="metadata"/>
+
     <copyField source="publisher" dest="metadata"/>
     <copyField source="place_publish" dest="metadata"/>
     <copyField source="year_publish" dest="metadata"/>
@@ -497,7 +505,10 @@
     <!-- copy fields into facetfields -->
     <copyField source="creator" dest="facet_creator"/>
     <copyField source="creator_type" dest="facet_creator_type"/>
+
     <copyField source="person" dest="facet_person"/>
+    <copyField source="person_type" dest="facet_person_type"/>
+
     <!--<copyField source="place_publish" dest="facet_place_publish"/>-->
     <!--<copyField source="publisher" dest="facet_publisher"/>-->
 
