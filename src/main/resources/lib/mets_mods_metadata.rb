@@ -227,7 +227,7 @@ class MetsModsMetadata
 
     h.merge! ({:title => title})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => sorttitle})
+    h.merge! ({:bytitle => sorttitle.join('; ')})
 
 
     # --- :displayform, :type, :role, :namepart, :date
