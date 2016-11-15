@@ -376,6 +376,7 @@
         <!-- indexed and stored text fields -->
         <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <field name="publisher" type="text_ci" indexed="true" stored="true"/>
         <field name="place_publish" type="text_ci" indexed="true" stored="true"/>
