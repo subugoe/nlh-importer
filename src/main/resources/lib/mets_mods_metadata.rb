@@ -217,17 +217,17 @@ class MetsModsMetadata
 
     title    = Array.new
     subtitle = Array.new
-    nonsort  = Array.new
+    sorttitle  = Array.new
 
     @title_infos.each { |ti|
-      title << ti.title
+      title << ti.nonsort + ti.title
       subtitle << ti.subtitle
-      nonsort << ti.nonsort
+      sorttitle << ti.title[0].upcase + ti.title[1..-1]
     }
 
-    h.merge! ({:title => nonsort + title})
+    h.merge! ({:title => title})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => title})
+    h.merge! ({:bytitle => sorttitle})
 
 
     # --- :displayform, :type, :role, :namepart, :date
