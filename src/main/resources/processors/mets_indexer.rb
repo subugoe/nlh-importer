@@ -139,7 +139,7 @@ def getTitleInfos(modsTitleInfoElements)
 
     titleInfo.subtitle = checkEmptyString ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    titleInfo.nonsort  = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
+    titleInfo.nonsort = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     # if nonsort == ""
     #   nonsort = titleInfo.title
@@ -188,11 +188,11 @@ def getName(modsNameElements)
 
     n.type        = checkEmptyString name['type']
     n.displayform = checkEmptyString name.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-    n.role = checkEmptyString name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    namepart = name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3')
-    namepart = name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3') if namepart.empty?
-    n.namepart = checkEmptyString namepart.text
-    n.date = checkEmptyString name.xpath('mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    n.role        = checkEmptyString name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    namepart      = name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3')
+    namepart      = name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3') if namepart.empty?
+    n.namepart    = checkEmptyString namepart.text
+    n.date        = checkEmptyString name.xpath('mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     nameArr << n
   }
@@ -594,15 +594,18 @@ def metsRigthsMDElements(metsRightsMDElements)
 
     ri = Right.new
 
-    rights          = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
-    ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text
-    ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
-    ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
-    ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
+    rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
+    if rights != nil
+      ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text
+      ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
+      ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
+      ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
 
 
-    links        = right.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
-    ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text
+      links        = right.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
+      ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text if links != nil
+
+    end
 
     rightsInfoArr << ri
 
