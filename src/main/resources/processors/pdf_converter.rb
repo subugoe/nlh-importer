@@ -84,47 +84,62 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  res = @rredis.brpop("copypdf")
+  seconds = 20
 
-  product = ENV['SHORT_PRODUCT']
+  catch (:stop) do
 
+    while true do
 
-  if (res != '' && res != nil)
+      begin
 
-    json  = JSON.parse(res)
+        res = @rredis.brpop("pdfpath")
 
-
-    # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
-    match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
-
-    from                     = match[0]
-    name                     = match[2]
-    name_without_whitespaces = name.gsub(' ', '').downcase
-    format                   = match[3]
+        product = ENV['SHORT_PRODUCT']
 
 
-    copy_to    = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}.#{format}"
-    convert_to = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/%06d.#{ENV['IMAGE_OUT_FORMAT']}"
+        if (res != '' && res != nil)
+
+          json  = JSON.parse(res[1])
 
 
-    to_pdf_dir   = "#{@outpath}/#{product}/"
-    to_image_dir = "#{@outpath}/#{product}/#{name_without_whitespaces}"
+          # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
+          match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
 
-    copyFile(from, copy_to, to_pdf_dir)
+          from                     = match[0]
+          name                     = match[2]
+          name_without_whitespaces = name.gsub(' ', '').downcase
+          format                   = match[3]
 
-    convert(from, convert_to, to_image_dir)
+
+          copy_to    = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}.#{format}"
+          convert_to = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/%06d.#{ENV['IMAGE_OUT_FORMAT']}"
 
 
-    # file size, resolution, ...
+          to_pdf_dir   = "#{@outpath}/#{product}/"
+          to_image_dir = "#{@outpath}/#{product}/#{name_without_whitespaces}"
 
-    seconds = seconds / 2 if seconds > 20
+          copyFile(from, copy_to, to_pdf_dir)
 
-  else
-    @logger.error "Get empty string or nil from redis"
-    sleep 20
-    seconds = seconds * 2 if seconds < 300
+          convert(from, convert_to, to_image_dir)
+
+
+          # file size, resolution, ...
+
+          seconds = seconds / 2 if seconds > 20
+
+        else
+          @logger.error "Get empty string or nil from redis"
+          sleep 20
+          seconds = seconds * 2 if seconds < 300
+        end
+
+      rescue Exception => e
+        @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
+        throw :stop
+      end
+
+    end
   end
-
   # future.complete(doc.to_s)
 
 }) { |res_err, res|
