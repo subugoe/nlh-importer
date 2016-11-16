@@ -175,7 +175,7 @@ if ENV['PREPARE'] == 'true'
 
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-#  $vertx.deploy_verticle("processors/pdf_path_retrieve.rb", pdf_retriever_options)
+#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 
