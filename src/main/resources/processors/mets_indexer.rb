@@ -19,6 +19,7 @@ require 'lib/physical_description'
 require 'lib/subject'
 require 'lib/note'
 require 'lib/right'
+require 'lib/volume'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -65,6 +66,8 @@ end
 
 
 def addDocsToSolr(document)
+
+  attempts = 0
   begin
     @solr.add [document]
     @solr.commit
@@ -72,6 +75,8 @@ def addDocsToSolr(document)
     @rredis.incr 'indexed'
 
   rescue Exception => e
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
     @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
   end
 end
@@ -109,7 +114,13 @@ def getRecordIdentifiers(mods, path)
   ids = Hash.new
 
   begin
+    # todo remove this, when mets is updated "recordIdentifer"
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
+
+    if recordIdentifiers.empty?
+      recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifer', 'mods' => 'http://www.loc.gov/mods/v3')
+    end
+
     recordIdentifiers.each do |id_element|
       source = id_element.attributes['source']
       if source != nil
@@ -350,7 +361,7 @@ def getSubject(modsSubjectElements)
       #                            'mods' => 'http://www.loc.gov/mods/v3')
       #addit = additional.collect { |s| s.text }.join("; ")
 
-      str             = personal.collect { |s| s.text }.join("; ")
+      str             = personal.collect { |s| s.text if s != nil}.join("; ")
       #   str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
@@ -360,7 +371,7 @@ def getSubject(modsSubjectElements)
       subject.type    = 'corporate'
       #     title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
 
-      str             = corporate.collect { |s| s.text }.join("; ")
+      str             = corporate.collect { |s| s.text if s != nil}.join("; ")
       #    str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
@@ -368,13 +379,13 @@ def getSubject(modsSubjectElements)
     elsif !geographic.empty?
 
       subject.type    = 'geographic'
-      subject.subject = geographic.children.collect { |s| s.text }.join("/")
+      subject.subject = geographic.children.collect { |s| s.text if (s != nil && s.children != nil)}.join("/")
 
 
     elsif !topic.empty?
 
       subject.type    = 'topic'
-      subject.subject = topic.collect { |s| s.child.text }.join("/")
+      subject.subject = topic.collect { |s| s.child.text if (s != nil && s.child != nil)}.join("/")
 
     end
 
@@ -568,13 +579,13 @@ def getVolumes(meta, logicalDivs)
     # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
     match        = volume_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
     product      = match[2]
-    volume       = match[3]
+    vol          = match[3]
     #prefix = match[2]
     #format = match[2]
 
     meta.product = product if i == 0
 
-    id_arr << volume
+    id_arr << "#{product}:#{vol}"
     volumeArr << volume
 
     i += 1
@@ -735,7 +746,7 @@ def parsePath(path)
     #meta.addCorporateNames = namesHash[:corporate]
 
     unless modsNameElements.empty?
-      meta.names = getName(modsNameElements)
+      meta.addName = getName(modsNameElements)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
