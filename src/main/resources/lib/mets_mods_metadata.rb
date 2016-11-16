@@ -111,7 +111,7 @@ class MetsModsMetadata
   # end
 
 
-  def addName(name)
+  def addName=(name)
     @names += name
   end
 
@@ -215,9 +215,9 @@ class MetsModsMetadata
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
-    title    = Array.new
-    subtitle = Array.new
-    sorttitle  = Array.new
+    title     = Array.new
+    subtitle  = Array.new
+    sorttitle = Array.new
 
     @title_infos.each { |ti|
       title << ti.nonsort + ti.title
@@ -229,12 +229,27 @@ class MetsModsMetadata
     h.merge! ({:subtitle => subtitle})
     h.merge! ({:bytitle => sorttitle.join('; ')})
 
+    begin
+      h.merge! ({:pid => @record_identifiers.first[1]})
+    rescue Exception => e
+      puts e.message
+      puts @record_identifiers
+      puts @identifiers
+    end
 
     # --- :displayform, :type, :role, :namepart, :date
+
+
+    facet_creator_personal = Array.new
+    facet_creator_corporate = Array.new
+
+    facet_person_personal = Array.new
+    facet_person_corporate = Array.new
 
     creator_displayform = Array.new
     creator_type        = Array.new
     creator_bycreator   = Array.new
+
 
     person_displayform = Array.new
     person_type        = Array.new
@@ -243,26 +258,50 @@ class MetsModsMetadata
 
     @names.each { |name|
 
-      if name.type == 'aut'
+      if name.role == 'aut'
         creator_displayform << name.displayform
         creator_type << name.type
+
+        if creator_type == 'personal'
+          facet_creator_personal << name.namepart
+        elsif creator_type == 'corporate'
+          facet_creator_corporate << name.namepart
+        end
+
         creator_bycreator << name.namepart
       else
         person_displayform << name.displayform
         person_type << name.type
+
+        if person_type == 'personal'
+          facet_person_personal << name.namepart
+        elsif creator_type == 'corporate'
+          facet_person_corporate << name.namepart
+        end
+
         person_byperson << name.namepart
 
       end
 
     }
 
+    byc = creator_bycreator.join('; ')
+    byp = person_byperson.join('; ')
+
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
-    h.merge! ({:bycreator => creator_bycreator.join('; ')})
+    h.merge! ({:bycreator => byc})
 
-    h.merge! ({:person => creator_displayform})
-    h.merge! ({:person_type => creator_type})
-    h.merge! ({:byperson => creator_bycreator.join('; ')})
+    h.merge! ({:person => person_displayform})
+    h.merge! ({:person_type => person_type})
+    h.merge! ({:byperson => byp})
+
+    h.merge! ({:facet_creator_personal => facet_creator_personal})
+    h.merge! ({:facet_creator_corporate => facet_creator_corporate})
+
+    h.merge! ({:facet_person_personal => facet_person_personal})
+    h.merge! ({:facet_person_corporate => facet_person_corporate})
+
 
     # ---
 

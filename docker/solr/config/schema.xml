@@ -351,16 +351,17 @@
         <field name="lang" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_creator" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_person" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="year_publish" type="tint" indexed="true" stored="true"/>
 
         <!-- added for nlh -->
 
-        <field name="facet_creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_creator_personal" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_person_personal" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_creator_corporate" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_person_corporate" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
 
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -487,6 +488,7 @@
     <copyField source="place_publish" dest="metadata"/>
     <copyField source="year_publish" dest="metadata"/>
     <copyField source="creator" dest="metadata"/>
+    <copyField source="person" dest="metadata"/>
     <copyField source="genre" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
@@ -504,11 +506,6 @@
 
 
     <!-- copy fields into facetfields -->
-    <copyField source="creator" dest="facet_creator"/>
-    <copyField source="creator_type" dest="facet_creator_type"/>
-
-    <copyField source="person" dest="facet_person"/>
-    <copyField source="person_type" dest="facet_person_type"/>
 
     <!--<copyField source="place_publish" dest="facet_place_publish"/>-->
     <!--<copyField source="publisher" dest="facet_publisher"/>-->
