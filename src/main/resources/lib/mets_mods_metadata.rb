@@ -262,9 +262,9 @@ class MetsModsMetadata
         creator_displayform << name.displayform
         creator_type << name.type
 
-        if creator_type == 'personal'
+        if name.type == 'personal'
           facet_creator_personal << name.namepart
-        elsif creator_type == 'corporate'
+        elsif name.type == 'corporate'
           facet_creator_corporate << name.namepart
         end
 
@@ -273,9 +273,9 @@ class MetsModsMetadata
         person_displayform << name.displayform
         person_type << name.type
 
-        if person_type == 'personal'
+        if name.type == 'personal'
           facet_person_personal << name.namepart
-        elsif creator_type == 'corporate'
+        elsif name.type == 'corporate'
           facet_person_corporate << name.namepart
         end
 
