@@ -11,10 +11,6 @@ require 'fileutils'
 require 'mini_magick'
 
 
-@image_in_format  = ENV['IMAGE_IN_FORMAT']
-@image_out_format = ENV['IMAGE_OUT_FORMAT']
-
-
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
@@ -27,11 +23,14 @@ require 'mini_magick'
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
+@image_in_format  = ENV['IMAGE_IN_FORMAT']
+@image_out_format = ENV['IMAGE_OUT_FORMAT']
 
 @inpath       = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
 @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 @originpath   = ENV['ORIG']
+@pdfdensity   = ENV['PDFDENSITY']
 
 #----------------
 
@@ -59,21 +58,22 @@ def copyFile(from, to, to_dir)
 
 end
 
-def convert(from, to, to_dir)
+def convert(from, to, to_dir, isPDF)
 
   begin
     FileUtils.mkdir_p(to_dir)
 
     MiniMagick::Tool::Convert.new do |convert|
+      convert << "-density" << "400" unless isPDF
+      convert << "-define" << "pdf:use-cropbox=true"
       convert << "#{from}"
-      # convert << "-density" << "300"
-      # convert << "-crop" << "100%x100%"
       convert << "#{to}"
     end
 
     @logger.debug "from: #{from} to: #{to}"
 
     @rredis.incr 'pdfsconverted'
+
 
   rescue Exception => e
     @file_logger.error "Could not convert PDF: '#{from}' to: '#{to}'\n\t#{e.message}"
@@ -92,7 +92,7 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        res = @rredis.brpop("pdfpath")
+        res = @rredis.brpop("convertpdf")
 
         product = ENV['SHORT_PRODUCT']
 
@@ -108,19 +108,12 @@ $vertx.execute_blocking(lambda { |future|
           from                     = match[0]
           name                     = match[2]
           name_without_whitespaces = name.gsub(' ', '').downcase
-          format                   = match[3]
 
+          convert_to_image_dir   = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/%06d.#{@image_out_format}"
 
-          copy_to    = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}.#{format}"
-          convert_to = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/%06d.#{ENV['IMAGE_OUT_FORMAT']}"
+          to_image_dir = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/"
 
-
-          to_pdf_dir   = "#{@outpath}/#{product}/"
-          to_image_dir = "#{@outpath}/#{product}/#{name_without_whitespaces}"
-
-          copyFile(from, copy_to, to_pdf_dir)
-
-          convert(from, convert_to, to_image_dir)
+          convert(from, convert_to_image_dir, to_image_dir, false) # convert to images
 
 
           # file size, resolution, ...

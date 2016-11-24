@@ -1,39 +1,41 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
 
-require 'oai'
+require 'rsolr'
+#require 'elasticsearch'
 require 'logger'
-require 'open-uri'
+require 'nokogiri'
 require 'redis'
 require 'json'
+require 'lib/mets_mods_metadata'
 require 'fileutils'
+require 'mini_magick'
 
-@logger       = Logger.new(STDOUT) # 'gdz_object.log')
+
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+
+@logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
 
 
-redis_config  = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
+@image_in_format  = ENV['IMAGE_IN_FORMAT']
+@image_out_format = ENV['IMAGE_OUT_FORMAT']
+
+@inpath       = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
+@imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+@originpath   = ENV['ORIG']
+@pdfdensity   = ENV['PDFDENSITY']
+
+#----------------
 
 
-
-#@redis         = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-
-@logger.debug "[pdf copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-
-
-inpath = ENV['ORIG']
-outpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
-product = ENV['PRODUCT']
-
-
+@logger.debug "[pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def pushToQueue(arr, queue)
@@ -52,30 +54,9 @@ def copyFile(from, to, to_dir)
     @file_logger.error "Could not copy PDF from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
-end
-
-def convert(from, to, to_dir)
-
-  begin
-    FileUtils.mkdir_p(to_dir)
-
-    MiniMagick::Tool::Convert.new do |convert|
-      convert << "#{from}"
-      # convert << "-density" << "300"
-      # convert << "-crop" << "100%x100%"
-      convert << "#{to}"
-    end
-
-    @logger.debug "from: #{from} to: #{to}"
-
-    @rredis.incr 'pdfsconverted'
-
-  rescue Exception => e
-    @file_logger.error "Could not convert PDF: '#{from}' to: '#{to}'\n\t#{e.message}"
-  end
+  return to
 
 end
-
 
 
 $vertx.execute_blocking(lambda { |future|
@@ -88,30 +69,36 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        res = @rredis.brpop("pdfpath")
+        res = @rredis.brpop("copypdf")
+
+        product = ENV['SHORT_PRODUCT']
+
 
         if (res != '' && res != nil)
-          json = JSON.parse res[1]
-          uri  = json['path']
 
-          match1   = uri.match(/([\s\S]*)\/([\s\S]*).(pdf|PDF)/)
-          match2 = uri.match(/([\s\S]*)\/([\s\S]*.[pdf|PDF])/)
+          json  = JSON.parse(res[1])
 
-          from = match1[0]
-          origName = match2[2]
-          name = origName.gsub(' ', '').downcase
 
-          to     = "#{outpath}/#{product}/#{name}"
-          to_dir = "#{outpath}/#{product}"
+          # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
+          match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
 
-          copyFile(from, to, to_dir)
+          from                     = match[0]
+          name                     = match[2]
+          name_without_whitespaces = name.gsub(' ', '').downcase
+          format                   = match[3]
 
+          copy_to_pdf_dir        = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}/#{name_without_whitespaces}.#{format}"
+          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}/"
+
+          copyFile(from, copy_to_pdf_dir, to_pdf_dir)
+
+          # file size, resolution, ...
 
           seconds = seconds / 2 if seconds > 20
 
         else
           @logger.error "Get empty string or nil from redis"
-          sleep seconds
+          sleep 20
           seconds = seconds * 2 if seconds < 300
         end
 
@@ -119,11 +106,11 @@ $vertx.execute_blocking(lambda { |future|
         @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
         throw :stop
       end
+
     end
   end
-
   # future.complete(doc.to_s)
 
 }) { |res_err, res|
-#
+  #
 }
