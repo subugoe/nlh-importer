@@ -4,6 +4,10 @@ package de.unigoettingen.sub.converter;
 
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.redis.RedisClient;
+import io.vertx.redis.RedisOptions;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -14,7 +18,7 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
+
 
 /**
  * These are the examples used in the documentation.
@@ -27,59 +31,76 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
     int MAX_ATTEMPTS = Integer.valueOf(System.getenv("MAX_ATTEMPTS"));
 
+    String product = System.getenv("SHORT_PRODUCT");
+
     String image_in_format = System.getenv("IMAGE_IN_FORMAT");
     String image_out_format = System.getenv("IMAGE_OUT_FORMAT");
 
     String inpath = System.getenv("IN") + System.getenv("PDF_IN_SUB_PATH");
     String imageoutpath = System.getenv("OUT") + System.getenv("IMAGE_OUT_SUB_PATH");
-    String pdfoutpath = System.getenv("OUT") + System.getenv("PDF_OUT_SUB_PATH");
+    //String pdfoutpath = System.getenv("OUT") + System.getenv("PDF_OUT_SUB_PATH");
     String originpath = System.getenv("ORIG");
     int pdfdensity = Integer.valueOf(System.getenv("PDFDENSITY"));
 
+    String redis_host = System.getenv("REDIS_HOST");
+    int redis_port = Integer.valueOf(System.getenv("REDIS_EXTERNAL_PORT"));
+    int redis_db = Integer.valueOf(System.getenv("REDIS_DB"));
 
 
     @Override
     public void start() {
 
-        System.out.println("start PdfFromImagesConverterVerticle");
+        System.out.println(Thread.currentThread().getName() + " started...");
+        String host = "10.0.2.206";
+        int port = 6379;
 
-        System.out.println(MAX_ATTEMPTS);
-        System.out.println(image_in_format);
-        System.out.println(image_out_format);
-        System.out.println(inpath);
-        System.out.println(imageoutpath);
-        System.out.println(pdfoutpath);
-        System.out.println(originpath);
-        System.out.println(pdfdensity);
+        final RedisClient redis = RedisClient.create(vertx,
+                new RedisOptions().setHost(redis_host).setPort(redis_port).setSelect(redis_db));
 
 
-
-        //Read more: http://javarevisited.blogspot.com/2012/08/how-to-get-environment-variables-in.html#ixzz4Qrwv4ltQ
-
-        //foo();
+        // todo find a better way
+        for (int i = 0; i < 20; i++) {
+            foo(redis);
+        }
 
     }
 
 
-    public void foo() {
+    public void foo(RedisClient redis) {
 
 
-        String filepath = inpath + "filename";
-        File pdfFile = new File(filepath);
-        String destination = "outpath";
+        redis.brpop("paths", 30, path -> {
+                    if (path.succeeded()) {
 
-        System.out.println("pdfFile: " + pdfFile);
-        System.out.println("destination: " + destination);
+                        JsonArray json = path.result();
 
-        //convertPdfToTif(pdfFile, destination, );
+                        if (json != null) {
+
+                            JsonObject object = new JsonObject(json.getString(1));
+
+                            String from = object.getString("'from'");
+                            String name = object.getString("name");
+                            String format = object.getString("'format'");
+                            
+                            String to_dir = imageoutpath + "/" + product + "/" + name + "/";
+
+                            convertPdfTo(new File(from), to_dir, name, format);
+
+                        }
+
+                    }
+
+                }
+
+        );
 
     }
 
 
-    public void convertPdfTo(File pdfFile, String destination, String format) {
+    public void convertPdfTo(File from, String to_dir, String name, String format) {
 
-        if (!fileExists(pdfFile)) {
-            throw new RuntimeException("File not found ! (" + pdfFile.getAbsolutePath() + ")");
+        if (!fileExists(from)) {
+            throw new RuntimeException("File not found ! (" + from.getAbsolutePath() + ")");
         }
 
 
@@ -87,10 +108,10 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
         try {
 
-            FileUtils.forceMkdir(new File(destination));
+            FileUtils.forceMkdir(new File(to_dir));
 
             // load PDF document
-            PDDocument document = PDDocument.load(pdfFile, "");
+            PDDocument document = PDDocument.load(from, "");
 
 
             // create PDF renderer
@@ -108,8 +129,8 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
 
                 // Writes a buffered image to a file using the given image format.
-                boolean done = ImageIOUtil.writeImage(image, destination + "/" + fileName + ".jpg", pdfdensity);
-                log.info("Generating  " + fileName + ".tif to " + destination + " (created=" + done + ")");
+                boolean done = ImageIOUtil.writeImage(image, to_dir + "/" + fileName + "." + format, pdfdensity);
+                log.info("Generating  " + fileName + "." + format + " to " + to_dir + " (created=" + done + ")");
 
                 image.flush();
 
@@ -120,11 +141,11 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
             log.info("PDF to TIF conversion well done for: " + fileName);
         } catch (IOException e) {
-            log.error("IOException with destination file: " + destination + "\n");
+            log.error("IOException with destination file: " + to_dir + "\n");
             e.printStackTrace();
             return;
         } catch (Exception e) {
-            log.error("Exception with destination file: " + destination + "\n");
+            log.error("Exception with destination file: " + to_dir + "\n");
             e.printStackTrace();
             return;
         }

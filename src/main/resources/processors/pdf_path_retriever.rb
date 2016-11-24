@@ -10,11 +10,10 @@ require 'json'
 @logger       = Logger.new(STDOUT) # 'gdz_object.log')
 @logger.level = Logger::DEBUG
 
-redis_config  = {
+redis_config = {
     'host' => ENV['REDIS_HOST'],
     'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
 }
-
 
 
 #@redis         = VertxRedis::RedisClient.create($vertx, redis_config)
@@ -33,10 +32,17 @@ end
 paths = Dir.glob("#{inpath}/*/*/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
 
 arr = Array.new
-paths.each {|path|
-  arr << {"path" => path}.to_json
-}
+paths.each { |path|
 
+  match = path.match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+
+  from   = match[0]
+  name   = match[2].gsub(' ', '').downcase
+  format = match[3].downcase
+
+
+  arr << {"from" => from, "name" => name, "format" => format}.to_json
+}
 
 
 pushToQueue(arr, 'copypdf')

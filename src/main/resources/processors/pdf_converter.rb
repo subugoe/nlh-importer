@@ -101,17 +101,12 @@ $vertx.execute_blocking(lambda { |future|
 
           json  = JSON.parse(res[1])
 
+          from = json['from']
+          name = json['name']
 
-          # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
-          match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+          convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
 
-          from                     = match[0]
-          name                     = match[2]
-          name_without_whitespaces = name.gsub(' ', '').downcase
-
-          convert_to_image_dir   = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/%06d.#{@image_out_format}"
-
-          to_image_dir = "#{@imageoutpath}/#{product}/#{name_without_whitespaces}/"
+          to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
 
           convert(from, convert_to_image_dir, to_image_dir, false) # convert to images
 

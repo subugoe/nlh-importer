@@ -76,19 +76,15 @@ $vertx.execute_blocking(lambda { |future|
 
         if (res != '' && res != nil)
 
-          json  = JSON.parse(res[1])
+          json = JSON.parse(res[1])
 
 
-          # /Volumes/NLH-1/ORIG/ZDB-1-EMO/CD2/Section II/A Tale of Indian Heroes.PDF
-          match = json['path'].match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+          from   = json['from']
+          name   = json['name']
+          format = json['format']
 
-          from                     = match[0]
-          name                     = match[2]
-          name_without_whitespaces = name.gsub(' ', '').downcase
-          format                   = match[3]
-
-          copy_to_pdf_dir        = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}/#{name_without_whitespaces}.#{format}"
-          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name_without_whitespaces}/"
+          copy_to_pdf_dir = "#{@pdfoutpath}/#{product}/#{name}/#{name}.#{format}"
+          to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{name}/"
 
           copyFile(from, copy_to_pdf_dir, to_pdf_dir)
 
