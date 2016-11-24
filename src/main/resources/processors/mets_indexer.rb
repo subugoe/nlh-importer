@@ -257,13 +257,21 @@ def getOriginInfo(modsOriginInfoElements)
       # The date on which the resource was digitized or a subsequent snapshot was taken.
       # multi_ dateCaptured[encoding, point, keyDate]/value
       # just the start
-      originInfo.date_captured_start = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
-      originInfo.date_captured_end   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      start_date                     = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      end_date                       = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      originInfo.date_captured_start = start_date.to_i
+      originInfo.date_captured_end   = end_date.to_i
+
+      # todo check if date is convertable to int
 
     else
       # The date that the resource was published, released or issued.
       # multi:  dateIssued[encoding, point, keyDate]/value
-      originInfo.date_issued = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      start_date             = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      originInfo.date_issued = start_date.to_i
+
+      # todo check if date is convertable to int
+
     end
 
     if (originInfo.edition == '[Electronic ed.]')
@@ -361,7 +369,7 @@ def getSubject(modsSubjectElements)
       #                            'mods' => 'http://www.loc.gov/mods/v3')
       #addit = additional.collect { |s| s.text }.join("; ")
 
-      str             = personal.collect { |s| s.text if s != nil}.join("; ")
+      str             = personal.collect { |s| s.text if s != nil }.join("; ")
       #   str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
@@ -371,7 +379,7 @@ def getSubject(modsSubjectElements)
       subject.type    = 'corporate'
       #     title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
 
-      str             = corporate.collect { |s| s.text if s != nil}.join("; ")
+      str             = corporate.collect { |s| s.text if s != nil }.join("; ")
       #    str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
@@ -379,13 +387,13 @@ def getSubject(modsSubjectElements)
     elsif !geographic.empty?
 
       subject.type    = 'geographic'
-      subject.subject = geographic.children.collect { |s| s.text if (s != nil && s.children != nil)}.join("/")
+      subject.subject = geographic.children.collect { |s| s.text if (s != nil && s.children != nil) }.join("/")
 
 
     elsif !topic.empty?
 
       subject.type    = 'topic'
-      subject.subject = topic.collect { |s| s.child.text if (s != nil && s.child != nil)}.join("/")
+      subject.subject = topic.collect { |s| s.child.text if (s != nil && s.child != nil) }.join("/")
 
     end
 
