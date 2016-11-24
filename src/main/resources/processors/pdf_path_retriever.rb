@@ -39,5 +39,6 @@ paths.each {|path|
 
 
 
-pushToQueue(arr, 'pdfpath')
+pushToQueue(arr, 'copypdf')
+pushToQueue(arr, 'convertpdf')
 

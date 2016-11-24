@@ -17,25 +17,6 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
-pdf_retriever_options = {
-    'instances'                  => 1,
-    'worker'                     => true,
-    'workerPoolName'             => 'retrieve_pdfs_worker_pool',
-    'workerPoolSize'             => 1,
-    'blockedThreadCheckInterval' => 15000,
-    'warningExceptionTime'       => 45000,
-    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
-}
-
-tei_retriever_options = {
-    'instances'                  => 1,
-    'worker'                     => true,
-    'workerPoolName'             => 'retrieve_teis_worker_pool',
-    'workerPoolSize'             => 1,
-    'blockedThreadCheckInterval' => 15000,
-    'warningExceptionTime'       => 45000,
-    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
-}
 
 retriever_options = {
     'instances'                  => 1,
@@ -67,25 +48,6 @@ indexer_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-fulltext_processor_options = {
-    'instances'                  => 4,
-    'worker'                     => true,
-    'workerPoolName'             => 'fulltext_worker_pool',
-    'workerPoolSize'             => 1,
-    'blockedThreadCheckInterval' => 15000,
-    'warningExceptionTime'       => 45000,
-    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
-}
-
-pdf_converter_options = {
-    'instances'                  => 4,
-    'worker'                     => true,
-    'workerPoolName'             => 'pdf_worker_pool',
-    'workerPoolSize'             => 1,
-    'blockedThreadCheckInterval' => 15000,
-    'warningExceptionTime'       => 45000,
-    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
-}
 
 image_processor_options = {
     'instances'                  => 4,
@@ -117,10 +79,50 @@ mets_copier_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
+pdf_retriever_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'retrieve_pdfs_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
+pdf_converter_options = {
+    'instances'                  => 4,
+    'worker'                     => true,
+    'workerPoolName'             => 'pdf_converter_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
 pdf_copier_options = {
     'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'pdf_copier_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
+tei_retriever_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'retrieve_teis_worker_pool',
+    'workerPoolSize'             => 1,
+    'blockedThreadCheckInterval' => 15000,
+    'warningExceptionTime'       => 45000,
+    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
+}
+
+fulltext_processor_options = {
+    'instances'                  => 4,
+    'worker'                     => true,
+    'workerPoolName'             => 'fulltext_worker_pool',
     'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
@@ -163,8 +165,12 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'metscopied'
   @rredis.del 'indexed'
   @rredis.del 'retrieved'
+  @rredis.del 'pdfsconverted'
+  @rredis.del 'pdfscopied'
 
 
+  @rredis.del 'copypdf'
+  @rredis.del 'convertpdf'
   @rredis.del 'fixitychecker'
   @rredis.del 'metspath'
   @rredis.del 'processImageURI'
@@ -182,21 +188,25 @@ if ENV['PREPARE'] == 'true'
 
 else
 
-#  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
-#  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
+  #  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+  #  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
-#  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
-#  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-#  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-#  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
+  #  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
+  #  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
 
+  #  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
-  if ENV['FULLTEXTS_EXIST'] == 'true'
-    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
-  end
+  #  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
 
-# f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
-# g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
+  #  if ENV['FULLTEXTS_EXIST'] == 'true'
+  #    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
+  #  end
+
+  # f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
+  # g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
 
 end
+
+
+
