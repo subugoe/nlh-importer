@@ -22,7 +22,8 @@ RUN apk update && \
     libxslt libxslt-dev \
     vim gcc yaml yaml-dev build-base \
     libtool pcre-dev \
-    imagemagick imagemagick-dev pcre-dev
+    ghostscript libpng libjpeg \
+    imagemagick imagemagick-dev
     # libmagickwand-dev
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
