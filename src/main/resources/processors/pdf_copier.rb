@@ -35,7 +35,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 #----------------
 
 
-@logger.debug "[pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.debug "[pdf copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def pushToQueue(arr, queue)

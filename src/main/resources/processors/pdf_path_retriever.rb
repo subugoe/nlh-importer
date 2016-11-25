@@ -29,7 +29,7 @@ def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
-paths = Dir.glob("#{inpath}/*/*/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+paths = Dir.glob("#{inpath}/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
 
 arr = Array.new
 paths.each { |path|
