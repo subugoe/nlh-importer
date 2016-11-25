@@ -33,13 +33,11 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
     String product = System.getenv("SHORT_PRODUCT");
 
-    String image_in_format = System.getenv("IMAGE_IN_FORMAT");
-    String image_out_format = System.getenv("IMAGE_OUT_FORMAT");
-
-    String inpath = System.getenv("IN") + System.getenv("PDF_IN_SUB_PATH");
     String imageoutpath = System.getenv("OUT") + System.getenv("IMAGE_OUT_SUB_PATH");
-    //String pdfoutpath = System.getenv("OUT") + System.getenv("PDF_OUT_SUB_PATH");
-    String originpath = System.getenv("ORIG");
+    String pdfoutpath = System.getenv("OUT") + System.getenv("PDF_OUT_SUB_PATH");
+
+    String imageoutformat = System.getenv("IMAGE_OUT_FORMAT");
+
     int pdfdensity = Integer.valueOf(System.getenv("PDFDENSITY"));
 
     String redis_host = System.getenv("REDIS_HOST");
@@ -51,15 +49,24 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     public void start() {
 
         System.out.println(Thread.currentThread().getName() + " started...");
-        
+
         final RedisClient redis = RedisClient.create(vertx,
                 new RedisOptions().setHost(redis_host).setPort(redis_port).setSelect(redis_db));
 
 
-        // todo find a better way
-        for (int i = 0; i < 20; i++) {
-            foo(redis);
-        }
+        redis.llen("convertpdf", value -> {
+                    if (value.succeeded()) {
+
+                        long i = value.result();
+
+                        for (int j = 0; j < i; j++) {
+                            foo(redis);
+                        }
+
+                    }
+                }
+        );
+
 
     }
 
@@ -67,7 +74,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     public void foo(RedisClient redis) {
 
 
-        redis.brpop("paths", 30, path -> {
+        redis.brpop("convertpdf", 30, path -> {
                     if (path.succeeded()) {
 
                         JsonArray json = path.result();
@@ -80,9 +87,11 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
                             String name = object.getString("name");
                             String format = object.getString("'format'");
 
-                            String to_dir = imageoutpath + "/" + product + "/" + name + "/";
+                            String to_images_dir = imageoutpath + "/" + product + "/" + name + "/";
+                            String to_pdf_dir = pdfoutpath + "/" + product + "/" + name + "/";
 
-                            convertPdfTo(new File(from), to_dir, name, format);
+                            convertTo(new File(from), to_images_dir, imageoutformat);
+                            convertTo(new File(from), to_pdf_dir, "pdf");
 
                         }
 
@@ -95,7 +104,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     }
 
 
-    public void convertPdfTo(File from, String to_dir, String name, String format) {
+    public void convertTo(File from, String to_dir, String format) {
 
         if (!fileExists(from)) {
             throw new RuntimeException("File not found ! (" + from.getAbsolutePath() + ")");
@@ -128,7 +137,6 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
                 // Writes a buffered image to a file using the given image format.
                 boolean done = ImageIOUtil.writeImage(image, to_dir + "/" + fileName + "." + format, pdfdensity);
-                log.info("Generating  " + fileName + "." + format + " to " + to_dir + " (created=" + done + ")");
 
                 image.flush();
 
