@@ -81,7 +81,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
                             String from = object.getString("'from'");
                             String name = object.getString("name");
                             String format = object.getString("'format'");
-                            
+
                             String to_dir = imageoutpath + "/" + product + "/" + name + "/";
 
                             convertPdfTo(new File(from), to_dir, name, format);
