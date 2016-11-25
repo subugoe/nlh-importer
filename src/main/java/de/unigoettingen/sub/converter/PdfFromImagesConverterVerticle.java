@@ -51,9 +51,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     public void start() {
 
         System.out.println(Thread.currentThread().getName() + " started...");
-        String host = "10.0.2.206";
-        int port = 6379;
-
+        
         final RedisClient redis = RedisClient.create(vertx,
                 new RedisOptions().setHost(redis_host).setPort(redis_port).setSelect(redis_db));
 
