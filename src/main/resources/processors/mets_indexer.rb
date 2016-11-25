@@ -36,11 +36,16 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
-@teiinpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
-@teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
-@originpath = ENV['ORIG']
+@teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+@teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+@originpath         = ENV['ORIG']
 
-@from_orig = ENV['GET_IMAGES_FROM_ORIG']
+#@from_orig = ENV['GET_IMAGES_FROM_ORIG']
+#@image_from_orig = ENV['GET_IMAGES_FROM_ORIG']
+@fulltext_from_orig = ENV['GET_FULLTEXT_FROM_ORIG']
+
+@fulltextexist = ENV['FULLTEXTS_EXIST']
+#@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
@@ -503,7 +508,7 @@ def getFulltext(path)
   fulltext = ""
 
   begin
-    if @from_orig == 'true'
+    if @fulltext_from_orig == 'true'
       return File.read(path)
     else
       fulltext = File.open(path) { |f|
@@ -542,7 +547,7 @@ def processFulltexts(meta, path)
     file     = match[4]
     filename = match[4] + '.tei.xml'
 
-    if @from_orig == 'true'
+    if @fulltext_from_orig == 'true'
       release = @rredis.hget('mapping', work)
       from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
       to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
@@ -555,13 +560,17 @@ def processFulltexts(meta, path)
     to_dir = "#{@teioutpath}/#{product}/#{work}"
 
 
-    fulltextArr << getFulltext(from)
+    if @fulltextexist == 'true'
+      fulltextArr << getFulltext(from)
 
+    end
     fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
   }
-
-  meta.addFulltext = fulltextArr
+  if @fulltextexist == 'true'
+    meta.addFulltext = fulltextArr
+  end
   push_many("processFulltextURI", fulltextUriArr)
+
 
 end
 
@@ -675,8 +684,11 @@ def parsePath(path)
 
   meta.context = @context
 
-  meta.mods = mods.to_xml
-
+  begin
+    meta.mods = mods.to_xml
+  rescue Exception => e
+    @logger.debug "#{path}, #{e.message}"
+  end
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
 
