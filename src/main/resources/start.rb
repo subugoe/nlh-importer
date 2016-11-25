@@ -93,7 +93,7 @@ pdf_converter_options = {
     'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'pdf_converter_worker_pool',
-    'workerPoolSize'             => 1,
+    #  'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -103,7 +103,7 @@ pdf_copier_options = {
     'instances'                  => 4,
     'worker'                     => true,
     'workerPoolName'             => 'pdf_copier_worker_pool',
-    'workerPoolSize'             => 1,
+    #  'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -169,6 +169,7 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'pdfscopied'
 
 
+  @rredis.del 'pdfpath'
   @rredis.del 'copypdf'
   @rredis.del 'convertpdf'
   @rredis.del 'fixitychecker'
