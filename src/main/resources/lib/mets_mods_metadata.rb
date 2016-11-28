@@ -471,7 +471,7 @@ class MetsModsMetadata
     # }
 
 
-    if @iswork == "true"
+    if @iswork == true
       h.merge! ({:fulltext => @fulltexts})
 
       #h.merge! ({:presentation_url => @presentation_image_uris})
