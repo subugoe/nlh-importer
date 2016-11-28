@@ -59,15 +59,7 @@ image_processor_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-converter_options = {
-    'instances'                  => 4,
-    'worker'                     => true,
-    'workerPoolName'             => 'converter_worker_pool',
-    'workerPoolSize'             => 1,
-    'blockedThreadCheckInterval' => 15000,
-    'warningExceptionTime'       => 45000,
-    'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
-}
+
 
 mets_copier_options = {
     'instances'                  => 4,
@@ -182,7 +174,7 @@ if ENV['PREPARE'] == 'true'
 
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
+  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 
@@ -204,7 +196,7 @@ else
   #  end
 
   # f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
-  # g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
+  g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", pdf_converter_options)
 
 
 end
