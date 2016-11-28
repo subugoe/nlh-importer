@@ -357,10 +357,10 @@
 
         <!-- added for nlh -->
 
-        <field name="facet_creator_personal" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_person_personal" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_creator_corporate" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_person_corporate" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_creator_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_person_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_creator_corporate" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_person_corporate" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
 
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -368,7 +368,7 @@
         <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
         <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
 
-        <field name="facet_product" type="text_ci" indexed="true" stored="true"/>
+        <field name="facet_product" type="string_mv" indexed="true" stored="true"/>
 
         <field name="facet_subject_topic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_subject_geographic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
