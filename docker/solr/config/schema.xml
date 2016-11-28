@@ -492,6 +492,7 @@
     <copyField source="genre" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
+    <copyField source="nlh_id" dest="metadata"/>
     <copyField source="pid" dest="metadata"/>
     <copyField source="publisher_digitization" dest="metadata"/>
     <copyField source="place_digitization" dest="metadata"/>
