@@ -39,6 +39,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     String imageoutformat = System.getenv("IMAGE_OUT_FORMAT");
 
     int pdfdensity = Integer.valueOf(System.getenv("PDFDENSITY"));
+    int imagedensity = Integer.valueOf(System.getenv("IMAGEDENSITY"));
 
     String redis_host = System.getenv("REDIS_HOST");
     int redis_port = Integer.valueOf(System.getenv("REDIS_EXTERNAL_PORT"));
@@ -83,15 +84,19 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
 
                             JsonObject object = new JsonObject(json.getString(1));
 
-                            String from = object.getString("'from'");
+                            String from = object.getString("from");
                             String name = object.getString("name");
-                            String format = object.getString("'format'");
+                            //String format = object.getString("format");
+
+                            System.out.println(from + " " + name);
 
                             String to_images_dir = imageoutpath + "/" + product + "/" + name + "/";
                             String to_pdf_dir = pdfoutpath + "/" + product + "/" + name + "/";
 
-                            convertTo(new File(from), to_images_dir, imageoutformat);
-                            convertTo(new File(from), to_pdf_dir, "pdf");
+                            File file = new File(from);
+
+                            convertTo(file, name, to_images_dir, imageoutformat, imagedensity);
+                            convertTo(file, name, to_pdf_dir, "pdf", pdfdensity);
 
                         }
 
@@ -104,7 +109,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     }
 
 
-    public void convertTo(File from, String to_dir, String format) {
+    public void convertTo(File from, String name, String to_dir, String format, int density) {
 
         if (!fileExists(from)) {
             throw new RuntimeException("File not found ! (" + from.getAbsolutePath() + ")");
@@ -125,18 +130,18 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
             PDFRenderer renderer = new PDFRenderer(document);
 
             // go through each page of PDF, and generate TIF for each PDF page.
-            for (int i = 0; i < document.getNumberOfPages(); i++) {
+            for (int i = 1; i <= document.getNumberOfPages(); i++) {
                 // Returns the given page as an RGB image with 300 DPI.
-                BufferedImage image = renderer.renderImageWithDPI(i, pdfdensity, ImageType.RGB);
+                BufferedImage image = renderer.renderImageWithDPI(i, density, ImageType.RGB);
 
 
                 // Assign the file name of TIF
                 //String fileName = pdfFileName + "_" + String.format("%06d", i + 1);
-                fileName = String.format("%06d", i + 1);
+                fileName = String.format("%06d", i);
 
 
                 // Writes a buffered image to a file using the given image format.
-                boolean done = ImageIOUtil.writeImage(image, to_dir + "/" + fileName + "." + format, pdfdensity);
+                boolean done = ImageIOUtil.writeImage(image, to_dir + "/" + fileName + "." + format, density);
 
                 image.flush();
 
@@ -145,7 +150,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
             document.close();
 
 
-            log.info("PDF to TIF conversion well done for: " + fileName);
+            log.info("PDF conversion well done for: " + name);
         } catch (IOException e) {
             log.error("IOException with destination file: " + to_dir + "\n");
             e.printStackTrace();
