@@ -63,14 +63,16 @@ def convert(from, to, to_dir, isPDF)
   begin
     FileUtils.mkdir_p(to_dir)
 
+    @logger.debug "from: #{from} to: #{to}"
+
     MiniMagick::Tool::Convert.new do |convert|
-      convert << "-density" << "400" unless isPDF
-      convert << "-define" << "pdf:use-cropbox=true"
+
+      #convert << "-define" << "pdf:use-cropbox=true"
+      #convert << "-density" << "400" unless isPDF
+
       convert << "#{from}"
       convert << "#{to}"
     end
-
-    @logger.debug "from: #{from} to: #{to}"
 
     @rredis.incr 'pdfsconverted'
 
@@ -92,24 +94,27 @@ $vertx.execute_blocking(lambda { |future|
 
       begin
 
-        res = @rredis.brpop("convertpdf")
+        res = @rredis.brpop("convertpdftoimage") # or convertpdftopdf
 
         product = ENV['SHORT_PRODUCT']
 
 
         if (res != '' && res != nil)
 
-          json  = JSON.parse(res[1])
+          json = JSON.parse(res[1])
 
           from = json['from']
           name = json['name']
 
           convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
+          convert_to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
 
           to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
+          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/"
+
 
           convert(from, convert_to_image_dir, to_image_dir, false) # convert to images
-
+          convert(from, convert_to_pdf_dir, to_pdf_dir, true) # convert to images
 
           # file size, resolution, ...
 

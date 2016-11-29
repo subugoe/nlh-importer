@@ -7,13 +7,16 @@ services:
       context: ./docker/
       dockerfile: Dockerfile
     container_name: nlh_importer
-    restart: always
+    #restart: always
     volumes:
       - $INPATHORIG/:$ORIG:ro
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
       - ./log:$LOG
-    mem_limit: 3GB
+    #depends_on:
+    #  - solr
+    #  - redis
+    mem_limit: 8GB
     env_file:
       - .env
     environment:
@@ -55,7 +58,7 @@ services:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
       - ./storage/solr/:/opt/solr/nlh/data/
-    mem_limit: 3GB
+    mem_limit: 5GB
     user: $USER_UID
     env_file:
       - .env
@@ -71,6 +74,6 @@ services:
       - ./storage/redis/:/data/
       #- $STORAGE/redis/:/data/
     user: $USER_UID
-    mem_limit: 2GB
+    mem_limit: 3GB
     env_file:
       - .env

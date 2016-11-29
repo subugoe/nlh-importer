@@ -172,6 +172,11 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'metsindexer'
   @rredis.del 'metscopier'
 
+  @rredis.del 'convertpdftopdf'
+  @rredis.del 'convertpdftoimage'
+
+
+
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
   $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
