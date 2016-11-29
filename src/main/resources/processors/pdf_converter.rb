@@ -67,8 +67,8 @@ def convert(from, to, to_dir, isPDF)
 
     MiniMagick::Tool::Convert.new do |convert|
 
-      #convert << "-define" << "pdf:use-cropbox=true"
-      #convert << "-density" << "400" unless isPDF
+      convert << "-define" << "pdf:use-cropbox=true"
+      convert << "-density" << "100" unless isPDF
 
       convert << "#{from}"
       convert << "#{to}"
