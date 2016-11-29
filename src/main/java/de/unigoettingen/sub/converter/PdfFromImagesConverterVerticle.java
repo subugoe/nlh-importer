@@ -55,7 +55,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
                 new RedisOptions().setHost(redis_host).setPort(redis_port).setSelect(redis_db));
 
 
-        redis.llen("convertpdf", value -> {
+        redis.llen("convertpdftoimage", value -> {
                     if (value.succeeded()) {
 
                         long i = value.result();
@@ -75,7 +75,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
     public void foo(RedisClient redis) {
 
 
-        redis.brpop("convertpdf", 30, path -> {
+        redis.brpop("convertpdftoimage", 30, path -> {
                     if (path.succeeded()) {
 
                         JsonArray json = path.result();
@@ -96,7 +96,7 @@ public class PdfFromImagesConverterVerticle extends AbstractVerticle {
                             File file = new File(from);
 
                             convertTo(file, name, to_images_dir, imageoutformat, imagedensity);
-                            convertTo(file, name, to_pdf_dir, "pdf", pdfdensity);
+                            //convertTo(file, name, to_pdf_dir, "pdf", pdfdensity);
 
                         }
 
