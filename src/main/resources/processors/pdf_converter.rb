@@ -69,6 +69,7 @@ def convert(from, to, to_dir, isPDF)
 
       convert << "-define" << "pdf:use-cropbox=true"
       convert << "-density" << "100" unless isPDF
+      convert << "-scene" << "1"
 
       convert << "#{from}"
       convert << "#{to}"
