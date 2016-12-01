@@ -23,7 +23,7 @@ redis_config  = {
 @logger.debug "[tei_path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-inpath = ENV['IN'] + ENV['TMP_TEI_IN_SUB_PATH']
+inpath = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 
 
 
@@ -31,13 +31,14 @@ def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
-paths = Dir.glob("#{inpath}/*/*/*/*.tei.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+work_paths = Dir.glob("#{inpath}/*", File::FNM_CASEFOLD).select { |e| File.directory? e }
 
-arr = Array.new
-paths.each {|path|
-  arr << {"path" => path}.to_json
+work_paths.each {|wp|
+  arr = Array.new
+  paths = Dir.glob("#{wp}/*.tei.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+  paths.each {|path|
+    arr << {"path" => path}.to_json
+  }
+  pushToQueue(arr, 'teicopier')
 }
-
-pushToQueue(arr, 'teicopier')
-
 
