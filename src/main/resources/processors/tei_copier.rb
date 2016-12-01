@@ -27,7 +27,8 @@ redis_config  = {
 
 @logger.debug "[tei copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-outpath = ENV['OUT'] + ENV['TEI_IN_SUB_PATH']
+outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+product = ENV['SHORT_PRODUCT']
 
 
 def copyFile(from, to, to_dir)
@@ -65,8 +66,8 @@ $vertx.execute_blocking(lambda { |future|
           match1   = uri.match(/([\s\S]*)\/([\s\S]*)\/([\s\S]*.tei.xml)/)
 
           from = match1[0]
-          to     = "#{outpath}/#{match1[2]}/#{match1[3]}"
-          to_dir = "#{outpath}/#{match1[2]}"
+          to     = "#{outpath}/#{product}/#{match1[2]}/#{match1[3]}"
+          to_dir = "#{outpath}/#{product}/#{match1[2]}"
 
           copyFile(from, to, to_dir)
 
