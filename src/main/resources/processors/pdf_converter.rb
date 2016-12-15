@@ -58,7 +58,7 @@ def copyFile(from, to, to_dir)
 
 end
 
-def convert(from, to, to_dir, isPDF)
+def convert(from, to, to_dir, isPDF, toPDF)
 
   begin
     FileUtils.mkdir_p(to_dir)
@@ -69,7 +69,7 @@ def convert(from, to, to_dir, isPDF)
 
       convert << "-define" << "pdf:use-cropbox=true"
       convert << "-density" << "400" unless isPDF
-      convert << "-scene" << "1"
+      convert << "-scene" << "1" unless toPDF
 
       convert << "#{from}"
       convert << "#{to}"
@@ -109,13 +109,15 @@ $vertx.execute_blocking(lambda { |future|
 
           convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
           convert_to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
+          convert_to_pdf   = "#{@pdfoutpath}/#{product}/#{name}/#{name}.pdf"
 
           to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
           to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/"
 
 
-          convert(from, convert_to_image_dir, to_image_dir, false) # convert to images
-          convert(from, convert_to_pdf_dir, to_pdf_dir, true) # convert to images
+          convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
+          convert(from, convert_to_pdf_dir, to_pdf_dir, true, false) # convert to images
+          convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
 
           # file size, resolution, ...
 
