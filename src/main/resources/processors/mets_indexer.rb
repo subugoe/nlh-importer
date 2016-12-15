@@ -7,6 +7,7 @@ require 'logger'
 require 'nokogiri'
 require 'redis'
 require 'json'
+require 'set'
 require 'lib/mets_mods_metadata'
 require 'lib/title_info'
 require 'lib/origin_info'
@@ -19,7 +20,7 @@ require 'lib/physical_description'
 require 'lib/subject'
 require 'lib/note'
 require 'lib/right'
-require 'lib/volume'
+require 'lib/logical_element'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -44,7 +45,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 #@image_from_orig = ENV['GET_IMAGES_FROM_ORIG']
 @fulltext_from_orig = ENV['GET_FULLTEXT_FROM_ORIG']
 
-@fulltextexist = ENV['FULLTEXTS_EXIST']
+@fulltextexist     = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
@@ -574,42 +575,128 @@ def processFulltexts(meta, path)
 
 end
 
+def getLogicalPageRange(smLinks)
 
-def getVolumes(meta, logicalDivs)
-  volumeArr = Array.new
-  id_arr    = Array.new
+  logIdSet = Set.new
+  smLinks.each { |link|
+    logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+  }
+
+  hsh = Hash.new
+  logIdSet.each { |logid|
+
+    arr = smLinks.select { |link| link.xpath("@xlink:from='#{logid}'", 'xlink' => "http://www.w3.org/1999/xlink") }
+
+    physId = Array.new
+    arr.each { |link| physId << link.attr('xlink:to').match(/(\S*_)(\S*)/)[2].to_i }
+
+    physId.sort!
+    hsh[logid] = {"start" => physId.min, "end" => physId.max}
+  }
+
+  return hsh
+end
 
 
-  i = 0
-  logicalDivs.each { |div|
-    volume = Volume.new
+def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, layer)
+
+  logicalElement = LogicalElement.new
+
+  type                = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
+  logicalElement.type = checkEmptyString(type.value) if type != nil
+
+  dmdid                = div.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
+  logicalElement.dmdid = checkEmptyString(dmdid.value) if dmdid != nil
+
+  id                = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
+  logicalElement.id = checkEmptyString(id.value) if id != nil
+
+  admid                = div.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
+  logicalElement.admid = checkEmptyString(admid.value) if admid != nil
+
+  label                = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
+
+  logicalElement.label = checkEmptyString(label.value) if label != nil
 
 
-    volume.id    = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first.text
-    volume.type  = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first.text
-    volume.label = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first.text
+  if doctype == "collection"
 
     mptrs = div.xpath("mets:mptr[@LOCTYPE='URL']", 'mets' => 'http://www.loc.gov/METS/')
 
-    volume_uri   = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+    if !mptrs.empty?
 
-    # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
-    match        = volume_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-    product      = match[2]
-    vol          = match[3]
-    #prefix = match[2]
-    #format = match[2]
+      part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
 
-    meta.product = product if i == 0
+      # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
+      match    = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+      product  = match[2]
+      work     = match[3]
 
-    id_arr << "#{product}:#{vol}"
-    volumeArr << volume
 
-    i += 1
+      logicalElement.part_product = product
+      logicalElement.part_work    = work
+      #logicalElement.volume_uri = volume_uri
+      logicalElement.part_nlh_id  = "#{product}:#{work}"
+
+      #meta.product              = product if i == 0
+
+      #id_arr << "#{product}:#{vol}"
+      #logicalElementArr << logicalElement
+
+      #i += 1
+
+
+      #meta.addVolume = logicalElementArr
+      #meta.addNlh_id = id_arr
+
+    end
+
+  else
+
+
+    puts logicalElementStartStopMapping
+
+
+    unless logicalElementStartStopMapping[logicalElement.id] == nil
+
+      logicalElement.start_page = logicalElementStartStopMapping[logicalElement.id]["start"]
+      logicalElement.end_page   = logicalElementStartStopMapping[logicalElement.id]["end"]
+
+
+      puts logicalElement.start_page
+      puts logicalElement.end_page
+    end
+  end
+
+  logicalElement.layer = layer
+
+  puts "------"
+
+  return logicalElement
+
+end
+
+def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, layer)
+
+  # todo abschließen
+
+  #logicalElementArr = Array.new
+  #id_arr            = Array.new
+
+  #log = getAttributesFromLogicalDiv(logicalDivs.first, doctype)
+  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, layer)
+  #id_arr = log.addNlh_id
+
+
+  #i    = 0
+  divs = div.xpath("./mets:div", 'mets' => 'http://www.loc.gov/METS/')
+
+  divs.each { |div|
+
+    getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, layer+1)
+    #logicalElementArr << log
+    #id_arr = log.addNlh_id
   }
-
-  meta.addVolume = volumeArr
-  meta.addNlh_id = id_arr
 
 end
 
@@ -691,36 +778,6 @@ def parsePath(path)
   end
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
-
-
-  # structtype, logid, dmdid
-  begin
-
-    docpart = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
-
-    type          = docpart.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
-    meta.docstrct = type.value if type != nil
-
-    dmdid      = docpart.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
-    meta.dmdid = dmdid.value if dmdid != nil
-
-    id         = docpart.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
-    meta.logid = id.value if id != nil
-
-    admid      = docpart.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
-    meta.admid = admid.value if admid != nil
-
-    label = docpart.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
-    if (label != nil)
-      meta.bytitle = label.value
-    else
-      meta.bytitle = ''
-    end
-
-  rescue Exception => e
-    @logger.error("Problems to resolve attributes of logical structMap (@TYPE, @DMDID, @ID, @ADMID or @LABEL) #{path} (#{e.message})")
-    # todo
-  end
 
 
   # # todo physical type ???
@@ -903,23 +960,28 @@ def parsePath(path)
       end
     rescue Exception => e
       @logger.error("Problems to resolve full texts #{path} (#{e.message})")
-
     end
+
 
   else
 
+    meta.iswork   = false
+    meta.doctype  = "collection"
+    meta.isanchor = true
 
-    meta.iswork  = false
-    # todo collection or anchor?
-    meta.doctype = "collection"
-
-    logicalDivs = docpart.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
-
-    unless logicalDivs.empty?
-      getVolumes(meta, logicalDivs)
-    end
   end
 
+
+  # logical structure
+
+  logicalElementArr = Array.new
+
+  maindiv                        = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+  links                          = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
+  logicalElementStartStopMapping = getLogicalPageRange(links)
+
+  getLogicalElements(logicalElementArr, maindiv, links, logicalElementStartStopMapping, meta.doctype, 0)
+  meta.addLogicalElement = logicalElementArr
 
   return meta
 end

@@ -11,6 +11,7 @@ class MetsModsMetadata
 
                 :isnlh,
                 :iswork,
+                :isanchor,
                 :context,
                 :doctype,
 
@@ -27,7 +28,7 @@ class MetsModsMetadata
                 :nlh_ids,
                 :image_format,
 
-                :volumes,
+                #          :volumes,
 
                 :subjects,
                 :related_items,
@@ -47,6 +48,7 @@ class MetsModsMetadata
                 :presentation_image_uris,
                 :thumb_image_uris,
                 :fulltext_uris,
+                :logicalElements,
 
                 :fulltexts,
 
@@ -70,18 +72,19 @@ class MetsModsMetadata
     @physical_descriptions = Array.new
     @notes                 = Array.new
 
-    @volumes =Array.new
+    #@volumes =Array.new
 
-    @pages         = Array.new
-    @nlh_ids       = Array.new
-    @subjects      = Array.new
-    @related_items = Array.new
-    @record_infos  = Array.new
-    @right_infos   = Array.new
+    @pages                 = Array.new
+    @nlh_ids               = Array.new
+    @subjects              = Array.new
+    @related_items         = Array.new
+    @record_infos          = Array.new
+    @right_infos           = Array.new
 
     @presentation_image_uris = Array.new
     @thumb_image_uris        = Array.new
     @fulltext_uris           = Array.new
+    @logicaElements          = Array.new
 
     @fulltexts = Array.new
 
@@ -153,9 +156,9 @@ class MetsModsMetadata
     @nlh_ids += nlh_id
   end
 
-  def addVolume=(volume)
-    @volumes += volume
-  end
+  #def addVolume=(volume)
+  #  @volumes += volume
+  #end
 
   def addSubject=(subject)
     @subjects += subject
@@ -185,6 +188,12 @@ class MetsModsMetadata
     @fulltext_uris += fulltextUri
   end
 
+
+  def addLogicalElement=(logicalElement)
+    @logicaElements += logicalElement
+  end
+
+
   def addFulltext=(fulltext)
     @fulltexts += fulltext
   end
@@ -207,6 +216,7 @@ class MetsModsMetadata
     # todo remove is... fields
     h.merge! ({:isnlh => true})
     h.merge! ({:iswork => @iswork})
+    h.merge! ({:isanchor => @isanchor})
 
     h.merge! ({:context => @context})
     h.merge! ({:doctype => @doctype})
@@ -240,10 +250,10 @@ class MetsModsMetadata
     # --- :displayform, :type, :role, :namepart, :date
 
 
-    facet_creator_personal = Array.new
+    facet_creator_personal  = Array.new
     facet_creator_corporate = Array.new
 
-    facet_person_personal = Array.new
+    facet_person_personal  = Array.new
     facet_person_corporate = Array.new
 
     creator_displayform = Array.new
@@ -369,22 +379,50 @@ class MetsModsMetadata
     elsif @doctype == "collection"
       h.merge! ({:collection => @collection})
 
-      # add volume info
-      id    = Array.new
-      type  = Array.new
-      label = Array.new
+      # add logical info (e.g. volume info)
 
-      @volumes.each { |vol|
+      id          = Array.new
+      type        = Array.new
+      label       = Array.new
+      dmdid       = Array.new
+      admid       = Array.new
+      start_page  = Array.new
+      end_page    = Array.new
+      part_product = Array.new
+      part_work   = Array.new
+      part_nlh_id = Array.new
+      layer       = Array.new
 
-        id << vol.id
-        type << vol.type
-        label << vol.label
+      @logicaElements.each { |el|
+
+        id << el.id
+        type << el.type
+        label << el.label
+
+        dmdid  << el.dmdid
+        admid        << el.admid
+        start_page  << el.start_page
+        end_page     << el.end_page
+        part_product << el.part_product
+        part_work   << el.part_work
+        part_nlh_id  << el.part_nlh_id
+        layer        << el.layer
 
       }
 
-      h.merge! ({:volume_id => id})
-      h.merge! ({:volume_type => type})
-      h.merge! ({:volume_label => label})
+      h.merge! ({:log_id => id})
+      h.merge! ({:log_type => type})
+      h.merge! ({:log_label => label})
+
+      #h.merge! ({:log_dmdid => dmdid})
+      #h.merge! ({:log_admid => admid})
+      h.merge! ({:log_start_page => start_page.to_i})
+      h.merge! ({:log_end_page => end_page.to_i})
+      h.merge! ({:log_layer => layer})
+      h.merge! ({:log_part_product => part_product})
+      h.merge! ({:log_part_work => part_work})
+      h.merge! ({:log_part_nlh_id => part_nlh_id})
+
 
     end
     h.merge! ({:nlh_id => @nlh_ids})
