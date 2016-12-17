@@ -423,6 +423,7 @@ def getRelatedItem(modsRelatedItemElements)
   modsRelatedItemElements.each { |ri|
     relatedItem = RelatedItem.new
 
+    relatedItem.id                = checkEmptyString ri.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').text
     relatedItem.title             = checkEmptyString ri.xpath('mods:titleInfo[not(@type="abbreviated")]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
     relatedItem.title_abbreviated = checkEmptyString ri.xpath('mods:titleInfo[@type="abbreviated"]/mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
     relatedItem.title_partnumber  = checkEmptyString ri.xpath('mods:titleInfo/mods:partNumber', 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -598,7 +599,7 @@ def getLogicalPageRange(smLinks)
 end
 
 
-def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, layer)
+def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
   logicalElement = LogicalElement.new
 
@@ -653,30 +654,26 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, la
 
   else
 
-
-    puts logicalElementStartStopMapping
-
-
     unless logicalElementStartStopMapping[logicalElement.id] == nil
 
-      logicalElement.start_page = logicalElementStartStopMapping[logicalElement.id]["start"]
-      logicalElement.end_page   = logicalElementStartStopMapping[logicalElement.id]["end"]
-
-
-      puts logicalElement.start_page
-      puts logicalElement.end_page
+      logicalElement.start_page = logicalElementStartStopMapping[logicalElement.id]["start"].to_i
+      logicalElement.end_page   = logicalElementStartStopMapping[logicalElement.id]["end"].to_i
+    else
+      logicalElement.start_page = -1
+      logicalElement.end_page   = -1
     end
   end
 
-  logicalElement.layer = layer
+  logicalElement.level = level
 
-  puts "------"
 
   return logicalElement
 
 end
 
-def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, layer)
+def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, level)
+
+
 
   # todo abschließen
 
@@ -684,21 +681,24 @@ def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMap
   #id_arr            = Array.new
 
   #log = getAttributesFromLogicalDiv(logicalDivs.first, doctype)
-  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, layer)
+  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
   #id_arr = log.addNlh_id
 
-
   #i    = 0
-  divs = div.xpath("./mets:div", 'mets' => 'http://www.loc.gov/METS/')
+  #   maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
 
-  divs.each { |div|
+  divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
-    getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, layer+1)
+
+  divs.each { |innerdiv|
+
+    getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
     #logicalElementArr << log
     #id_arr = log.addNlh_id
   }
 
 end
+
 
 
 def metsRigthsMDElements(metsRightsMDElements)
@@ -981,6 +981,8 @@ def parsePath(path)
   logicalElementStartStopMapping = getLogicalPageRange(links)
 
   getLogicalElements(logicalElementArr, maindiv, links, logicalElementStartStopMapping, meta.doctype, 0)
+
+
   meta.addLogicalElement = logicalElementArr
 
   return meta

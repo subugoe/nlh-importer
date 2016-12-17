@@ -2,6 +2,7 @@ class MetsModsMetadata
 
   attr_accessor :identifiers,
                 :record_identifiers,
+                :idparentdoc,
                 :title_infos,
                 #:personalNames,
                 #:corporateNames,
@@ -225,6 +226,7 @@ class MetsModsMetadata
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
+
     title     = Array.new
     subtitle  = Array.new
     sorttitle = Array.new
@@ -378,53 +380,54 @@ class MetsModsMetadata
       h.merge! ({:page => @pages})
     elsif @doctype == "collection"
       h.merge! ({:collection => @collection})
-
-      # add logical info (e.g. volume info)
-
-      id          = Array.new
-      type        = Array.new
-      label       = Array.new
-      dmdid       = Array.new
-      admid       = Array.new
-      start_page  = Array.new
-      end_page    = Array.new
-      part_product = Array.new
-      part_work   = Array.new
-      part_nlh_id = Array.new
-      layer       = Array.new
-
-      @logicaElements.each { |el|
-
-        id << el.id
-        type << el.type
-        label << el.label
-
-        dmdid  << el.dmdid
-        admid        << el.admid
-        start_page  << el.start_page
-        end_page     << el.end_page
-        part_product << el.part_product
-        part_work   << el.part_work
-        part_nlh_id  << el.part_nlh_id
-        layer        << el.layer
-
-      }
-
-      h.merge! ({:log_id => id})
-      h.merge! ({:log_type => type})
-      h.merge! ({:log_label => label})
-
-      #h.merge! ({:log_dmdid => dmdid})
-      #h.merge! ({:log_admid => admid})
-      h.merge! ({:log_start_page => start_page.to_i})
-      h.merge! ({:log_end_page => end_page.to_i})
-      h.merge! ({:log_layer => layer})
-      h.merge! ({:log_part_product => part_product})
-      h.merge! ({:log_part_work => part_work})
-      h.merge! ({:log_part_nlh_id => part_nlh_id})
-
-
     end
+
+    # add logical info (e.g. volume info)
+
+    id          = Array.new
+    type        = Array.new
+    label       = Array.new
+    dmdid       = Array.new
+    admid       = Array.new
+    start_page  = Array.new
+    end_page    = Array.new
+    part_product = Array.new
+    part_work   = Array.new
+    part_nlh_id = Array.new
+    level       = Array.new
+
+    @logicaElements.each { |el|
+
+      id << el.id
+      type << el.type
+      label << el.label
+
+      dmdid  << el.dmdid
+      admid        << el.admid
+      start_page  << el.start_page
+      end_page     << el.end_page
+      part_product << el.part_product
+      part_work   << el.part_work
+      part_nlh_id  << el.part_nlh_id
+      level        << el.level
+
+    }
+
+    h.merge! ({:log_id => id})
+    h.merge! ({:log_type => type})
+    h.merge! ({:log_label => label})
+
+    #h.merge! ({:log_dmdid => dmdid})
+    #h.merge! ({:log_admid => admid})
+
+    h.merge! ({:log_start_page => start_page})
+    h.merge! ({:log_end_page => end_page})
+    h.merge! ({:log_level => level})
+    h.merge! ({:log_part_product => part_product})
+    h.merge! ({:log_part_work => part_work})
+    h.merge! ({:log_part_nlh_id => part_nlh_id})
+
+
     h.merge! ({:nlh_id => @nlh_ids})
 
 
@@ -497,6 +500,8 @@ class MetsModsMetadata
     h.merge! ({:rights_reference => @right_infos.collect { |rights| rights.reference }})
 
 
+
+    h.merge! ({:parentdoc_id => @related_items.collect { |rel_item| rel_item.id }})
     h.merge! ({:parentdoc_title => @related_items.collect { |rel_item| rel_item.title }})
     h.merge! ({:parentdoc_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
     h.merge! ({:parentdoc_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
