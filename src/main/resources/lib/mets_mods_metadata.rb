@@ -348,25 +348,30 @@ class MetsModsMetadata
     h.merge! ({:facet_publisher_digitization => publisherFacet})
 
     # originInfo: original
-    place          = Array.new
-    placeFacet     = Array.new
-    date_issued    = Array.new
-    publisher      = Array.new
-    publisherFacet = Array.new
+    place             = Array.new
+    placeFacet        = Array.new
+    date_issued_start = Array.new
+    date_issued_end   = Array.new
+    publisher         = Array.new
+    publisherFacet    = Array.new
 
 
     @original_infos.each { |oi|
 
       place << oi.place
       placeFacet << oi.placeFacet
-      date_issued << oi.date_issued
+      date_issued_start << oi.date_issued_start
+      date_issued_end << oi.date_issued_end
       publisher << oi.publisher
       publisherFacet << oi.publisherFacet
     }
 
     h.merge! ({:place_publish => place})
     h.merge! ({:facet_place_publish => placeFacet})
-    h.merge! ({:year_publish => date_issued})
+    # todo the FE needs to use year_publish_start, instead of year_publish, when changed remove year_publish
+    h.merge! ({:year_publish => date_issued_start})
+    h.merge! ({:year_publish_start => date_issued_start})
+    h.merge! ({:year_publish_end => date_issued_end})
     h.merge! ({:publisher => publisher})
     h.merge! ({:facet_publisher => publisherFacet})
 
@@ -498,7 +503,6 @@ class MetsModsMetadata
     h.merge! ({:rights_owner_contact => @right_infos.collect { |rights| rights.ownerContact }})
     h.merge! ({:rights_license => @right_infos.collect { |rights| rights.license }})
     h.merge! ({:rights_reference => @right_infos.collect { |rights| rights.reference }})
-
 
 
     h.merge! ({:parentdoc_id => @related_items.collect { |rel_item| rel_item.id }})

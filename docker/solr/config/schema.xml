@@ -370,6 +370,8 @@
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="year_publish" type="tint" indexed="true" stored="true"/>
+        <field name="year_publish_start" type="tint" indexed="true" stored="true"/>
+        <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
 
         <!-- added for nlh -->
 
@@ -503,6 +505,7 @@
     <copyField source="publisher" dest="metadata"/>
     <copyField source="place_publish" dest="metadata"/>
     <copyField source="year_publish" dest="metadata"/>
+    <copyField source="year_publish_start" dest="metadata"/>
     <copyField source="creator" dest="metadata"/>
     <copyField source="person" dest="metadata"/>
     <copyField source="genre" dest="metadata"/>
