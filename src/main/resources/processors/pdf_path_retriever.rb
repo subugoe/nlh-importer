@@ -22,27 +22,46 @@ redis_config = {
 @logger.debug "[pdf_path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-inpath = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
-
+pdf_inpath    = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
+mets_inpath   = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
 def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
-paths = Dir.glob("#{inpath}/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+if from_full_pdf == "true"
+  paths = Dir.glob("#{pdf_inpath}/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
 
-arr = Array.new
-paths.each { |path|
+  arr = Array.new
+  paths.each { |path|
 
-  match = path.match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+    match = path.match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
 
-  from   = match[0]
-  name   = match[2].gsub(' ', '').downcase
-  format = match[3].downcase
+    from   = match[0]
+    name   = match[2].gsub(' ', '').downcase
+    format = match[3].downcase
 
 
-  arr << {"from" => from, "name" => name, "format" => format}.to_json
-}
+    arr << {"from" => from, "name" => name, "format" => format}.to_json
+  }
+else
+  paths = Dir.glob("#{pdf_inpath}/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+
+  arr = Array.new
+  paths.each { |path|
+
+    match = path.match(/([\S\W]*)\/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+
+    from   = match[0]
+    work   = match[2].gsub(' ', '').upcase
+    page   = match[3].gsub(' ', '').downcase
+    format = match[4].downcase
+
+
+    arr << {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
+  }
+end
 
 
 pushToQueue(arr, 'copypdf')

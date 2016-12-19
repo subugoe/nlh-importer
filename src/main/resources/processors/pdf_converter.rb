@@ -26,11 +26,12 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-@inpath       = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
-@imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
-@originpath   = ENV['ORIG']
-@pdfdensity   = ENV['PDFDENSITY']
+@inpath        = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
+@imageoutpath  = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@pdfoutpath    = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+@originpath    = ENV['ORIG']
+@pdfdensity    = ENV['PDFDENSITY']
+@from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
 #----------------
 
@@ -84,6 +85,15 @@ def convert(from, to, to_dir, isPDF, toPDF)
 
 end
 
+def mergePDFs(to_pdf_dir, work)
+  FileUtils.rm(to_dir + work + ".pdf", :force => true)
+
+  MiniMagick::Tool::Convert.new do |convert|
+    convert << "#{from}/*.pdf"
+    convert << "#{to}"
+  end
+  
+end
 
 $vertx.execute_blocking(lambda { |future|
 
@@ -104,24 +114,43 @@ $vertx.execute_blocking(lambda { |future|
 
           json = JSON.parse(res[1])
 
-          from = json['from']
-          name = json['name']
+          if from_full_pdf == "true"
+            from = json['from']
+            name = json['name']
 
-          convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
-          convert_to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
-          convert_to_pdf   = "#{@pdfoutpath}/#{product}/#{name}/#{name}.pdf"
+            convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
+            convert_to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
+            convert_to_pdf       = "#{@pdfoutpath}/#{product}/#{name}/#{name}.pdf"
 
-          to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
-          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/"
+            to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
+            to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/"
 
 
-          convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
-          convert(from, convert_to_pdf_dir, to_pdf_dir, true, false) # convert to images
-          convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
+            convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
+            convert(from, convert_to_pdf_dir, to_pdf_dir, true, false) # convert to images
+            convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
 
-          # file size, resolution, ...
+            # file size, resolution, ...
 
-          seconds = seconds / 2 if seconds > 20
+            seconds = seconds / 2 if seconds > 20
+
+          else
+            # {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
+            from   = json['from']
+            work   = json['work']
+            page   = json['page']
+            format = json['format']
+
+
+            convert_to_pdf       = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
+            convert_to_image_dir = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
+
+            convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
+            convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
+            mergePDFs(to_pdf_dir, work)
+
+          end
+
 
         else
           @logger.error "Get empty string or nil from redis"
