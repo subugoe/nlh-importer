@@ -263,8 +263,8 @@ def getOriginInfo(modsOriginInfoElements)
       # The date on which the resource was digitized or a subsequent snapshot was taken.
       # multi_ dateCaptured[encoding, point, keyDate]/value
       # just the start
-      captured_start_date            = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
-      captured_end_date              = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      captured_start_date = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      captured_end_date   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       originInfo.date_captured_start = captured_start_date.to_i
 
@@ -618,19 +618,39 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
   logicalElement = LogicalElement.new
 
   type                = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
-  logicalElement.type = checkEmptyString(type.value) if type != nil
+  if type != nil
+    logicalElement.type = checkEmptyString(type.value)
+  else
+    logicalElement.type = ' '
+  end
 
   dmdid                = div.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
-  logicalElement.dmdid = checkEmptyString(dmdid.value) if dmdid != nil
+  if dmdid != nil
+    logicalElement.dmdid = checkEmptyString(dmdid.value)
+  else
+    logicalElement.dmdid = ' '
+  end
 
   id                = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
-  logicalElement.id = checkEmptyString(id.value) if id != nil
+  if id != nil
+    logicalElement.id = checkEmptyString(id.value)
+  else
+    logicalElement.id = ' '
+  end
 
   admid                = div.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
-  logicalElement.admid = checkEmptyString(admid.value) if admid != nil
+  if admid != nil
+    logicalElement.admid = checkEmptyString(admid.value)
+  else
+    logicalElement.admid = ' '
+  end
 
-  label                = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
-  logicalElement.label = checkEmptyString(label.value) if label != nil
+  label = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
+  if label != nil
+    logicalElement.label = checkEmptyString(label.value)
+  else
+    logicalElement.label = ' '
+  end
 
 
   if doctype == "collection"
