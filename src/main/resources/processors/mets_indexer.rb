@@ -263,20 +263,32 @@ def getOriginInfo(modsOriginInfoElements)
       # The date on which the resource was digitized or a subsequent snapshot was taken.
       # multi_ dateCaptured[encoding, point, keyDate]/value
       # just the start
-      captured_start_date                     = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
-      captured_end_date                       = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      captured_start_date            = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      captured_end_date              = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+
       originInfo.date_captured_start = captured_start_date.to_i
-      originInfo.date_captured_end   = captured_end_date.to_i
+
+      unless issued_end_date == ''
+        originInfo.date_captured_end = captured_end_date.to_i
+      else
+        originInfo.date_captured_end = captured_start_date.to_i
+      end
 
       # todo check if date is convertable to int
 
     else
       # The date that the resource was published, released or issued.
       # multi:  dateIssued[encoding, point, keyDate]/value
-      issued_start_date             = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
-      issued_end_date               = oi.xpath("mods:dateIssued[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      issued_start_date = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      issued_end_date   = oi.xpath("mods:dateIssued[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
+
       originInfo.date_issued_start = issued_start_date.to_i
-      originInfo.date_issued_end = issued_end_date.to_i
+
+      unless issued_end_date == ''
+        originInfo.date_issued_end = issued_end_date.to_i
+      else
+        originInfo.date_issued_end = issued_start_date.to_i
+      end
 
       # todo check if date is convertable to int
 
