@@ -389,17 +389,17 @@ class MetsModsMetadata
 
     # add logical info (e.g. volume info)
 
-    id          = Array.new
-    type        = Array.new
-    label       = Array.new
-    dmdid       = Array.new
-    admid       = Array.new
-    start_page  = Array.new
-    end_page    = Array.new
+    id           = Array.new
+    type         = Array.new
+    label        = Array.new
+    dmdid        = Array.new
+    admid        = Array.new
+    start_page   = Array.new
+    end_page     = Array.new
     part_product = Array.new
-    part_work   = Array.new
-    part_nlh_id = Array.new
-    level       = Array.new
+    part_work    = Array.new
+    part_nlh_id  = Array.new
+    level        = Array.new
 
     @logicaElements.each { |el|
 
@@ -407,14 +407,14 @@ class MetsModsMetadata
       type << el.type
       label << el.label
 
-      dmdid  << el.dmdid
-      admid        << el.admid
-      start_page  << el.start_page
-      end_page     << el.end_page
+      dmdid << el.dmdid
+      admid << el.admid
+      start_page << el.start_page
+      end_page << el.end_page
       part_product << el.part_product
-      part_work   << el.part_work
-      part_nlh_id  << el.part_nlh_id
-      level        << el.level
+      part_work << el.part_work
+      part_nlh_id << el.part_nlh_id
+      level << el.level
 
     }
 
