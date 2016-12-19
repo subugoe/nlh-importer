@@ -778,6 +778,7 @@ def parsePath(path)
   meta.addIdentifiers      = getIdentifiers(mods, path)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
 
+  meta.product = ENV['SHORT_PRODUCT']
 
   # # todo physical type ???
   # begin
