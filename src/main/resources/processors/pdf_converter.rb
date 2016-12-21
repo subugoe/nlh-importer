@@ -59,18 +59,19 @@ def copyFile(from, to, to_dir)
 
 end
 
-def convert(from, to, to_dir, isPDF, toPDF)
+def convert(from, to, to_dir, toPDF, toFullPDF, removeBefore)
 
   begin
     FileUtils.mkdir_p(to_dir)
+    FileUtils.rm(to, :force => true) if removeBefore == true
 
     @logger.debug "from: #{from} to: #{to}"
 
     MiniMagick::Tool::Convert.new do |convert|
 
       convert << "-define" << "pdf:use-cropbox=true"
-      convert << "-density" << "400" unless isPDF
-      convert << "-scene" << "1" unless toPDF
+      convert << "-density" << "400" unless toPDF
+      convert << "-scene" << "1" unless toFullPDF
 
       convert << "#{from}"
       convert << "#{to}"
@@ -85,14 +86,24 @@ def convert(from, to, to_dir, isPDF, toPDF)
 
 end
 
-def mergePDFs(to_pdf_dir, work)
-  FileUtils.rm(to_dir + work + ".pdf", :force => true)
 
-  MiniMagick::Tool::Convert.new do |convert|
-    convert << "#{from}/*.pdf"
-    convert << "#{to}"
+def mogrifyPDFs(from, to_dir, format)
+
+  @logger.debug "from: #{from} to: #{to_dir}"
+
+  begin
+    FileUtils.mkdir_p(to_dir)
+
+    MiniMagick::Tool::Mogrify.new do |mogrify|
+      mogrify << "-format" << format
+      mogrify << "-path" << to_dir
+      mogrify << "#{from}"
+    end
+
+  rescue Exception => e
+    @file_logger.error "Could not convert PDFs: '#{from}' to: '#{to_dir}'\n\t#{e.message}"
   end
-  
+
 end
 
 $vertx.execute_blocking(lambda { |future|
@@ -114,21 +125,21 @@ $vertx.execute_blocking(lambda { |future|
 
           json = JSON.parse(res[1])
 
-          if from_full_pdf == "true"
+          if @from_full_pdf == "true"
             from = json['from']
             name = json['name']
 
-            convert_to_image_dir = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
-            convert_to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
-            convert_to_pdf       = "#{@pdfoutpath}/#{product}/#{name}/#{name}.pdf"
+            to_page_images = "#{@imageoutpath}/#{product}/#{name}/%06d.#{@image_out_format}"
+            to_page_pdfs   = "#{@pdfoutpath}/#{product}/#{name}/%06d.pdf"
+            to_full_pdfs   = "#{@pdfoutpath}/#{product}/#{name}/#{name}.pdf"
 
             to_image_dir = "#{@imageoutpath}/#{product}/#{name}/"
             to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{name}/"
 
 
-            convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
-            convert(from, convert_to_pdf_dir, to_pdf_dir, true, false) # convert to images
-            convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
+            convert(from, to_page_images, to_image_dir, false, false, false) # convert to images
+            convert(from, to_page_pdfs, to_pdf_dir, true, false, false) # convert to images
+            convert(from, to_full_pdfs, to_pdf_dir, true, true, false) # copy pdf
 
             # file size, resolution, ...
 
@@ -136,21 +147,24 @@ $vertx.execute_blocking(lambda { |future|
 
           else
             # {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
-            from   = json['from']
-            work   = json['work']
-            page   = json['page']
-            format = json['format']
+            from         = json['from']
+            work         = json['work']
+            #page         = json['page']
+            #format       = json['format']
 
 
-            convert_to_pdf       = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
-            convert_to_image_dir = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
+            #to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
+            #to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
 
-            convert(from, convert_to_image_dir, to_image_dir, false, false) # convert to images
-            convert(from, convert_to_pdf, to_pdf_dir, true, true) # copy pdf
-            mergePDFs(to_pdf_dir, work)
+            to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
+            to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
+
+
+            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) unless @image_out_format == 'pdf' # convert page pdfs to page images
+            mogrifyPDFs("#{from}/*.pdf", "#{to_pdf_dir}", 'pdf') unless @image_out_format == 'pdf' # copy page pdfs to page pdfs
+            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true, true) # convert page pdfs to full pdf
 
           end
-
 
         else
           @logger.error "Get empty string or nil from redis"
@@ -164,6 +178,7 @@ $vertx.execute_blocking(lambda { |future|
       end
 
     end
+
   end
   # future.complete(doc.to_s)
 

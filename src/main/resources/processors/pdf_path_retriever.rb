@@ -39,27 +39,29 @@ if from_full_pdf == "true"
     match = path.match(/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
 
     from   = match[0]
-    name   = match[2].gsub(' ', '').downcase
+    name   = match[2].gsub(' ', '')
     format = match[3].downcase
 
 
     arr << {"from" => from, "name" => name, "format" => format}.to_json
   }
 else
-  paths = Dir.glob("#{pdf_inpath}/*.pdf", File::FNM_CASEFOLD).select { |e| !File.directory? e }
+  paths = Dir.glob("#{pdf_inpath}/*", File::FNM_CASEFOLD).select { |e| File.directory? e }
 
   arr = Array.new
   paths.each { |path|
 
-    match = path.match(/([\S\W]*)\/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+    #match = path.match(/([\S\W]*)\/([\S\W]*)\/([\S\W]*).(pdf|PDF)/)
+    match = path.match(/([\S\W]*)\/([\S\W]*)/)
 
-    from   = match[0]
-    work   = match[2].gsub(' ', '').upcase
-    page   = match[3].gsub(' ', '').downcase
-    format = match[4].downcase
+    from = "#{match[1]}/#{match[2]}"
+    work = match[2].gsub(' ', '')
+    #page   = match[3].gsub(' ', '')
+    #format = match[4]
 
 
-    arr << {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
+    #arr << {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
+    arr << {"from" => from, "work" => work}.to_json
   }
 end
 
