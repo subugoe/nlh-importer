@@ -394,8 +394,8 @@ class MetsModsMetadata
     label        = Array.new
     dmdid        = Array.new
     admid        = Array.new
-    start_page   = Array.new
-    end_page     = Array.new
+    start_page_index   = Array.new
+    end_page_index     = Array.new
     part_product = Array.new
     part_work    = Array.new
     part_nlh_id  = Array.new
@@ -409,8 +409,8 @@ class MetsModsMetadata
 
       dmdid << el.dmdid
       admid << el.admid
-      start_page << el.start_page
-      end_page << el.end_page
+      start_page_index << el.start_page_index
+      end_page_index << el.end_page_index
       part_product << el.part_product
       part_work << el.part_work
       part_nlh_id << el.part_nlh_id
@@ -425,8 +425,8 @@ class MetsModsMetadata
     #h.merge! ({:log_dmdid => dmdid})
     #h.merge! ({:log_admid => admid})
 
-    h.merge! ({:log_start_page => start_page})
-    h.merge! ({:log_end_page => end_page})
+    h.merge! ({:log_start_page_index => start_page_index})
+    h.merge! ({:log_end_page_index => end_page_index})
     h.merge! ({:log_level => level})
     h.merge! ({:log_part_product => part_product})
     h.merge! ({:log_part_work => part_work})

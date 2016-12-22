@@ -689,11 +689,11 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     unless logicalElementStartStopMapping[logicalElement.id] == nil
 
-      logicalElement.start_page = logicalElementStartStopMapping[logicalElement.id]["start"].to_i
-      logicalElement.end_page   = logicalElementStartStopMapping[logicalElement.id]["end"].to_i
+      logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"].to_i
+      logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"].to_i
     else
-      logicalElement.start_page = -1
-      logicalElement.end_page   = -1
+      logicalElement.start_page_index = -1
+      logicalElement.end_page_index   = -1
     end
   end
 
