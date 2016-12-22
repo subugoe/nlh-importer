@@ -64,7 +64,8 @@ services:
       - .env
 
   redis:
-    build: docker/redis/
+    #build: docker/redis/
+    image: redis:alpine
     command: redis-server --appendonly yes
     container_name: nlh-redis
     restart: always
