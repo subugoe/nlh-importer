@@ -130,7 +130,7 @@ $vertx.execute_blocking(lambda { |future|
             from = json['from']
             work = json['work']
 
-            response   = solr.get 'select', :params => {:q => "work:#{work}"}
+            response   = @solr.get 'select', :params => {:q => "work:#{work}"}
             first_page = response['response']['docs'].first['page'].first
             start      = first_page.to_i
 
