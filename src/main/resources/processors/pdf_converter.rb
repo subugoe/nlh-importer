@@ -59,7 +59,7 @@ def copyFile(from, to, to_dir)
 
 end
 
-def convert(from, to, to_dir, start, toPDF, toFullPDF, removeBefore)
+def convert(from, to, to_dir, toPDF, removeBefore)
 
   begin
     FileUtils.mkdir_p(to_dir)
@@ -70,8 +70,12 @@ def convert(from, to, to_dir, start, toPDF, toFullPDF, removeBefore)
     MiniMagick::Tool::Convert.new do |convert|
 
       convert << "-define" << "pdf:use-cropbox=true"
-      convert << "-density" << "400" unless toPDF
-      convert << "-scene" << start.to_s unless toFullPDF
+      unless toPDF
+        convert << "-density" << "400"
+      else
+        convert << "-density" << "100"
+      end
+      #convert << "-scene" << start.to_s unless toFullPDF
 
       convert << "#{from}"
       convert << "#{to}"
@@ -130,22 +134,27 @@ $vertx.execute_blocking(lambda { |future|
             from = json['from']
             work = json['work']
 
-            response   = @solr.get 'select', :params => {:q => "work:#{work}"}
-            first_page = response['response']['docs'].first['page'].first
-            start      = first_page.to_i
+            solr_work     = @solr.get 'select', :params => {:q => "work:#{work}"}
+            first_page    = solr_work['response']['docs'].first['page'].first
+            # start      = first_page.to_i
 
-
-            to_page_images = "#{@imageoutpath}/#{product}/#{work}/%0#{start.length}d.#{@image_out_format}"
-            to_page_pdfs   = "#{@pdfoutpath}/#{product}/#{work}/%0#{start.length}d.pdf"
-            to_full_pdfs   = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
+            solr_page_arr = @solr_work['response']['docs'].first['page']
 
             to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
             to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
 
+            to_full_pdf    = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
 
-            convert(from, to_page_images, to_image_dir, start, false, false, false) # convert to images
-            convert(from, to_page_pdfs, to_pdf_dir, start, true, false, false) # convert to images
-            convert(from, to_full_pdfs, to_pdf_dir, start, true, true, false) # copy pdf
+            solr_page_arr.each_index { |index|
+
+              to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.#{@image_out_format}"
+              to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
+
+              convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) # convert to images
+              convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) # convert to page pdfs
+            }
+            copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
+
 
             # file size, resolution, ...
 
@@ -168,7 +177,7 @@ $vertx.execute_blocking(lambda { |future|
 
             mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) unless @image_out_format == 'pdf' # convert page pdfs to page images
             mogrifyPDFs("#{from}/*.pdf", "#{to_pdf_dir}", 'pdf') unless @image_out_format == 'pdf' # copy page pdfs to page pdfs
-            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, start, true, true, true) # convert page pdfs to full pdf
+            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
 
           end
 
