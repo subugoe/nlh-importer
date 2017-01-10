@@ -10,7 +10,7 @@ require 'fileutils'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_copier.log")
 @file_logger.level = Logger::DEBUG
 
 redis_config = {

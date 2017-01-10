@@ -48,7 +48,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @fulltextexist     = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_indexer.log")
 @file_logger.level = Logger::DEBUG
 
 
