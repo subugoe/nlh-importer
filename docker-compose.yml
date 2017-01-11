@@ -16,7 +16,7 @@ services:
     #depends_on:
     #  - solr
     #  - redis
-    mem_limit: 12GB
+    mem_limit: 11GB
     env_file:
       - .env
     environment:
@@ -58,7 +58,7 @@ services:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
       - ./storage/solr/:/opt/solr/nlh/data/
-    mem_limit: 2GB
+    mem_limit: 3GB
     user: $USER_UID
     env_file:
       - .env
@@ -78,3 +78,5 @@ services:
     mem_limit: 2GB
     env_file:
       - .env
+    environment:
+      - JAVA_OPTS=-Xms256M -Xmx1G
