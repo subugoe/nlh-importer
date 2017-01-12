@@ -39,8 +39,8 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 10,
-    'worker'                     => true,
+    'instances'                  => 6,
+    'worker'                     => false,
     #'workerPoolName'             => 'index_worker_pool',
     #'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
