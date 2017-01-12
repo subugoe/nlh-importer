@@ -16,7 +16,7 @@ services:
     #depends_on:
     #  - solr
     #  - redis
-    mem_limit: 11GB
+    mem_limit: 8GB
     env_file:
       - .env
     environment:
@@ -28,7 +28,9 @@ services:
       - SOLR_ADR=${SOLR_ADR}
       - SOLR_HOST=${SOLR_HOST}
       - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
-
+      - JAVA_OPTS=-Xms512M -Xmx1G
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx1G
+      - JVM_ARGS=-Xms512M -Xmx1G
 
   # https://hub.docker.com/_/elasticsearch/
 #  elasticsearch:
@@ -58,10 +60,13 @@ services:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
       - ./storage/solr/:/opt/solr/nlh/data/
-    mem_limit: 3GB
+    mem_limit: 7GB
     user: $USER_UID
     env_file:
       - .env
+    environment:
+      - JAVA_OPTS=-Xms512M -Xmx6G
+      - SOLR_JAVA_MEM=-Xms512M -Xmx6G
 
   redis:
     #build: docker/redis/
@@ -75,7 +80,7 @@ services:
       - ./storage/redis/:/data/
       #- $STORAGE/redis/:/data/
 #    user: $USER_UID
-    mem_limit: 2GB
+    mem_limit: 1GB
     env_file:
       - .env
     environment:

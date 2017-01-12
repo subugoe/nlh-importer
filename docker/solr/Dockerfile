@@ -36,7 +36,7 @@ RUN sed -i -e 's/#SOLR_PORT=8983/SOLR_PORT=8983/' /opt/solr/bin/solr.in.sh
 RUN sed -i -e '/-Dsolr.clustering.enabled=true/ a SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=60"' /opt/solr/bin/solr.in.sh
 
 #ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M"
-ENV JAVA_OPTS "-Xms512m -Xmx3g -XX:MaxPermSize=1g"
+#ENV JAVA_OPTS "-Xms512m -Xmx3g -XX:MaxPermSize=1g"
 
 #RUN cp /opt/solr/bin/solr.in.sh /opt/solr/bin/solr.in.sh.orig
 #RUN sed -e 's/SOLR_HEAP=".*"/SOLR_HEAP="2048m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh

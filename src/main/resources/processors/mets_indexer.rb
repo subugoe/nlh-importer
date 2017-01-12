@@ -75,7 +75,7 @@ def addDocsToSolr(document)
 
   attempts = 0
   begin
-    @solr.add [document]
+    @solr.add [document] # , :add_attributes => {:commitWithin => 10}
     @solr.commit
 
     @rredis.incr 'indexed'
