@@ -184,6 +184,8 @@ if ENV['PREPARE'] == 'true'
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 #  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/check_existence_in_index.rb", retriever_options)
 
 else
 
