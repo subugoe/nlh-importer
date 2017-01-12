@@ -10,7 +10,7 @@ require 'fileutils'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_copier.log")
 @file_logger.level = Logger::DEBUG
 
 redis_config = {
@@ -72,15 +72,13 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  seconds = 20
-
-  catch (:stop) do
 
     while true do
 
-      begin
-
         res = @rredis.brpop("metscopier")
+
+attempts = 0
+begin
 
         if (res != '' && res != nil)
           json = JSON.parse res[1]
@@ -100,23 +98,22 @@ $vertx.execute_blocking(lambda { |future|
           to     = "#{@outpath}/#{product}/#{work}.#{prefix}.#{format}"
           to_dir = "#{@outpath}/#{product}"
 
+@logger.debug "Copying METS file for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
           copyFile(from, to, to_dir)
-
-
-          seconds = seconds / 2 if seconds > 20
+@logger.debug "\tFinish copying METS file for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
         else
           @logger.error "Get empty string or nil from redis"
-          sleep seconds
-          seconds = seconds * 2 if seconds < 300
         end
 
       rescue Exception => e
-        @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
-        throw :stop
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error("Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})")
+        @file_logger.error("Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}")
       end
     end
-  end
 
   # future.complete(doc.to_s)
 

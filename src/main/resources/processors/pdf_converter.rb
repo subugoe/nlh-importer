@@ -17,7 +17,7 @@ require 'mini_magick'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_pdf_converter.log")
 @file_logger.level = Logger::DEBUG
 
 
@@ -112,19 +112,13 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  seconds = 20
-
-  catch (:stop) do
-
     while true do
 
-      begin
-
         res = @rredis.brpop("convertpdftoimage") # or convertpdftopdf
-
         product = ENV['SHORT_PRODUCT']
 
-        start = 1
+    attempts = 0
+    begin
 
         if (res != '' && res != nil)
 
@@ -133,6 +127,8 @@ $vertx.execute_blocking(lambda { |future|
           if @from_full_pdf == "true"
             from = json['from']
             work = json['work']
+
+@logger.debug "Convert page PDFs for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
             solr_work     = @solr.get 'select', :params => {:q => "work:#{work}"}
             first_page    = solr_work['response']['docs'].first['page'].first
@@ -158,8 +154,6 @@ $vertx.execute_blocking(lambda { |future|
 
             # file size, resolution, ...
 
-            seconds = seconds / 2 if seconds > 20
-
           else
             # {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
             from         = json['from']
@@ -167,6 +161,7 @@ $vertx.execute_blocking(lambda { |future|
             #page         = json['page']
             #format       = json['format']
 
+@logger.debug "Convert page PDFs for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
             #to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
             #to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
@@ -175,26 +170,27 @@ $vertx.execute_blocking(lambda { |future|
             to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
 
 
-            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) unless @image_out_format == 'pdf' # convert page pdfs to page images
+#            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) unless @image_out_format == 'pdf' # convert page pdfs to page images
             mogrifyPDFs("#{from}/*.pdf", "#{to_pdf_dir}", 'pdf') unless @image_out_format == 'pdf' # copy page pdfs to page pdfs
-            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
+#            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
 
           end
 
         else
           @logger.error "Get empty string or nil from redis"
-          sleep 20
-          seconds = seconds * 2 if seconds < 300
         end
 
+@logger.debug "\tFinish page PDFs conversion for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
       rescue Exception => e
-        @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
-        throw :stop
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})" 
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}" 
       end
 
     end
 
-  end
   # future.complete(doc.to_s)
 
 }) { |res_err, res|

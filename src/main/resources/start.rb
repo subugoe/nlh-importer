@@ -21,8 +21,8 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 retriever_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'workerPoolName'             => 'retrieve_worker_pool',
-    'workerPoolSize'             => 1,
+    # 'workerPoolName'             => 'retrieve_worker_pool',
+    # 'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -39,8 +39,8 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 4,
-    'worker'                     => false,
+    'instances'                  => 10,
+    'worker'                     => true,
     #'workerPoolName'             => 'index_worker_pool',
     #'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
@@ -50,10 +50,10 @@ indexer_options = {
 
 
 image_processor_options = {
-    'instances'                  => 4,
+    'instances'                  => 20,
     'worker'                     => true,
-    'workerPoolName'             => 'image_worker_pool',
-    'workerPoolSize'             => 1,
+#    'workerPoolName'             => 'image_worker_pool',
+#    'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -62,10 +62,10 @@ image_processor_options = {
 
 
 mets_copier_options = {
-    'instances'                  => 4,
+    'instances'                  => 15,
     'worker'                     => true,
-    'workerPoolName'             => 'mets_copier_worker_pool',
-    'workerPoolSize'             => 1,
+#    'workerPoolName'             => 'mets_copier_worker_pool',
+#    'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -82,9 +82,9 @@ pdf_retriever_options = {
 }
 
 pdf_converter_options = {
-    'instances'                  => 4,
+    'instances'                  => 10,
     'worker'                     => true,
-    'workerPoolName'             => 'pdf_converter_worker_pool',
+    #  'workerPoolName'             => 'pdf_converter_worker_pool',
     #  'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
@@ -175,19 +175,19 @@ if ENV['PREPARE'] == 'true'
 
   @rredis.del 'convertpdftopdf'
   @rredis.del 'convertpdftoimage'
+  @rredis.del 'worksToProcess'
 
 
 
-
-#  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
+  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-
+#  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
 
 else
 
-  #  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+    $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
   #  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
   #  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
@@ -196,13 +196,14 @@ else
   #  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
   #  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
+  #  $vertx.deploy_verticle("processors/image_to_pdf_converter.rb", image_processor_options)
 
   #  if ENV['FULLTEXTS_EXIST'] == 'true'
   #    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
   #  end
 
   # f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
-  g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", pdf_converter_options)
+  # g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", pdf_converter_options)
 
 
 end

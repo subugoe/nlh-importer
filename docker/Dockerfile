@@ -9,8 +9,10 @@ ENV GEM_PATH=/usr/share/jruby/lib/ruby/gems/shared/gems
 ENV PATH=$PATH:$JRUBY_HOME/bin
 
 
-ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx4096M"
-
+#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx4096M"
+ENV JAVA_OPTS "${JAVA_OPTS} -Xms512M -Xmx1G"
+ENV JRUBY_OPTS "${JRUBY_OPTS} -J-Xms512M -J-Xmx1G"
+ENV JVM_ARGS "-Xms512M -Xmx1G"
 
 RUN apk update && \
     apk upgrade && \

@@ -48,7 +48,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @fulltextexist     = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_indexer.log")
 @file_logger.level = Logger::DEBUG
 
 
@@ -1023,40 +1023,39 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-
-  seconds = 20
-
-  catch (:stop) do
-
     while true do
-
-      begin
 
         res = @rredis.brpop("metsindexer")
 
+attempts = 0
+begin
         if (res != '' && res != nil)
 
           json             = JSON.parse res[1]
-          metsModsMetadata = parsePath(json['path'])
+	  path = json['path'] 
+
+
+@logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+   
+          metsModsMetadata = parsePath(path)
 
           addDocsToSolr(metsModsMetadata.to_solr_string) if metsModsMetadata != nil
 
-          seconds = seconds / 2 if seconds > 20
+@logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
         else
           @logger.error "Get empty string or nil from redis"
-          sleep seconds
-          seconds = seconds * 2 if seconds < 300
         end
 
 
       rescue Exception => e
-        @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
-        throw :stop
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
       end
 
     end
-  end
 
   # future.complete(doc.to_s)
 
