@@ -50,7 +50,8 @@ def copyFile(from, to, to_dir)
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
 
-    @rredis.incr 'pdfscopied'
+#@logger.debug "Copy from: #{from} to: #{to_dir}"
+
   rescue Exception => e
     @file_logger.error "Could not copy PDF from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -65,7 +66,7 @@ def convert(from, to, to_dir, toPDF, removeBefore)
     FileUtils.mkdir_p(to_dir)
     FileUtils.rm(to, :force => true) if removeBefore == true
 
-    @logger.debug "from: #{from} to: #{to}"
+#    @logger.debug "Convert from: #{from} to: #{to}"
 
     MiniMagick::Tool::Convert.new do |convert|
 
@@ -81,9 +82,6 @@ def convert(from, to, to_dir, toPDF, removeBefore)
       convert << "#{to}"
     end
 
-    @rredis.incr 'pdfsconverted'
-
-
   rescue Exception => e
     @file_logger.error "Could not convert PDF: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -93,7 +91,7 @@ end
 
 def mogrifyPDFs(from, to_dir, format)
 
-  @logger.debug "from: #{from} to: #{to_dir}"
+  @logger.debug "Convert from: #{from} to: #{to_dir}"
 
   begin
     FileUtils.mkdir_p(to_dir)
@@ -128,13 +126,13 @@ $vertx.execute_blocking(lambda { |future|
             from = json['from']
             work = json['work']
 
-@logger.debug "Convert page PDFs for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+@logger.debug "Convert page PDFs (from full PDF) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
             solr_work     = @solr.get 'select', :params => {:q => "work:#{work}"}
-            first_page    = solr_work['response']['docs'].first['page'].first
+            # first_page    = solr_work['response']['docs'].first['page'].first
             # start      = first_page.to_i
 
-            solr_page_arr = @solr_work['response']['docs'].first['page']
+            solr_page_arr = solr_work['response']['docs'].first['page']
 
             to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
             to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
@@ -146,11 +144,11 @@ $vertx.execute_blocking(lambda { |future|
               to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.#{@image_out_format}"
               to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
 
+
               convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) # convert to images
               convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) # convert to page pdfs
             }
-            copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
-
+           copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
 
             # file size, resolution, ...
 
@@ -161,7 +159,7 @@ $vertx.execute_blocking(lambda { |future|
             #page         = json['page']
             #format       = json['format']
 
-@logger.debug "Convert page PDFs for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+@logger.debug "Convert page PDFs (from page PDFs) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
             #to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
             #to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"

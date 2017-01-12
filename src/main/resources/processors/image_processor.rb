@@ -29,7 +29,7 @@ redis_config = {
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/nlh_image_processing.log")
 @file_logger.level = Logger::DEBUG
 
 
@@ -55,7 +55,7 @@ def copyFile(from, to, to_dir)
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
-
+=begin
     fixity = (Digest::MD5.file from).hexdigest
 
     hsh = Hash.new
@@ -67,7 +67,9 @@ def copyFile(from, to, to_dir)
 
 
     @rredis.incr 'imagescopied'
-  rescue Exception => e
+=end
+ 
+ rescue Exception => e
     @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
@@ -87,9 +89,9 @@ def convert(from, to, to_dir)
       convert << "#{to}"
     end
 
-    @logger.debug "from: #{from} to: #{to}"
+#    @logger.debug "from: #{from} to: #{to}"
 
-    @rredis.incr 'imagescopied'
+#    @rredis.incr 'imagescopied'
 
   rescue Exception => e
     @file_logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
@@ -100,29 +102,29 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  seconds = 20
-
   while true do
 
-    res = @rredis.brpoplpush("processImageURI", "processPdfFromImageURI") # ⇒ nil, [String, String]
-    # {"path":"/Users/jpanzer/Documents/projects/test/nlh-importer/in/METS_Daten/mets_eai1_0F7AD82E731D8E58.xml",
-    #     "image_uri":"http://nl.sub.uni-goettingen.de/image/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0/full/full/0/default.jpg"}
+    res = @rredis.brpop("processImageURI") #, "processPdfFromImageURI") # ⇒ nil, [String, String]
 
-
-    # res = @rredis.brpop("processImageURI") # ⇒ nil, String
-    # ["processImageURI", "{\"path\":\"/Users/jpanzer/Documents/projects/test/nlh-importer/in/METS_Daten/mets_eai1_0F7AD82E731D8E58.xml\",
-    #               \"image_uri\":\"http://nl.sub.uni-goettingen.de/image/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0/full/full/0/default.jpg\"}"]
+attempts = 0
+begin
 
     if (res != '' && res != nil)
 
-      json = JSON.parse(res)
 
-      match      = json['image_uri'].match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      json = JSON.parse res[1]
+      image_uri = json['image_uri']
+
+
+
+      # image_uri = "https://nl.sub.uni-goettingen.de/image/ecj:worldvolume4:0653/full/800,/0/default.jpg"
+      match      = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
       product    = match[2]
       work       = match[3]
       file       = match[4]
       format     = match[9]
 
+@logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
       if @from_orig == 'true'
         release = @rredis.hget('mapping', work)
@@ -141,16 +143,22 @@ $vertx.execute_blocking(lambda { |future|
         convert(from, to, to_dir)
       end
 
+@logger.debug "\tFinish image processing \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
       # file size, resolution, ...
 
-      seconds = seconds / 2 if seconds > 20
 
     else
       @logger.error "Get empty string or nil from redis"
-      sleep 20
-      seconds = seconds * 2 if seconds < 300
     end
+
+  rescue Exception => e
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+      end
+
   end
 
   # future.complete(doc.to_s)

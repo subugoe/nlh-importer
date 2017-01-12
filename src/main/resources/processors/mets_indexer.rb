@@ -981,6 +981,7 @@ def parsePath(path)
       @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
     end
 
+# =begin
 
     # full texts
     begin
@@ -994,6 +995,7 @@ def parsePath(path)
       @logger.error("Problems to resolve full texts #{path} (#{e.message})")
     end
 
+# =end
 
   else
 
@@ -1025,7 +1027,7 @@ $vertx.execute_blocking(lambda { |future|
 
     while true do
 
-        res = @rredis.brpop("metsindexer")
+         res = @rredis.brpop("metsindexer")
 
 attempts = 0
 begin
@@ -1039,10 +1041,14 @@ begin
    
           metsModsMetadata = parsePath(path)
 
-          addDocsToSolr(metsModsMetadata.to_solr_string) if metsModsMetadata != nil
+          if metsModsMetadata != nil
+#          addDocsToSolr(metsModsMetadata.to_solr_string)
 
+          
 @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
+else 
+  @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+end
         else
           @logger.error "Get empty string or nil from redis"
         end
@@ -1051,7 +1057,7 @@ begin
       rescue Exception => e
         attempts = attempts + 1
         retry if (attempts < MAX_ATTEMPTS)
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
         @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
       end
 

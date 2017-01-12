@@ -38,8 +38,11 @@ paths.each {|path|
   arr << {"path" => path}.to_json
 }
 
+# =begin
 pushToQueue(arr, 'metsindexer')
 pushToQueue(arr, 'metscopier')
+# =end
 
-@rredis.incrby('retrieved', arr.size)
+# pushToQueue(arr, 'checkmets')
+
 
