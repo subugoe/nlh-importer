@@ -148,7 +148,7 @@ while true do
         product = json['product']
 
 
-        solr_work = @solr.get 'select', :params => {:q => "work:#{work}"}
+        solr_work = @solr.get 'select', :params => {:q => "work:#{work}", :fl => "image_format, page"}
 
 
         image_format  = solr_work['response']['docs'].first['image_format']
