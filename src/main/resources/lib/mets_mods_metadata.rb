@@ -33,6 +33,7 @@ class MetsModsMetadata
 
                 :subjects,
                 :related_items,
+                :parts,
                 :record_infos,
 
                 :structype,
@@ -79,6 +80,7 @@ class MetsModsMetadata
     @nlh_ids               = Array.new
     @subjects              = Array.new
     @related_items         = Array.new
+    @parts                 = Array.new
     @record_infos          = Array.new
     @right_infos           = Array.new
 
@@ -167,6 +169,10 @@ class MetsModsMetadata
 
   def addRelatedItem=(relatedItem)
     @related_items += relatedItem
+  end
+
+  def addPart=(part)
+    @parts += part
   end
 
   def addRecordInfo=(recordInfo)
@@ -389,17 +395,17 @@ class MetsModsMetadata
 
     # add logical info (e.g. volume info)
 
-    id           = Array.new
-    type         = Array.new
-    label        = Array.new
-    dmdid        = Array.new
-    admid        = Array.new
-    start_page_index   = Array.new
-    end_page_index     = Array.new
-    part_product = Array.new
-    part_work    = Array.new
-    part_nlh_id  = Array.new
-    level        = Array.new
+    id               = Array.new
+    type             = Array.new
+    label            = Array.new
+    dmdid            = Array.new
+    admid            = Array.new
+    start_page_index = Array.new
+    end_page_index   = Array.new
+    part_product     = Array.new
+    part_work        = Array.new
+    part_nlh_id      = Array.new
+    level            = Array.new
 
     @logicaElements.each { |el|
 
@@ -512,6 +518,11 @@ class MetsModsMetadata
     h.merge! ({:parentdoc_note => @related_items.collect { |rel_item| rel_item.note }})
     h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
 
+    # order, :type, :number
+    h.merge! ({:part_order => @parts.collect { |part| part.order }})
+    h.merge! ({:part_type => @parts.collect { |part| part.type }})
+    h.merge! ({:part_number => @parts.collect { |part| part.number }})
+    h.merge! ({:currentno => @parts.collect { |part| part.type }})
 
     # @record_infos.each { |recInfo|
     #   h.merge! recInfo.to_solr_string

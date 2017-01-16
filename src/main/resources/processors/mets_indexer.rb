@@ -24,7 +24,7 @@ require 'lib/logical_element'
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
@@ -351,7 +351,7 @@ def getSubject(modsSubjectElements)
 
     if !personal.empty?
 
-      subject.type    = 'personal'
+      subject.type = 'personal'
 
       str             = personal.collect { |s| s.text if s != nil }.join("; ")
       subject.subject = str
@@ -407,7 +407,24 @@ def getRelatedItem(modsRelatedItemElements)
 end
 
 
-# todo - not implemented yet
+def getPart(modsPartElements)
+
+  partArr = Array.new
+
+  modsPartElements.each { |p|
+    part = Part.new
+
+    part.order  = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.type   = checkEmptyString p.xpath('mods:detail[@type]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.number = checkEmptyString p.xpath('mods:detail/mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    partArr << part
+  }
+
+  return partArr
+end
+
+
 def getRecordInfo(modsRecordInfoElements)
 
   recordInfoArr = Array.new
@@ -854,6 +871,17 @@ def parsePath(path)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
+  end
+
+  # Part (of multipart Documents)
+  begin
+    modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+
+    unless modsPartElements.empty?
+      meta.addPart = getPart(modsPartElements)
+    end
+  rescue Exception => e
+    @logger.error("Problems to resolve mods:part #{path} (#{e.message})")
   end
 
 
