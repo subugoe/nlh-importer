@@ -1,6 +1,4 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'oai'
 require 'logger'
 require 'open-uri'
@@ -11,13 +9,6 @@ require 'rsolr'
 @logger       = Logger.new(STDOUT) # 'gdz_object.log')
 @logger.level = Logger::DEBUG
 
-redis_config = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
-
-#@redis         = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
@@ -43,5 +34,5 @@ solr_works_to_update['response']['docs'].each { |doc|
 }
 
 pushToQueue(arr, 'metsindexer')
-#pushToQueue(arr, 'metscopier')
+
 

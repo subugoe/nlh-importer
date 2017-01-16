@@ -1,7 +1,6 @@
 require 'vertx/vertx'
 
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -33,9 +32,6 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @pdfdensity    = ENV['PDFDENSITY']
 @from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
-#----------------
-
-
 @logger.debug "[pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
@@ -50,8 +46,6 @@ def copyFile(from, to, to_dir)
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
 
-#@logger.debug "Copy from: #{from} to: #{to_dir}"
-
   rescue Exception => e
     @file_logger.error "Could not copy PDF from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -65,8 +59,6 @@ def convert(from, to, to_dir, toPDF, removeBefore)
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.rm(to, :force => true) if removeBefore == true
-
-#    @logger.debug "Convert from: #{from} to: #{to}"
 
     MiniMagick::Tool::Convert.new do |convert|
 
@@ -110,84 +102,83 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-    while true do
+  while true do
 
-        res = @rredis.brpop("convertpdftoimage") # or convertpdftopdf
-        product = ENV['SHORT_PRODUCT']
+    res     = @rredis.brpop("convertpdftoimage")
+    product = ENV['SHORT_PRODUCT']
 
     attempts = 0
     begin
 
-        if (res != '' && res != nil)
+      if (res != '' && res != nil)
 
-          json = JSON.parse(res[1])
+        json = JSON.parse(res[1])
 
-          if @from_full_pdf == "true"
-            from = json['from']
-            work = json['work']
+        if @from_full_pdf == "true"
+          from = json['from']
+          work = json['work']
 
-@logger.debug "Convert page PDFs (from full PDF) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.debug "Convert page PDFs (from full PDF) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-            solr_work     = @solr.get 'select', :params => {:q => "work:#{work}"}
-            # first_page    = solr_work['response']['docs'].first['page'].first
-            # start      = first_page.to_i
+          solr_work     = @solr.get 'select', :params => {:q => "work:#{work}"}
+          # first_page    = solr_work['response']['docs'].first['page'].first
+          # start      = first_page.to_i
 
-            solr_page_arr = solr_work['response']['docs'].first['page']
+          solr_page_arr = solr_work['response']['docs'].first['page']
 
-            to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
-            to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
+          to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
+          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
 
-            to_full_pdf    = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
+          to_full_pdf = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
 
-            solr_page_arr.each_index { |index|
+          solr_page_arr.each_index { |index|
 
-              to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.#{@image_out_format}"
-              to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
+            to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.#{@image_out_format}"
+            to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
 
 
-              convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) # convert to images
-              convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) # convert to page pdfs
-            }
-           copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
+            convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) # convert to images
+            convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) # convert to page pdfs
+          }
+          copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
 
-            # file size, resolution, ...
 
-          else
-            # {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
-            from         = json['from']
-            work         = json['work']
-            #page         = json['page']
-            #format       = json['format']
+        else
 
-@logger.debug "Convert page PDFs (from page PDFs) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          # {"from" => from, "work" => work, "page" => page, "format" => format}.to_json
+          from = json['from']
+          work = json['work']
+          #page         = json['page']
+          #format       = json['format']
 
-            #to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
-            #to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
+          @logger.debug "Convert page PDFs (from page PDFs) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-            to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
-            to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
+          #to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{@image_out_format}"
+          #to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
 
+          to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
+          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
 
 #            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) unless @image_out_format == 'pdf' # convert page pdfs to page images
 #            mogrifyPDFs("#{from}/*.pdf", "#{to_pdf_dir}", 'pdf') unless @image_out_format == 'pdf' # copy page pdfs to page pdfs
-            convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
+             convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
 
-          end
-
-        else
-          @logger.error "Get empty string or nil from redis"
         end
 
-@logger.debug "\tFinish page PDFs conversion for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})" 
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}" 
+      else
+        @logger.error "Get empty string or nil from redis"
       end
 
+      @logger.debug "\tFinish page PDFs conversion for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
     end
+
+  end
 
   # future.complete(doc.to_s)
 

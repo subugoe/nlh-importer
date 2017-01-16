@@ -1,8 +1,5 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -11,13 +8,6 @@ require 'lib/mets_mods_metadata'
 require 'fileutils'
 
 
-redis_config = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
-
-#@redis       = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
