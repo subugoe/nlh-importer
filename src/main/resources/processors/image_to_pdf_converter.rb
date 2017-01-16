@@ -1,8 +1,5 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -12,18 +9,11 @@ require 'fileutils'
 require 'mini_magick'
 
 
-redis_config = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-
-#@redis = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis           = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr             = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -35,9 +25,9 @@ redis_config = {
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
-@imageinpath     = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
-@imageoutpath    = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@pdfoutpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+@imageinpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+@imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 
 @logger.debug "[image to pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -81,18 +71,15 @@ def convert(work, product, solr_page_arr, image_format, to_full_pdf, to_pdf_dir)
     MiniMagick::Tool::Convert.new do |convert|
 
 
-solr_page_arr.each {|path|
-convert << "#{path}"
-}
+      solr_page_arr.each { |path|
+        convert << "#{path}"
+      }
       convert << "-define" << "pdf:use-cropbox=true"
 #      convert << "-density" << "100"
 
 #      convert << solr_page_arr.join(' ')
       convert << "#{to_full_pdf}"
     end
-
-      #@rredis.incr 'pdfsconverted'
-
 
   rescue Exception => e
     @file_logger.error "Could not convert images to Full PDF: '#{to_full_pdf}'\n\t#{e.message}"
@@ -107,21 +94,14 @@ def convert(from, to_page_pdf, to_pdf_dir)
     FileUtils.mkdir_p(to_pdf_dir)
     #FileUtils.rm(to_full_pdf, :force => true)
 
-#    @logger.debug "creating #{to_page_pdf}"
-
     MiniMagick::Tool::Convert.new do |convert|
 
       convert << from
-
       convert << "-define" << "pdf:use-cropbox=true"
       #convert << "-density" << "100"
-
-
       convert << "#{to_page_pdf}"
+
     end
-
-      #@rredis.incr 'pdfsconverted'
-
 
   rescue Exception => e
     @file_logger.error "Could not convert images to Full PDF: '#{to_page_pdf}'\n\t#{e.message}"
@@ -131,9 +111,9 @@ end
 
 
 $vertx.execute_blocking(lambda { |future|
-  
 
-while true do
+
+  while true do
 
     res = @rredis.brpop("worksToProcess") # ⇒ nil, [String, String]
 
@@ -152,19 +132,11 @@ while true do
 
 
         image_format  = solr_work['response']['docs'].first['image_format']
-        #image_format = "jpg" #if image_format == nil
         solr_page_arr = solr_work['response']['docs'].first['page']
 
         @logger.debug "Creating #{solr_page_arr.size} PDFs for Work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-        #solr_page_arr.collect! { |x| "#{@imageoutpath}/#{product}/#{work}/#{x}.#{image_format}" }
-        #image_paths = solr_page_arr.join(' ')
-
-
         to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/"
-
-        #to_full_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
-
 
         solr_page_arr.each { |page|
 
@@ -175,9 +147,8 @@ while true do
 
         @logger.debug "\tFinish PDF creation for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-	#convert(work, product, image_paths, image_format, to_full_pdf, to_pdf_dir) # convert to page pdfs
+        #convert(work, product, image_paths, image_format, to_full_pdf, to_pdf_dir) # convert to page pdfs
 
-        # file size, resolution, ...
 
       else
         @logger.error "Get empty string or nil from redis"

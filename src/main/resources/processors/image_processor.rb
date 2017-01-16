@@ -1,8 +1,5 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -12,19 +9,11 @@ require 'fileutils'
 require 'mini_magick'
 
 
-redis_config = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
-@image_in_format = ENV['IMAGE_IN_FORMAT']
+@image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-
-
-#@redis = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis       = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr         = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -41,8 +30,6 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @originpath = ENV['ORIG']
 
 @from_orig = ENV['GET_IMAGES_FROM_ORIG']
-#----------------
-
 
 @logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -68,8 +55,8 @@ def copyFile(from, to, to_dir)
 
     @rredis.incr 'imagescopied'
 =end
- 
- rescue Exception => e
+
+  rescue Exception => e
     @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
@@ -89,10 +76,6 @@ def convert(from, to, to_dir)
       convert << "#{to}"
     end
 
-#    @logger.debug "from: #{from} to: #{to}"
-
-#    @rredis.incr 'imagescopied'
-
   rescue Exception => e
     @file_logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -104,60 +87,56 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("processImageURI") #, "processPdfFromImageURI") # ⇒ nil, [String, String]
+    res = @rredis.brpop("processImageURI")
 
-attempts = 0
-begin
+    attempts = 0
+    begin
 
-    if (res != '' && res != nil)
-
-
-      json = JSON.parse res[1]
-      image_uri = json['image_uri']
+      if (res != '' && res != nil)
 
 
+        json      = JSON.parse res[1]
+        image_uri = json['image_uri']
 
-      # image_uri = "https://nl.sub.uni-goettingen.de/image/ecj:worldvolume4:0653/full/800,/0/default.jpg"
-      match      = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-      product    = match[2]
-      work       = match[3]
-      file       = match[4]
-      format     = match[9]
 
-@logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        # image_uri = "https://nl.sub.uni-goettingen.de/image/ecj:worldvolume4:0653/full/800,/0/default.jpg"
+        match     = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        product   = match[2]
+        work      = match[3]
+        file      = match[4]
+        format    = match[9]
 
-      if @from_orig == 'true'
-        release = @rredis.hget('mapping', work)
-        from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
+        @logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+        if @from_orig == 'true'
+          release = @rredis.hget('mapping', work)
+          from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
+        else
+          from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
+        end
+
+        to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_out_format}"
+        to_dir = "#{@outpath}/#{product}/#{work}"
+
+
+        if @image_in_format == @image_out_format
+          copyFile(from, to, to_dir)
+        else
+          convert(from, to, to_dir)
+        end
+
+        @logger.debug "\tFinish image processing \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
       else
-        from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
+        @logger.error "Get empty string or nil from redis"
       end
 
-      to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_out_format}"
-      to_dir = "#{@outpath}/#{product}/#{work}"
-
-
-      if @image_in_format == @image_out_format
-        copyFile(from, to, to_dir)
-      else
-        convert(from, to, to_dir)
-      end
-
-@logger.debug "\tFinish image processing \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-      # file size, resolution, ...
-
-
-    else
-      @logger.error "Get empty string or nil from redis"
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
     end
-
-  rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
-      end
 
   end
 

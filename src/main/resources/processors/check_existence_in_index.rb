@@ -1,6 +1,4 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'oai'
 require 'logger'
 require 'open-uri'
@@ -8,25 +6,16 @@ require 'redis'
 require 'json'
 require 'rsolr'
 
-@logger       = Logger.new(STDOUT) # 'gdz_object.log')
+@logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-redis_config  = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
-
-
-#@redis         = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 product = ENV['SHORT_PRODUCT']
-inpath = ENV['IN'] + ENV['METS_IN_SUB_PATH']
-
+inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 
 
 def pushToQueue(arr, queue)
@@ -51,28 +40,28 @@ $vertx.execute_blocking(lambda { |future|
         @logger.debug "Checking METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
         # /inpath/METS_Daten/mets_eai2_10C95FDFE3EA5600.xml
-        match2  = path.match(/(\S*)\/(\S*)_(\S*)_(\S*)\.(\S*)/)
+        match2     = path.match(/(\S*)\/(\S*)_(\S*)_(\S*)\.(\S*)/)
         #prefix  = match2[2]
-        product = match2[3]
-        work    = match2[4]
+        product    = match2[3]
+        work       = match2[4]
         #format  = match2[5]
 
 
         solr_works = @solr.get 'select', :params => {:q => "product:#{product} & work:#{work}", :fl => 'work'}
-       
+
         if solr_works['response']['docs'].empty?
           @logger.debug "Work #{work} (#{product}) not in index"
           #pushToQueue([{"path" => path}.to_json], 'reindexmets')
         else
 
           solr_page_arr = solr_works['response']['docs'].first['page']
-          image_format = solr_works['response']['docs'].first['image_format']
+          image_format  = solr_works['response']['docs'].first['image_format']
 
           images_paths = Dir.glob("#{imageoutpath}/#{product}/#{work}/*", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-          images = images_paths.collect {|p| File.basename(p, '.jpg')}
+          images       = images_paths.collect { |p| File.basename(p, '.jpg') }
 
           pdf_paths = Dir.glob("#{pdfoutpath}/#{product}/#{work}/*", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-          pdfs = pdf_paths.collect { |p| File.basename(p, ".pdf" }
+          pdfs      = pdf_paths.collect { |p| File.basename(p, ".pdf" }
 
           @logger.debug "Full PDF #{product}/#{work}/#{work}.#{image_format} not found" if !pdfs.include? work
 
@@ -93,7 +82,7 @@ $vertx.execute_blocking(lambda { |future|
 
 
       else
-         @logger.error "Get empty string or nil from redis"
+        @logger.error "Get empty string or nil from redis"
       end
 
 

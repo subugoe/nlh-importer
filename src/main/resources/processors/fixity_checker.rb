@@ -6,8 +6,6 @@ require 'json'
 require 'digest'
 
 
-
-
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger       = Logger.new(STDOUT)
@@ -26,7 +24,7 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 
 def checkfixity(to, fixity)
-    return fixity == (Digest::MD5.file to).hexdigest
+  return fixity == (Digest::MD5.file to).hexdigest
 end
 
 $vertx.execute_blocking(lambda { |future|
@@ -67,7 +65,6 @@ $vertx.execute_blocking(lambda { |future|
         @logger.error("Error: #{e.message}- #{e.backtrace.join('\n\t')}")
         throw :stop
       end
-
 
 
       @rredis.incr 'fixitieschecked'

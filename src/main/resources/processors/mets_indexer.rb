@@ -1,8 +1,5 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -25,14 +22,8 @@ require 'lib/logical_element'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-redis_config = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-#@redis  = VertxRedis::RedisClient.create($vertx, redis_config)
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
@@ -176,28 +167,7 @@ end
 
 def getName(modsNameElements)
 
-  #persNameArr = Array.new
-  #corpNameArr = Array.new
   nameArr = Array.new
-
-  # corp = modsNameElements.select {|name| name['type'] == 'corporate'}
-  # pers = modsNameElements.select {|name| name['type'] == 'personal'}
-  #
-  # pers.each { |n|
-  #   name = Name.new
-  #
-  #   name.displayform = n.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-  #
-  #   persNameArr << name
-  # }
-  #
-  # corp.each { |n|
-  #   name = Name.new
-  #
-  #   name.displayform = n.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-  #
-  #   corpNameArr << name
-  # }
 
   modsNameElements.each { |name|
 
@@ -214,12 +184,10 @@ def getName(modsNameElements)
     nameArr << n
   }
 
-  #return {:personal => persNameArr, :corporate => corpNameArr}
   return nameArr
 
 end
 
-# todo - not implemented yet
 def getTypeOfResource(modsTypeOfResourceElements)
 
   typeOfResourceArr = Array.new
@@ -384,23 +352,15 @@ def getSubject(modsSubjectElements)
     if !personal.empty?
 
       subject.type    = 'personal'
-      #parent       = personal.xpath('../..', 'mods' => 'http://www.loc.gov/mods/v3')
-      #additional   = parent.xpath('mods:titleInfo/mods:title|mods:geographic|mods:topic|mods:temporal|mods:titleInfo/mods:title',
-      #                            'mods' => 'http://www.loc.gov/mods/v3')
-      #addit = additional.collect { |s| s.text }.join("; ")
 
       str             = personal.collect { |s| s.text if s != nil }.join("; ")
-      #   str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
 
     elsif !corporate.empty?
 
       subject.type    = 'corporate'
-      #     title        = corporate.xpath('../../mods:titleInfo/mods:title', 'mods' => 'http://www.loc.gov/mods/v3')
-
       str             = corporate.collect { |s| s.text if s != nil }.join("; ")
-      #    str             = str.join("; " + title.text) if (!title.empty?)
       subject.subject = str
 
 
@@ -427,10 +387,6 @@ end
 
 
 def getRelatedItem(modsRelatedItemElements)
-
-#  subtitle = ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
-#  subtitle = ' ' if subtitle == ""
-#  titleInfo.subtitle = subtitle
 
   relatedItemArr = Array.new
 
@@ -461,23 +417,6 @@ def getRecordInfo(modsRecordInfoElements)
 end
 
 
-# # conversion, calculate hash, copy to storage, check
-# def processThumbs(meta)
-#
-# end
-
-# # conversion, calculate hash, copy to storage, check
-# def   processFullPDFs(meta)
-#
-# end
-
-
-# # conversion, calculate hash, copy to storage, check
-# def processFullPDFs(meta)
-#
-# end
-
-# calculate hash, copy to storage, check
 def processPresentationImages(meta, path)
 
   path_arr = Array.new
@@ -547,7 +486,6 @@ def getFulltext(path)
 
 end
 
-# index, calculate hash, copy to storage, check
 def processFulltexts(meta, path)
 
   fulltextUriArr = Array.new
@@ -617,28 +555,28 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
   logicalElement = LogicalElement.new
 
-  type                = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
+  type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
   if type != nil
     logicalElement.type = checkEmptyString(type.value)
   else
     logicalElement.type = ' '
   end
 
-  dmdid                = div.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
+  dmdid = div.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
   if dmdid != nil
     logicalElement.dmdid = checkEmptyString(dmdid.value)
   else
     logicalElement.dmdid = ' '
   end
 
-  id                = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
+  id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
   if id != nil
     logicalElement.id = checkEmptyString(id.value)
   else
     logicalElement.id = ' '
   end
 
-  admid                = div.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
+  admid = div.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
   if admid != nil
     logicalElement.admid = checkEmptyString(admid.value)
   else
@@ -709,15 +647,7 @@ def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMap
 
   # todo abschließen
 
-  #logicalElementArr = Array.new
-  #id_arr            = Array.new
-
-  #log = getAttributesFromLogicalDiv(logicalDivs.first, doctype)
   logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
-  #id_arr = log.addNlh_id
-
-  #i    = 0
-  #   maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
 
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -725,8 +655,6 @@ def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMap
   divs.each { |innerdiv|
 
     getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
-    #logicalElementArr << log
-    #id_arr = log.addNlh_id
   }
 
 end
@@ -764,7 +692,7 @@ end
 
 def push_many(queue, arr)
   @rredis.lpush(queue, arr)
-  #@logger.info "Pushed #{arr.size} URIs to redis (to queue: #{queue})"
+
 end
 
 def pushToQueue(queue, hsh)
@@ -812,13 +740,6 @@ def parsePath(path)
 
   meta.product = ENV['SHORT_PRODUCT']
 
-  # # todo physical type ???
-  # begin
-  #   meta.structype = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div/@TYPE", 'mets' => 'http://www.loc.gov/METS/').first.value
-  # rescue Exception => e
-  #   @logger.info("Mets structype info is nil for #{path} (#{e.message})")
-  # end
-
 
   # Titel
   begin
@@ -849,10 +770,6 @@ def parsePath(path)
   # Name
   begin
     modsNameElements = mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
-
-    #namesHash = getName(modsNameElements)
-    #meta.addPersonalNames  = namesHash[:personal]
-    #meta.addCorporateNames = namesHash[:corporate]
 
     unless modsNameElements.empty?
       meta.addName = getName(modsNameElements)
@@ -981,7 +898,7 @@ def parsePath(path)
       @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
     end
 
-# =begin
+    # =begin
 
     # full texts
     begin
@@ -1025,43 +942,43 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-    while true do
+  while true do
 
-         res = @rredis.brpop("metsindexer")
+    res = @rredis.brpop("metsindexer")
 
-attempts = 0
-begin
-        if (res != '' && res != nil)
+    attempts = 0
+    begin
+      if (res != '' && res != nil)
 
-          json             = JSON.parse res[1]
-	  path = json['path'] 
+        json = JSON.parse res[1]
+        path = json['path']
 
 
-@logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-   
-          metsModsMetadata = parsePath(path)
+        @logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-          if metsModsMetadata != nil
-#          addDocsToSolr(metsModsMetadata.to_solr_string)
+        metsModsMetadata = parsePath(path)
 
-          
-@logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-else 
-  @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-end
+        if metsModsMetadata != nil
+          addDocsToSolr(metsModsMetadata.to_solr_string)
+
+
+          @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         else
-          @logger.error "Get empty string or nil from redis"
+          @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         end
-
-
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+      else
+        @logger.error "Get empty string or nil from redis"
       end
 
+
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
     end
+
+  end
 
   # future.complete(doc.to_s)
 

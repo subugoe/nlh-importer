@@ -1,6 +1,4 @@
 require 'vertx/vertx'
-#require 'vertx-redis/redis_client'
-
 require 'oai'
 require 'logger'
 require 'open-uri'
@@ -8,22 +6,13 @@ require 'redis'
 require 'json'
 require 'fileutils'
 
-@logger       = Logger.new(STDOUT) # 'gdz_object.log')
+@logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
 @file_logger.level = Logger::DEBUG
 
-
-redis_config  = {
-    'host' => ENV['REDIS_HOST'],
-    'port' => ENV['REDIS_EXTERNAL_PORT'].to_i
-}
-
-
-
-#@redis         = VertxRedis::RedisClient.create($vertx, redis_config)
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger.debug "[tei copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -58,14 +47,14 @@ $vertx.execute_blocking(lambda { |future|
         res = @rredis.brpop("teicopier")
 
         if (res != '' && res != nil)
-          json = JSON.parse res[1]
-          uri  = json['path']
+          json   = JSON.parse res[1]
+          uri    = json['path']
 
           # /mnt/nlhstorage/PROD/ZDB-1-EAP/TEI/scan_process_006/release_0001/10487A71838609E0/104876242DF07B98.tei.xml
 
-          match1   = uri.match(/([\s\S]*)\/([\s\S]*)\/([\s\S]*.tei.xml)/)
+          match1 = uri.match(/([\s\S]*)\/([\s\S]*)\/([\s\S]*.tei.xml)/)
 
-          from = match1[0]
+          from   = match1[0]
           to     = "#{outpath}/#{product}/#{match1[2]}/#{match1[3]}"
           to_dir = "#{outpath}/#{product}/#{match1[2]}"
 

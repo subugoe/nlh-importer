@@ -1,7 +1,6 @@
 require 'vertx/vertx'
 
 require 'rsolr'
-#require 'elasticsearch'
 require 'logger'
 require 'nokogiri'
 require 'redis'
@@ -88,7 +87,6 @@ $vertx.execute_blocking(lambda { |future|
 
           copyFile(from, copy_to_pdf_dir, to_pdf_dir)
 
-          # file size, resolution, ...
 
           seconds = seconds / 2 if seconds > 20
 
