@@ -795,10 +795,11 @@ def parsePath(path)
     return
   end
 
+  meta = MetsModsMetadata.new
+
+=begin
 
   mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
-
-  meta = MetsModsMetadata.new
 
   meta.context = @context
 
@@ -963,6 +964,7 @@ def parsePath(path)
     @logger.error("Problems to resolve rights info #{path} (#{e.message})")
   end
 
+=end
 
   if checkwork(doc) != nil
 
@@ -981,7 +983,7 @@ def parsePath(path)
       @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
     end
 
-# =begin
+=begin
 
     # full texts
     begin
@@ -995,7 +997,7 @@ def parsePath(path)
       @logger.error("Problems to resolve full texts #{path} (#{e.message})")
     end
 
-# =end
+=end
 
   else
 
