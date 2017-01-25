@@ -12,6 +12,7 @@ require 'lib/name'
 require 'lib/genre'
 require 'lib/language'
 require 'lib/related_item'
+require 'lib/part'
 require 'lib/record_info'
 require 'lib/physical_description'
 require 'lib/subject'
@@ -69,7 +70,7 @@ def addDocsToSolr(document)
     @solr.add [document] # , :add_attributes => {:commitWithin => 10}
     @solr.commit
 
-    @rredis.incr 'indexed'
+#    @rredis.incr 'indexed'
 
   rescue Exception => e
     attempts = attempts + 1
@@ -111,7 +112,6 @@ def getRecordIdentifiers(mods, path)
   ids = Hash.new
 
   begin
-    # todo remove this, when mets is updated "recordIdentifer"
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
 
     if recordIdentifiers.empty?
@@ -136,7 +136,6 @@ def getRecordIdentifiers(mods, path)
 end
 
 
-# todo check alternatives for empty fields instead of ' '
 def getTitleInfos(modsTitleInfoElements)
 
   titleInfoArr = Array.new
@@ -242,7 +241,6 @@ def getOriginInfo(modsOriginInfoElements)
         originInfo.date_captured_end = captured_start_date.to_i
       end
 
-      # todo check if date is convertable to int
 
     else
       # The date that the resource was published, released or issued.
@@ -257,8 +255,6 @@ def getOriginInfo(modsOriginInfoElements)
       else
         originInfo.date_issued_end = issued_start_date.to_i
       end
-
-      # todo check if date is convertable to int
 
     end
 
@@ -409,19 +405,25 @@ end
 
 def getPart(modsPartElements)
 
-  partArr = Array.new
+ partArr = Array.new
 
   modsPartElements.each { |p|
     part = Part.new
 
-    part.order  = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
-    part.type   = checkEmptyString p.xpath('mods:detail[@type]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    part.number = checkEmptyString p.xpath('mods:detail/mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.order = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
 
+    detail = p.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
+
+    unless detail.empty?
+      part.type   = checkEmptyString detail.first.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
+      part.number = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+    end
+    
     partArr << part
   }
 
   return partArr
+
 end
 
 
@@ -505,43 +507,46 @@ end
 
 def processFulltexts(meta, path)
 
-  fulltextUriArr = Array.new
-  fulltextArr    = Array.new
-
-  meta.fulltext_uris.each { |fulltexturi|
-
-    # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-    match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-
-    product  = match[2]
-    work     = match[3]
-    file     = match[4]
-    filename = match[4] + '.tei.xml'
-
-    if @fulltext_from_orig == 'true'
-      release = @rredis.hget('mapping', work)
-      from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-      to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-    else
-      from = "#{@teiinpath}/#{work}/#{filename}"
-      to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-    end
-
-
-    to_dir = "#{@teioutpath}/#{product}/#{work}"
-
-
-    if @fulltextexist == 'true'
-      fulltextArr << getFulltext(from)
-
-    end
-    fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
-  }
   if @fulltextexist == 'true'
-    meta.addFulltext = fulltextArr
-  end
-  push_many("processFulltextURI", fulltextUriArr)
 
+    fulltextUriArr = Array.new
+    fulltextArr    = Array.new
+
+    meta.fulltext_uris.each { |fulltexturi|
+
+      # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+      match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+
+      product  = match[2]
+      work     = match[3]
+      file     = match[4]
+      filename = match[4] + '.tei.xml'
+
+      if @fulltext_from_orig == 'true'
+        release = @rredis.hget('mapping', work)
+        from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+        to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+      else
+        from = "#{@teiinpath}/#{work}/#{filename}"
+        to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+      end
+
+
+      to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+
+      if @fulltextexist == 'true'
+        fulltextArr << getFulltext(from)
+
+      end
+      fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+    }
+
+    meta.addFulltext = fulltextArr
+
+    push_many("processFulltextURI", fulltextUriArr)
+
+  end
 
 end
 
@@ -740,10 +745,11 @@ def parsePath(path)
     return
   end
 
+  meta = MetsModsMetadata.new
+
+#=begin
 
   mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
-
-  meta = MetsModsMetadata.new
 
   meta.context = @context
 
@@ -795,7 +801,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
   end
 
-  # TypeOfResource:   todo - not implemented yet
+  # TypeOfResource:
   begin
     modsTypeOfResourceElements = mods.xpath('mods:typeOfResource', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -881,11 +887,11 @@ def parsePath(path)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:part #{path} (#{e.message})\n#{e.backtrace}")
   end
 
 
-  # RecordInfo:   todo - not implemented yet
+  # RecordInfo:
   begin
     modsRecordInfoElements = mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -908,6 +914,7 @@ def parsePath(path)
     @logger.error("Problems to resolve rights info #{path} (#{e.message})")
   end
 
+#=end
 
   if checkwork(doc) != nil
 
@@ -1013,5 +1020,4 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
 #
 }
-
 
