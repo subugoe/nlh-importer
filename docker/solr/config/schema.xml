@@ -275,6 +275,12 @@
         <field name="mods" type="string" indexed="true" stored="true"/>
         <field name="identifier" type="string" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="issn" type="string" indexed="true" stored="true"/>
+        <field name="zdb" type="string" indexed="true" stored="true"/>
+        <field name="vd" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="vd17" type="string" indexed="true" stored="true"/>
+        <field name="vd18" type="string" indexed="true" stored="true"/>
+
         <!-- added for nlh -->
         <field name="marc" type="string" indexed="true" stored="true"/>
 
@@ -413,7 +419,6 @@
         <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
 
 
-
         <field name="creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
@@ -497,9 +502,6 @@
 
     <!-- for TYPO3 Extension find -->
     <copyField source="pid" dest="id"/>
-
-
-
 
 
     <copyField source="title" dest="metadata"/>
