@@ -112,7 +112,6 @@ def getRecordIdentifiers(mods, path)
   ids = Hash.new
 
   begin
-    # todo remove this, when mets is updated "recordIdentifer"
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
 
     if recordIdentifiers.empty?
@@ -137,7 +136,6 @@ def getRecordIdentifiers(mods, path)
 end
 
 
-# todo check alternatives for empty fields instead of ' '
 def getTitleInfos(modsTitleInfoElements)
 
   titleInfoArr = Array.new
@@ -243,7 +241,6 @@ def getOriginInfo(modsOriginInfoElements)
         originInfo.date_captured_end = captured_start_date.to_i
       end
 
-      # todo check if date is convertable to int
 
     else
       # The date that the resource was published, released or issued.
@@ -258,8 +255,6 @@ def getOriginInfo(modsOriginInfoElements)
       else
         originInfo.date_issued_end = issued_start_date.to_i
       end
-
-      # todo check if date is convertable to int
 
     end
 
