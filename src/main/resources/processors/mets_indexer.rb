@@ -507,43 +507,46 @@ end
 
 def processFulltexts(meta, path)
 
-  fulltextUriArr = Array.new
-  fulltextArr    = Array.new
-
-  meta.fulltext_uris.each { |fulltexturi|
-
-    # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-    match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-
-    product  = match[2]
-    work     = match[3]
-    file     = match[4]
-    filename = match[4] + '.tei.xml'
-
-    if @fulltext_from_orig == 'true'
-      release = @rredis.hget('mapping', work)
-      from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-      to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-    else
-      from = "#{@teiinpath}/#{work}/#{filename}"
-      to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-    end
-
-
-    to_dir = "#{@teioutpath}/#{product}/#{work}"
-
-
-    if @fulltextexist == 'true'
-      fulltextArr << getFulltext(from)
-
-    end
-    fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
-  }
   if @fulltextexist == 'true'
-    meta.addFulltext = fulltextArr
-  end
-  push_many("processFulltextURI", fulltextUriArr)
 
+    fulltextUriArr = Array.new
+    fulltextArr    = Array.new
+
+    meta.fulltext_uris.each { |fulltexturi|
+
+      # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+      match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+
+      product  = match[2]
+      work     = match[3]
+      file     = match[4]
+      filename = match[4] + '.tei.xml'
+
+      if @fulltext_from_orig == 'true'
+        release = @rredis.hget('mapping', work)
+        from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+        to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+      else
+        from = "#{@teiinpath}/#{work}/#{filename}"
+        to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+      end
+
+
+      to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+
+      if @fulltextexist == 'true'
+        fulltextArr << getFulltext(from)
+
+      end
+      fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+    }
+
+    meta.addFulltext = fulltextArr
+
+    push_many("processFulltextURI", fulltextUriArr)
+
+  end
 
 end
 
