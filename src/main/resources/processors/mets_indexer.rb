@@ -12,6 +12,7 @@ require 'lib/name'
 require 'lib/genre'
 require 'lib/language'
 require 'lib/related_item'
+require 'lib/part'
 require 'lib/record_info'
 require 'lib/physical_description'
 require 'lib/subject'
@@ -69,7 +70,7 @@ def addDocsToSolr(document)
     @solr.add [document] # , :add_attributes => {:commitWithin => 10}
     @solr.commit
 
-    @rredis.incr 'indexed'
+#    @rredis.incr 'indexed'
 
   rescue Exception => e
     attempts = attempts + 1
@@ -409,19 +410,25 @@ end
 
 def getPart(modsPartElements)
 
-  partArr = Array.new
+ partArr = Array.new
 
   modsPartElements.each { |p|
     part = Part.new
 
-    part.order  = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
-    part.type   = checkEmptyString p.xpath('mods:detail[@type]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    part.number = checkEmptyString p.xpath('mods:detail/mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.order = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
 
+    detail = p.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
+
+    unless detail.empty?
+      part.type   = checkEmptyString detail.first.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
+      part.number = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+    end
+    
     partArr << part
   }
 
   return partArr
+
 end
 
 
@@ -882,7 +889,7 @@ def parsePath(path)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:part #{path} (#{e.message})\n#{e.backtrace}")
   end
 
 

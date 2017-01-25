@@ -522,7 +522,7 @@ class MetsModsMetadata
     h.merge! ({:part_order => @parts.collect { |part| part.order }})
     h.merge! ({:part_type => @parts.collect { |part| part.type }})
     h.merge! ({:part_number => @parts.collect { |part| part.number }})
-    h.merge! ({:currentno => @parts.collect { |part| part.type }})
+    h.merge! ({:currentno => @parts.collect { |part| part.order }})
 
     # @record_infos.each { |recInfo|
     #   h.merge! recInfo.to_solr_string
