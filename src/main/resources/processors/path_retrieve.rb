@@ -20,7 +20,6 @@ oai_endpoint = ENV['METS_VIA_OAI']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 
-
 def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
@@ -68,9 +67,6 @@ $vertx.execute_blocking(lambda { |future|
 
       sum += response.count
 
-@logger.debug("sum=#{sum}")
-@logger.debug("resumption_token: #{response.resumption_token}") if sum > 54000
-
       arr = Array.new
       response.each do |record|
         identifier = record.identifier
@@ -81,6 +77,7 @@ $vertx.execute_blocking(lambda { |future|
       pushToQueue(arr, 'metsindexer')
       pushToQueue(arr, 'metscopier')
 
+      @logger.debug("sum=#{sum}")
 
       while true do
 
@@ -107,6 +104,7 @@ $vertx.execute_blocking(lambda { |future|
             rescue Exception => e
               @logger.debug("Problem to parse identifier: #{e.message}")
             end
+
           end
 
         rescue Exception => e
@@ -119,6 +117,7 @@ $vertx.execute_blocking(lambda { |future|
         unless arr.empty?
           pushToQueue(arr, 'metsindexer')
           pushToQueue(arr, 'metscopier')
+          @logger.debug("sum=#{sum}")
         else
           throw :stop
         end
