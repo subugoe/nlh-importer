@@ -25,6 +25,26 @@ def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
+def parseId(id)
+
+  id = id.to_s
+
+  begin
+    i = id.rindex(':')
+    j = id.rindex('|')
+    j ||= id.size
+    s = id[(i+1)..(j-1)]
+    return s
+  rescue Exception => e
+    @logger.debug("Exception while parse id string: #{id} #{e.message}")
+  end
+
+end
+
+
+$vertx.execute_blocking(lambda { |future|
+
+  catch (:stop) do
 
 arr = Array.new
 
@@ -45,15 +65,19 @@ else
 
   sum += response.count
 
+@logger.debug("sum=#{sum}")
+
   arr = Array.new
   response.each do |record|
     identifier = record.identifier
     ppn        = parseId(identifier)
     arr << {"ppn" => ppn}.to_json
 
-    pushToQueue(arr, 'metsindexer')
-    pushToQueue(arr, 'metscopier')
   end
+
+pushToQueue(arr, 'metsindexer')
+pushToQueue(arr, 'metscopier')
+
 
   while true do
 
@@ -66,7 +90,7 @@ else
       response = client.list_identifiers(:resumption_token => response.resumption_token)
 
       sum += response.count
-
+@logger.debug("sum=#{sum}")
       @logger.debug("resumption_token: #{response.resumption_token}") if sum > 54000
 
       response.each do |record|
@@ -82,9 +106,6 @@ else
         end
       end
 
-      pushToQueue(arr, 'metsindexer')
-      pushToQueue(arr, 'metscopier')
-
 
     rescue Exception => e
       attempts = attempts + 1
@@ -93,9 +114,23 @@ else
       @file_logger.error "Exception while identifiers retrieval from OAI: (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
     end
 
+unless arr.empty?
+          pushToQueue(arr, 'metsindexer')
+          pushToQueue(arr, 'metscopier')
+        else
+          throw :stop
+        end
+
   end
 
 end
 
+end
 
+
+  # future.complete(doc.to_s)
+
+}) { |res_err, res|
+#
+}
 
