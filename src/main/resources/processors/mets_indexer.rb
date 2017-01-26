@@ -23,7 +23,8 @@ require 'lib/logical_element'
 
 
 MAX_ATTEMPTS        = ENV['MAX_ATTEMPTS'].to_i
-oai_endpoint        = ENV['METS_VIA_OAI']
+@oai_endpoint       = ENV['METS_VIA_OAI']
+@short_product      = ENV['SHORT_PRODUCT']
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 @originpath         = ENV['ORIG']
@@ -33,6 +34,7 @@ oai_endpoint        = ENV['METS_VIA_OAI']
 @fulltextexist      = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 @context            = ENV['CONTEXT']
+
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -442,29 +444,57 @@ def processPresentationImages(meta)
   presentation_image_uris = meta.presentation_image_uris
 
 
-  # https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+  firstUri = presentation_image_uris[0]
 
-  firstUri                = presentation_image_uris[0]
+  unless @oai_endpoint == 'true'
 
-  match   = firstUri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-  product = match[2]
-  work    = match[3]
+    # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+    match   = firstUri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    product = match[2]
+    work    = match[3]
 
 
-  meta.product = product
-  meta.work    = work
+    meta.product = product
+    meta.work    = work
 
-  presentation_image_uris.each { |image_uri|
+    presentation_image_uris.each { |image_uri|
 
-    match = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    id_arr << match[2]
+      match = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+      id_arr << match[2]
 
-    match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    page_arr << match2[4]
+      match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+      page_arr << match2[4]
 
-    path_arr << {"image_uri" => image_uri}.to_json
+      path_arr << {"image_uri" => image_uri}.to_json
 
-  }
+    }
+
+  else
+
+    # todo modify for gdz
+
+    # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
+    match = firstUri.match(/(\S*\/content\/)(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+
+    work    = match[2]
+    product = @short_product
+
+    meta.product = product
+    meta.work    = work
+
+    presentation_image_uris.each { |image_uri|
+
+      match = image_uri.match(/(\S*\/content\/)(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      page  = match[5]
+
+      id_arr << "#{product}:#{work}:#{page}"
+
+      page_arr << page
+
+      path_arr << {"image_uri" => image_uri}.to_json
+
+    }
+  end
 
   meta.addNlh_id = id_arr
   meta.addPage   = page_arr
@@ -509,35 +539,83 @@ def processFulltexts(meta)
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
 
-    meta.fulltext_uris.each { |fulltexturi|
+    unless @oai_endpoint == 'true'
 
-      # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-      match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+      meta.fulltext_uris.each { |fulltexturi|
 
-      product  = match[2]
-      work     = match[3]
-      file     = match[4]
-      filename = match[4] + '.tei.xml'
+        # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+        match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
-      if @fulltext_from_orig == 'true'
-        release = @rredis.hget('mapping', work)
-        from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-        to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-      else
-        from = "#{@teiinpath}/#{work}/#{filename}"
-        to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-      end
+        product  = match[2]
+        work     = match[3]
+        file     = match[4]
+        filename = match[4] + '.tei.xml'
+
+        if @fulltext_from_orig == 'true'
+          release = @rredis.hget('mapping', work)
+          from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+          to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+        else
+          from = "#{@teiinpath}/#{work}/#{filename}"
+          to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+        end
 
 
-      to_dir = "#{@teioutpath}/#{product}/#{work}"
+        to_dir = "#{@teioutpath}/#{product}/#{work}"
 
 
-      if @fulltextexist == 'true'
-        fulltextArr << getFulltext(from)
+        if @fulltextexist == 'true'
+          fulltextArr << getFulltext(from)
+        end
 
-      end
-      fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
-    }
+        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+      }
+
+    else
+
+      # todo modify for gdz
+
+      meta.fulltext_uris.each { |fulltexturi|
+
+        # gdzocr_url": [
+        #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
+
+        match = fulltexturi.match(/(\S*gdzocr)\/(\S*)\/(\S*)\.(\S*)/)
+
+        work    = match[2]
+        product = @short_product
+        page = match[3]
+        format = match[4]
+        filename = "#{page}.#{format}"
+
+        #product  = match[2]
+        #work     = match[3]
+        #file     = match[4]
+        #filename = match[4] + '.tei.xml'
+
+        #if @fulltext_from_orig == 'true'
+        #  release = @rredis.hget('mapping', work)
+        #  from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+        #  to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+        #else
+        #  from = "#{@teiinpath}/#{work}/#{filename}"
+        #  to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+        #end
+
+        from = match[0]
+
+        to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+
+        if @fulltextexist == 'true'
+          fulltextArr << getFulltext(from)
+        end
+
+        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+      }
+
+    end
+
 
     meta.addFulltext = fulltextArr
 
@@ -800,7 +878,7 @@ def parseDoc(doc, source)
       meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:titleInfo #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:titleInfo for #{source} (#{e.message})")
   end
 
 
@@ -814,7 +892,7 @@ def parseDoc(doc, source)
       meta.addEditionInfo  = originInfoHash[:edition]
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:originInfo #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:originInfo for #{source} (#{e.message})")
   end
 
 
@@ -826,7 +904,7 @@ def parseDoc(doc, source)
       meta.addName = getName(modsNameElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:name #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:name for #{source} (#{e.message})")
   end
 
 # TypeOfResource:
@@ -837,7 +915,7 @@ def parseDoc(doc, source)
       meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:typeOfResource #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
   end
 
 # Genre
@@ -848,7 +926,7 @@ def parseDoc(doc, source)
       meta.addGenre = getGenre(modsGenreElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:genre #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:genre for #{source} (#{e.message})")
   end
 
 # Language
@@ -859,7 +937,7 @@ def parseDoc(doc, source)
       meta.addLanguage = getLanguage(modsLanguageElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:language #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:language for #{source} (#{e.message})")
   end
 
 # PhysicalDescription:
@@ -870,7 +948,7 @@ def parseDoc(doc, source)
       meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:physicalDescription #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
   end
 
 
@@ -882,7 +960,7 @@ def parseDoc(doc, source)
       meta.addNote = getNote(modsNoteElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:note #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:note for #{source} (#{e.message})")
   end
 
 # Subject:
@@ -893,7 +971,7 @@ def parseDoc(doc, source)
       meta.addSubject = getSubject(modsSubjectElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:subject #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:subject for #{source} (#{e.message})")
   end
 
 # RelatedItem
@@ -904,7 +982,7 @@ def parseDoc(doc, source)
       meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:relatedItem #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:relatedItem for #{source} (#{e.message})")
   end
 
 # Part (of multipart Documents)
@@ -915,7 +993,7 @@ def parseDoc(doc, source)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part #{source} (#{e.message})\n#{e.backtrace}")
+    @logger.error("Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
   end
 
 
@@ -927,7 +1005,7 @@ def parseDoc(doc, source)
       meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:recordInfo for #{source} (#{e.message})")
   end
 
 
@@ -939,7 +1017,7 @@ def parseDoc(doc, source)
       meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve rights info #{source} (#{e.message})")
+    @logger.error("Problems to resolve rights info for #{source} (#{e.message})")
   end
 
 #=end
@@ -958,7 +1036,7 @@ def parseDoc(doc, source)
         processPresentationImages(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve presentation images #{source} (#{e.message})")
+      @logger.error("Problems to resolve presentation images for #{source} (#{e.message})")
     end
 
     # =begin
@@ -972,7 +1050,7 @@ def parseDoc(doc, source)
         processFulltexts(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve full texts #{source} (#{e.message})")
+      @logger.error("Problems to resolve full texts for #{source} (#{e.message})")
     end
 
 # =end
@@ -1006,7 +1084,7 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  unless oai_endpoint == 'true'
+  unless @oai_endpoint == 'true'
 
     while true do
 
