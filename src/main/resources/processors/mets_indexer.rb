@@ -20,33 +20,29 @@ require 'lib/note'
 require 'lib/right'
 require 'lib/logical_element'
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
 
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-
-@solr = RSolr.connect :url => ENV['SOLR_ADR']
-
+MAX_ATTEMPTS        = ENV['MAX_ATTEMPTS'].to_i
+oai_endpoint        = ENV['METS_VIA_OAI']
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 @originpath         = ENV['ORIG']
-
 #@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 #@image_from_orig = ENV['GET_IMAGES_FROM_ORIG']
 @fulltext_from_orig = ENV['GET_FULLTEXT_FROM_ORIG']
-
-@fulltextexist     = ENV['FULLTEXTS_EXIST']
+@fulltextexist      = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
+@context            = ENV['CONTEXT']
+
+@logger       = Logger.new(STDOUT)
+@logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_indexer.log")
 @file_logger.level = Logger::DEBUG
 
-
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@context = ENV['CONTEXT']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 def modifyUrisInArray(images, object_uri)
@@ -405,7 +401,7 @@ end
 
 def getPart(modsPartElements)
 
- partArr = Array.new
+  partArr = Array.new
 
   modsPartElements.each { |p|
     part = Part.new
@@ -418,7 +414,7 @@ def getPart(modsPartElements)
       part.type   = checkEmptyString detail.first.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
       part.number = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
     end
-    
+
     partArr << part
   }
 
@@ -712,6 +708,10 @@ def metsRigthsMDElements(metsRightsMDElements)
 
 end
 
+def metsUri(ppn)
+  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
+end
+
 def push_many(queue, arr)
   @rredis.lpush(queue, arr)
 
@@ -745,6 +745,33 @@ def parsePath(path)
     return
   end
 
+  return parseDoc(doc)
+
+end
+
+def parsePPN(ppn)
+
+  uri = metsUri(ppn)
+
+  attempts = 0
+  doc      = ""
+
+  begin
+    doc = Nokogiri::XML(open(uri))
+  rescue Exception => e
+    @logger.warn("Problem to open file #{path}")
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error("Could not open file #{path} #{e.message}")
+    return
+  end
+
+  return parseDoc(doc)
+
+end
+
+def parseDoc(doc)
+
   meta = MetsModsMetadata.new
 
 #=begin
@@ -764,7 +791,7 @@ def parsePath(path)
   meta.product = ENV['SHORT_PRODUCT']
 
 
-  # Titel
+# Titel
   begin
     modsTitleInfoElements = mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3')
 
@@ -776,7 +803,7 @@ def parsePath(path)
   end
 
 
-  # Erscheinungsort
+# Erscheinungsort
   begin
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -790,7 +817,7 @@ def parsePath(path)
   end
 
 
-  # Name
+# Name
   begin
     modsNameElements = mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -801,7 +828,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
   end
 
-  # TypeOfResource:
+# TypeOfResource:
   begin
     modsTypeOfResourceElements = mods.xpath('mods:typeOfResource', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -812,7 +839,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:typeOfResource #{path} (#{e.message})")
   end
 
-  # Genre
+# Genre
   begin
     modsGenreElements = mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -823,7 +850,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:genre #{path} (#{e.message})")
   end
 
-  # Language
+# Language
   begin
     modsLanguageElements = mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -834,7 +861,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:language #{path} (#{e.message})")
   end
 
-  # PhysicalDescription:
+# PhysicalDescription:
   begin
     modsPhysicalDescriptionElements = mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -846,7 +873,7 @@ def parsePath(path)
   end
 
 
-  # Note:
+# Note:
   begin
     modsNoteElements = mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -857,7 +884,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:note #{path} (#{e.message})")
   end
 
-  # Subject:
+# Subject:
   begin
     modsSubjectElements = mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -868,7 +895,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:subject #{path} (#{e.message})")
   end
 
-  # RelatedItem
+# RelatedItem
   begin
     modsRelatedItemElements = mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -879,7 +906,7 @@ def parsePath(path)
     @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
   end
 
-  # Part (of multipart Documents)
+# Part (of multipart Documents)
   begin
     modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -891,7 +918,7 @@ def parsePath(path)
   end
 
 
-  # RecordInfo:
+# RecordInfo:
   begin
     modsRecordInfoElements = mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -903,7 +930,7 @@ def parsePath(path)
   end
 
 
-  # rights info
+# rights info
   begin
     metsRightsMDElements = doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -958,7 +985,7 @@ def parsePath(path)
   end
 
 
-  # logical structure
+# logical structure
 
   logicalElementArr = Array.new
 
@@ -972,45 +999,90 @@ def parsePath(path)
   meta.addLogicalElement = logicalElementArr
 
   return meta
+
 end
 
 
 $vertx.execute_blocking(lambda { |future|
 
-  while true do
+  unless oai_endpoint == 'true'
 
-    res = @rredis.brpop("metsindexer")
+    while true do
 
-    attempts = 0
-    begin
-      if (res != '' && res != nil)
+      res = @rredis.brpop("metsindexer")
 
-        json = JSON.parse res[1]
-        path = json['path']
+      attempts = 0
+      begin
+        if (res != '' && res != nil)
 
-
-        @logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-        metsModsMetadata = parsePath(path)
-
-        if metsModsMetadata != nil
-          addDocsToSolr(metsModsMetadata.to_solr_string)
+          json = JSON.parse res[1]
+          path = json['path']
 
 
-          @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+          metsModsMetadata = parsePath(path)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.to_solr_string)
+
+
+            @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          end
         else
-          @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.error "Get empty string or nil from redis"
         end
-      else
-        @logger.error "Get empty string or nil from redis"
+
+
+      rescue Exception => e
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
       end
 
+    end
 
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+  else
+
+    while true do
+
+      res = @rredis.brpop("metsindexer")
+
+      attempts = 0
+      begin
+        if (res != '' && res != nil)
+
+          json = JSON.parse res[1]
+          ppn  = json['ppn']
+
+
+          @logger.debug "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+          metsModsMetadata = parsePPN(ppn)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.to_solr_string)
+
+
+            @logger.debug "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.debug "\tCould not process #{ppn} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          end
+        else
+          @logger.error "Get empty string or nil from redis"
+        end
+
+
+      rescue Exception => e
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
+        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+      end
+
     end
 
   end
