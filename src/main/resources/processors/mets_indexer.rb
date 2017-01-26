@@ -84,7 +84,7 @@ def checkEmptyString(str)
 end
 
 
-def getIdentifiers(mods, path)
+def getIdentifiers(mods, source)
 
   ids = Hash.new
 
@@ -96,14 +96,14 @@ def getIdentifiers(mods, path)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve an identifier #{path}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve an identifier for #{source}\n\t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
 end
 
 
-def getRecordIdentifiers(mods, path)
+def getRecordIdentifiers(mods, source)
 
   ids = Hash.new
 
@@ -115,8 +115,8 @@ def getRecordIdentifiers(mods, path)
     end
 
     recordIdentifiers.each do |id_element|
-      source = id_element.attributes['source']
-      if source != nil
+      id_source = id_element.attributes['source']
+      if id_source != nil
         type = id_element.attributes['source'].value
       else
         type = 'recordIdentifier'
@@ -125,7 +125,7 @@ def getRecordIdentifiers(mods, path)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve the recordidentifier #{path}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve the recordidentifier for #{source}\n\t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -432,7 +432,7 @@ def getRecordInfo(modsRecordInfoElements)
 end
 
 
-def processPresentationImages(meta, path)
+def processPresentationImages(meta)
 
   path_arr = Array.new
   id_arr   = Array.new
@@ -461,7 +461,7 @@ def processPresentationImages(meta, path)
     match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
     page_arr << match2[4]
 
-    path_arr << {"path" => path, "image_uri" => image_uri}.to_json
+    path_arr << {"image_uri" => image_uri}.to_json
 
   }
 
@@ -501,7 +501,7 @@ def getFulltext(path)
 
 end
 
-def processFulltexts(meta, path)
+def processFulltexts(meta)
 
   if @fulltextexist == 'true'
 
@@ -745,7 +745,7 @@ def parsePath(path)
     return
   end
 
-  return parseDoc(doc)
+  return parseDoc(doc, path)
 
 end
 
@@ -759,18 +759,18 @@ def parsePPN(ppn)
   begin
     doc = Nokogiri::XML(open(uri))
   rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
+    @logger.warn("Problem to open uri #{uri}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Could not open uri #{uri} #{e.message}")
     return
   end
 
-  return parseDoc(doc)
+  return parseDoc(doc, uri)
 
 end
 
-def parseDoc(doc)
+def parseDoc(doc, source)
 
   meta = MetsModsMetadata.new
 
@@ -783,10 +783,10 @@ def parseDoc(doc)
   begin
     meta.mods = mods.to_xml
   rescue Exception => e
-    @logger.debug "#{path}, #{e.message}"
+    @logger.debug "#{source}, #{e.message}"
   end
-  meta.addIdentifiers      = getIdentifiers(mods, path)
-  meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
+  meta.addIdentifiers      = getIdentifiers(mods, source)
+  meta.addRecordIdentifiers= getRecordIdentifiers(mods, source)
 
   meta.product = ENV['SHORT_PRODUCT']
 
@@ -799,7 +799,7 @@ def parseDoc(doc)
       meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:titleInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:titleInfo #{source} (#{e.message})")
   end
 
 
@@ -813,7 +813,7 @@ def parseDoc(doc)
       meta.addEditionInfo  = originInfoHash[:edition]
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:originInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:originInfo #{source} (#{e.message})")
   end
 
 
@@ -825,7 +825,7 @@ def parseDoc(doc)
       meta.addName = getName(modsNameElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:name #{source} (#{e.message})")
   end
 
 # TypeOfResource:
@@ -836,7 +836,7 @@ def parseDoc(doc)
       meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:typeOfResource #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:typeOfResource #{source} (#{e.message})")
   end
 
 # Genre
@@ -847,7 +847,7 @@ def parseDoc(doc)
       meta.addGenre = getGenre(modsGenreElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:genre #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:genre #{source} (#{e.message})")
   end
 
 # Language
@@ -858,7 +858,7 @@ def parseDoc(doc)
       meta.addLanguage = getLanguage(modsLanguageElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:language #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:language #{source} (#{e.message})")
   end
 
 # PhysicalDescription:
@@ -869,7 +869,7 @@ def parseDoc(doc)
       meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:physicalDescription #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:physicalDescription #{source} (#{e.message})")
   end
 
 
@@ -881,7 +881,7 @@ def parseDoc(doc)
       meta.addNote = getNote(modsNoteElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:note #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:note #{source} (#{e.message})")
   end
 
 # Subject:
@@ -892,7 +892,7 @@ def parseDoc(doc)
       meta.addSubject = getSubject(modsSubjectElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:subject #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:subject #{source} (#{e.message})")
   end
 
 # RelatedItem
@@ -903,7 +903,7 @@ def parseDoc(doc)
       meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:relatedItem #{source} (#{e.message})")
   end
 
 # Part (of multipart Documents)
@@ -914,7 +914,7 @@ def parseDoc(doc)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part #{path} (#{e.message})\n#{e.backtrace}")
+    @logger.error("Problems to resolve mods:part #{source} (#{e.message})\n#{e.backtrace}")
   end
 
 
@@ -926,7 +926,7 @@ def parseDoc(doc)
       meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:recordInfo #{source} (#{e.message})")
   end
 
 
@@ -938,7 +938,7 @@ def parseDoc(doc)
       meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve rights info #{path} (#{e.message})")
+    @logger.error("Problems to resolve rights info #{source} (#{e.message})")
   end
 
 #=end
@@ -954,10 +954,10 @@ def parseDoc(doc)
 
       unless metsPresentationImageUriElements.empty?
         meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processPresentationImages(meta, path)
+        processPresentationImages(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
+      @logger.error("Problems to resolve presentation images #{source} (#{e.message})")
     end
 
     # =begin
@@ -968,10 +968,10 @@ def parseDoc(doc)
 
       unless metsFullTextUriElements.empty?
         meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processFulltexts(meta, path)
+        processFulltexts(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve full texts #{path} (#{e.message})")
+      @logger.error("Problems to resolve full texts #{source} (#{e.message})")
     end
 
 # =end
