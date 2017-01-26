@@ -2,6 +2,7 @@ require 'vertx/vertx'
 require 'rsolr'
 require 'logger'
 require 'nokogiri'
+require 'open-uri'
 require 'redis'
 require 'json'
 require 'set'
@@ -738,10 +739,10 @@ def parsePath(path)
       }
     }
   rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Problem to open file #{path}")
+    @file_logger.error("Could not open file #{path} #{e.message}")
     return
   end
 
@@ -759,10 +760,10 @@ def parsePPN(ppn)
   begin
     doc = Nokogiri::XML(open(uri))
   rescue Exception => e
-    @logger.warn("Problem to open uri #{uri}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open uri #{uri} #{e.message}")
+    @logger.error("Problem to open uri #{uri}")
+    @file_logger.error("Could not open uri #{uri} #{e.message}")
     return
   end
 
