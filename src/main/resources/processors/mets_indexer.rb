@@ -462,6 +462,7 @@ def processPresentationImages(meta)
     work    = match[4]
 
     meta.baseurl = baseurl
+    meta.url_pattern = @url_pattern
     meta.product = product
     meta.work    = work
     meta.image_format = ENV['IMAGE_OUT_FORMAT']
