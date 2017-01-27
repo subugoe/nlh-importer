@@ -364,6 +364,10 @@
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
         <field name="byperson" type="string" indexed="true" omitNorms="true"/>
         <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
+
+        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
 
         <!-- modified for nlh -->
         <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
@@ -411,11 +415,6 @@
 
         <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="part_type" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
 
         <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
