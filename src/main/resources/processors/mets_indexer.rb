@@ -76,7 +76,8 @@ def addDocsToSolr(document)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not add doc to solr \t#{e.message}")
+    @file_logger.error("Could not add doc to solr \t#{e.message}\n\t#{e.backtrace}")
   end
 end
 
@@ -101,7 +102,8 @@ def getIdentifiers(mods, source)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve an identifier for #{source}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve an identifier for #{source} \t#{e.message}")
+    @file_logger.error("Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -130,7 +132,8 @@ def getRecordIdentifiers(mods, source)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve the recordidentifier for #{source}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}")
+    @file_logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -451,7 +454,7 @@ def processPresentationImages(meta)
   unless @oai_endpoint == 'true'
 
     # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
-    match   = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+    match = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
 
     baseurl = match[1]
     product = match[3]
@@ -525,10 +528,10 @@ def getFulltext(path)
     end
 
   rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @file_logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Could not open file #{path} \t#{e.message}")
+    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -545,7 +548,7 @@ def processFulltexts(meta)
     unless @oai_endpoint == 'true'
 
       # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-      match   = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+      match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
       product = match[2]
       work    = match[3]
@@ -584,7 +587,7 @@ def processFulltexts(meta)
       # gdzocr_url": [
       #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
 
-      match   = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
       product = @short_product
       work    = match[3]
@@ -825,8 +828,8 @@ def parsePath(path)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Problem to open file #{path}")
-    @file_logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Could not open file #{path} \t#{e.message}")
+    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -846,8 +849,8 @@ def parsePPN(ppn)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Problem to open uri #{uri}")
-    @file_logger.error("Could not open uri #{uri} #{e.message}")
+    @logger.error("Could not open uri #{uri} \t#{e.message}")
+    @file_logger.error("Could not open uri #{uri} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -868,8 +871,10 @@ def parseDoc(doc, source)
   begin
     meta.mods = mods.to_xml
   rescue Exception => e
-    @logger.debug "#{source}, #{e.message}"
+    @logger.error "Could not get MODS XML for #{source} \t#{e.message}"
+    @file_logger.error("Could not get MODS XML for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
+
   meta.addIdentifiers      = getIdentifiers(mods, source)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, source)
 
@@ -885,6 +890,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:titleInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -899,6 +905,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:originInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -911,6 +918,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:name for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # TypeOfResource:
@@ -922,6 +930,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Genre
@@ -933,6 +942,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:genre for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Language
@@ -944,6 +954,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:language for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # PhysicalDescription:
@@ -955,6 +966,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -967,6 +979,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:note for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Subject:
@@ -978,6 +991,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:subject for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # RelatedItem
@@ -989,6 +1003,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:relatedItem for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Part (of multipart Documents)
@@ -1000,6 +1015,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
+    @file_logger.error("Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1012,6 +1028,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:recordInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1024,6 +1041,7 @@ def parseDoc(doc, source)
     end
   rescue Exception => e
     @logger.error("Problems to resolve rights info for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 #=end
@@ -1043,6 +1061,7 @@ def parseDoc(doc, source)
       end
     rescue Exception => e
       @logger.error("Problems to resolve presentation images for #{source} (#{e.message})")
+      @file_logger.error("Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
     # =begin
@@ -1057,6 +1076,7 @@ def parseDoc(doc, source)
       end
     rescue Exception => e
       @logger.error("Problems to resolve full texts for #{source} (#{e.message})")
+      @file_logger.error("Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
 # =end
@@ -1104,28 +1124,29 @@ $vertx.execute_blocking(lambda { |future|
           path = json['path']
 
 
-          @logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
           metsModsMetadata = parsePath(path)
 
           if metsModsMetadata != nil
             addDocsToSolr(metsModsMetadata.to_solr_string)
 
-
-            @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "\tCould not process #{path} metadata, object is nil"
           end
         else
-          @logger.error "Get empty string or nil from redis"
+          @logger.error "Get empty string or nil from redis (#{res[1]})"
+          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
         end
 
 
       rescue Exception => e
         attempts = attempts + 1
         retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
       end
 
     end
@@ -1144,7 +1165,7 @@ $vertx.execute_blocking(lambda { |future|
           ppn  = json['ppn']
 
 
-          @logger.debug "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
           metsModsMetadata = parsePPN(ppn)
 
@@ -1152,20 +1173,22 @@ $vertx.execute_blocking(lambda { |future|
             addDocsToSolr(metsModsMetadata.to_solr_string)
 
 
-            @logger.debug "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.debug "\tCould not process #{ppn} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "\tCould not process #{path} metadata, object is nil"
           end
         else
-          @logger.error "Get empty string or nil from redis"
+          @logger.error "Get empty string or nil from redis (#{res[1]})"
+          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
         end
 
 
       rescue Exception => e
         attempts = attempts + 1
         retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-        @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
       end
 
     end
