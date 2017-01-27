@@ -16,6 +16,9 @@ class MetsModsMetadata
                 :context,
                 :doctype,
 
+                :url_pattern,
+                :baseurl,
+
                 :original_infos,
                 :edition_infos,
                 :languages,
@@ -68,6 +71,7 @@ class MetsModsMetadata
     @type_of_resources  = Array.new
     @genres             = Array.new
 
+
     @original_infos        = Array.new
     @edition_infos         = Array.new
     @languages             = Array.new
@@ -101,6 +105,8 @@ class MetsModsMetadata
   def addRecordIdentifiers=(record_identifier_hash)
     @record_identifiers.merge!(record_identifier_hash)
   end
+
+
 
 
   def addTitleInfo=(titleInfo)
@@ -231,6 +237,9 @@ class MetsModsMetadata
 
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
+
+    h.merge! ({:url_pattern => @url_pattern})
+    h.merge! ({:baseurl => @baseurl})
 
 
     title     = Array.new

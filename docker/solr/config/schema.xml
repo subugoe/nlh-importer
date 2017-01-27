@@ -313,12 +313,15 @@
         <!-- related image index position of fulltext (solr doc) -->
         <field name="image_index" type="string" indexed="true" stored="true"/>
 
-        <field name="product" type="string" indexed="true" stored="true"/>
         <field name="collection" type="string" indexed="true" stored="true"/>
+        <field name="product" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
         <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
+
+        <field name="url_pattern" type="string" indexed="false" stored="true"/>
+        <field name="baseurl" type="string" indexed="false" stored="true"/>
 
         <!-- todo: begin remove ()after full reindex -->
         <field name="volume_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>

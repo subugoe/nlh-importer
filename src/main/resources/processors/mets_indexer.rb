@@ -22,9 +22,11 @@ require 'lib/right'
 require 'lib/logical_element'
 
 
-MAX_ATTEMPTS        = ENV['MAX_ATTEMPTS'].to_i
-@oai_endpoint       = ENV['METS_VIA_OAI']
-@short_product      = ENV['SHORT_PRODUCT']
+MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
+@oai_endpoint  = ENV['METS_VIA_OAI']
+@short_product = ENV['SHORT_PRODUCT']
+@url_pattern   = ENV['URI_PATTERN']
+
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 @originpath         = ENV['ORIG']
@@ -449,22 +451,23 @@ def processPresentationImages(meta)
   unless @oai_endpoint == 'true'
 
     # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
-    match   = firstUri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    product = match[2]
-    work    = match[3]
+    match   = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
 
+    baseurl = match[1]
+    product = match[3]
+    work    = match[4]
 
+    meta.baseurl = baseurl
     meta.product = product
     meta.work    = work
 
     presentation_image_uris.each { |image_uri|
 
-      match = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-      id_arr << match[2]
+      match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+      page  = match[4]
 
-      match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-      page_arr << match2[4]
-
+      id_arr << "#{product}:#{work}:#{page}"
+      page_arr << page
       path_arr << {"image_uri" => image_uri}.to_json
 
     }
@@ -474,23 +477,23 @@ def processPresentationImages(meta)
     # todo modify for gdz
 
     # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
-    match = firstUri.match(/(\S*\/content\/)(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+    match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
-    work    = match[2]
+    baseurl = match[1]
+    work    = match[3]
     product = @short_product
 
+    meta.baseurl = baseurl
     meta.product = product
     meta.work    = work
 
     presentation_image_uris.each { |image_uri|
 
-      match = image_uri.match(/(\S*\/content\/)(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-      page  = match[5]
+      match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      page  = match[6]
 
       id_arr << "#{product}:#{work}:#{page}"
-
       page_arr << page
-
       path_arr << {"image_uri" => image_uri}.to_json
 
     }
@@ -541,13 +544,16 @@ def processFulltexts(meta)
 
     unless @oai_endpoint == 'true'
 
+      # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+      match   = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+
+      product = match[2]
+      work    = match[3]
+
       meta.fulltext_uris.each { |fulltexturi|
 
-        # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
         match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
-        product  = match[2]
-        work     = match[3]
         file     = match[4]
         filename = match[4] + '.tei.xml'
 
@@ -575,17 +581,20 @@ def processFulltexts(meta)
 
       # todo modify for gdz
 
+      # gdzocr_url": [
+      #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
+
+      match   = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+
+      product = @short_product
+      work    = match[3]
+
       meta.fulltext_uris.each { |fulltexturi|
 
-        # gdzocr_url": [
-        #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
+        match = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
-        match = fulltexturi.match(/(\S*gdzocr)\/(\S*)\/(\S*)\.(\S*)/)
-
-        work    = match[2]
-        product = @short_product
-        page = match[3]
-        format = match[4]
+        page     = match[4]
+        format   = match[5]
         filename = "#{page}.#{format}"
 
         #product  = match[2]
@@ -602,7 +611,7 @@ def processFulltexts(meta)
         #  to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
         #end
 
-        from = match[0]
+        from     = match[0]
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
@@ -740,9 +749,6 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 end
 
 def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, level)
-
-
-  # todo abschließen
 
   logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
