@@ -542,13 +542,13 @@ class MetsModsMetadata
 
     @parts.each { |part|
       part_order << part.currentnosort
-      currentnosort << part.currentnosort
+      currentnosort << part.currentnosort.to_i
       part_number << part.currentno
       currentno << part.currentno
     }
 
     h.merge! ({:part_order => part_order})
-    h.merge! ({:currentnosort => currentnosort.to_i})
+    h.merge! ({:currentnosort => currentnosort})
     h.merge! ({:part_number => part_number})
     h.merge! ({:currentno => currentno})
 
