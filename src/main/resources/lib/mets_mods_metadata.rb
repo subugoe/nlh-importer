@@ -9,6 +9,7 @@ class MetsModsMetadata
                 :names,
                 :type_of_resources,
                 :genres,
+                :sponsors,
 
                 :isnlh,
                 :iswork,
@@ -70,7 +71,7 @@ class MetsModsMetadata
     @names              = Array.new
     @type_of_resources  = Array.new
     @genres             = Array.new
-
+    @sponsors           = Array.new
 
     @original_infos        = Array.new
     @edition_infos         = Array.new
@@ -95,7 +96,7 @@ class MetsModsMetadata
 
     @fulltexts = Array.new
 
-    @image_format = ENV['IMAGE_OUT_FORMAT']
+    #@image_format = ENV['IMAGE_OUT_FORMAT']
   end
 
   def addIdentifiers=(identifiersHash)
@@ -105,8 +106,6 @@ class MetsModsMetadata
   def addRecordIdentifiers=(record_identifier_hash)
     @record_identifiers.merge!(record_identifier_hash)
   end
-
-
 
 
   def addTitleInfo=(titleInfo)
@@ -127,6 +126,9 @@ class MetsModsMetadata
     @names += name
   end
 
+  def addSponsor=(sponsor)
+    @sponsors += sponsor
+  end
 
   def addTypeOfResource=(typeOfResource)
     @type_of_resources += typeOfResource
@@ -329,6 +331,9 @@ class MetsModsMetadata
     h.merge! ({:facet_person_personal => facet_person_personal})
     h.merge! ({:facet_person_corporate => facet_person_corporate})
 
+    # ---
+
+    h.merge! ({:sponsor => @sponsors})
 
     # ---
 
@@ -395,6 +400,7 @@ class MetsModsMetadata
 
 
     h.merge! ({:product => @product})
+
     if @doctype == "work"
       h.merge! ({:work => @work})
       h.merge! ({:page => @pages})
@@ -528,10 +534,23 @@ class MetsModsMetadata
     h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
 
     # order, :type, :number
-    h.merge! ({:part_order => @parts.collect { |part| part.order }})
-    h.merge! ({:part_type => @parts.collect { |part| part.type }})
-    h.merge! ({:part_number => @parts.collect { |part| part.number }})
-    h.merge! ({:currentno => @parts.collect { |part| part.order }})
+
+    part_order    = Array.new
+    currentnosort = Array.new
+    part_number   = Array.new
+    currentno     = Array.new
+
+    @parts.each { |part|
+      part_order << part.currentnosort
+      currentnosort << part.currentnosort
+      part_number << part.currentno
+      currentno << part.currentno
+    }
+
+    h.merge! ({:part_order => part_order})
+    h.merge! ({:currentnosort => currentnosort.to_i})
+    h.merge! ({:part_number => part_number})
+    h.merge! ({:currentno => currentno})
 
     # @record_infos.each { |recInfo|
     #   h.merge! recInfo.to_solr_string

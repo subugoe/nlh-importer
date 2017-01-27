@@ -335,6 +335,8 @@ def getNote(modsNoteElements)
 end
 
 
+
+
 def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
@@ -414,13 +416,12 @@ def getPart(modsPartElements)
   modsPartElements.each { |p|
     part = Part.new
 
-    part.order = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.currentnosort = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     detail = p.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
 
     unless detail.empty?
-      part.type   = checkEmptyString detail.first.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
-      part.number = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+      part.currentno = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
     end
 
     partArr << part
@@ -463,6 +464,7 @@ def processPresentationImages(meta)
     meta.baseurl = baseurl
     meta.product = product
     meta.work    = work
+    meta.image_format = ENV['IMAGE_OUT_FORMAT']
 
     presentation_image_uris.each { |image_uri|
 
@@ -484,11 +486,14 @@ def processPresentationImages(meta)
 
     baseurl = match[1]
     work    = match[3]
+    image_format = match[7]
     product = @short_product
+
 
     meta.baseurl = baseurl
     meta.product = product
     meta.work    = work
+    meta.image_format = image_format
 
     presentation_image_uris.each { |image_uri|
 
@@ -972,7 +977,7 @@ def parseDoc(doc, source)
 
 # Note:
   begin
-    modsNoteElements = mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+    modsNoteElements= mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
     unless modsNoteElements.empty?
       meta.addNote = getNote(modsNoteElements)
@@ -981,6 +986,21 @@ def parseDoc(doc, source)
     @logger.error("Problems to resolve mods:note for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
+
+# Sponsor:
+  begin
+    modsSponsorElements  = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/') # [0].text
+
+    unless modsSponsorElements.empty?
+      meta.addSponsor = modsSponsorElements.text
+    end
+
+  rescue Exception => e
+    @logger.error("Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
+
 
 # Subject:
   begin
