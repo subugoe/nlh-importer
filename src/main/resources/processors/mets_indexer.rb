@@ -661,7 +661,7 @@ def getLogicalPageRange(smLinks)
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     from = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
-    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").match(/(\S*_)(\S*)/)[2].to_i
+    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s.match(/(\S*_)(\S*)/)[2].to_i
 
     addToHash(logPhyHsh, from, to)
   }
