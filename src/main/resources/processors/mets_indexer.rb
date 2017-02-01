@@ -335,8 +335,6 @@ def getNote(modsNoteElements)
 end
 
 
-
-
 def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
@@ -461,10 +459,10 @@ def processPresentationImages(meta)
     product = match[3]
     work    = match[4]
 
-    meta.baseurl = baseurl
-    meta.url_pattern = @url_pattern
-    meta.product = product
-    meta.work    = work
+    meta.baseurl      = baseurl
+    meta.url_pattern  = @url_pattern
+    meta.product      = product
+    meta.work         = work
     meta.image_format = ENV['IMAGE_OUT_FORMAT']
 
     presentation_image_uris.each { |image_uri|
@@ -485,15 +483,15 @@ def processPresentationImages(meta)
     # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
     match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
-    baseurl = match[1]
-    work    = match[3]
+    baseurl      = match[1]
+    work         = match[3]
     image_format = match[7]
-    product = @short_product
+    product      = @short_product
 
 
-    meta.baseurl = baseurl
-    meta.product = product
-    meta.work    = work
+    meta.baseurl      = baseurl
+    meta.product      = product
+    meta.work         = work
     meta.image_format = image_format
 
     presentation_image_uris.each { |image_uri|
@@ -1050,7 +1048,7 @@ def parseDoc(doc, source)
 
 # Sponsor:
   begin
-    modsSponsorElements  = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/') # [0].text
+    modsSponsorElements = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/') # [0].text
 
     unless modsSponsorElements.empty?
       meta.addSponsor = modsSponsorElements.text
@@ -1060,7 +1058,6 @@ def parseDoc(doc, source)
     @logger.error("Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
-
 
 
 # Subject:
