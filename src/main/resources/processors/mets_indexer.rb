@@ -549,6 +549,9 @@ def processFulltexts(meta)
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
 
+    fulltext_uris = meta.fulltext_uris
+    firstUri = fulltext_uris[0]
+
     unless @oai_endpoint == 'true'
 
       # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
@@ -557,7 +560,7 @@ def processFulltexts(meta)
       product = match[2]
       work    = match[3]
 
-      meta.fulltext_uris.each { |fulltexturi|
+      fulltext_uris.each { |fulltexturi|
 
         match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
@@ -596,7 +599,7 @@ def processFulltexts(meta)
       product = @short_product
       work    = match[3]
 
-      meta.fulltext_uris.each { |fulltexturi|
+      fulltext_uris.each { |fulltexturi|
 
         match = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
