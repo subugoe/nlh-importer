@@ -55,6 +55,7 @@ class MetsModsMetadata
                 :thumb_image_uris,
                 :fulltext_uris,
                 :logicalElements,
+                :physicalElements,
 
                 :fulltexts,
 
@@ -93,6 +94,7 @@ class MetsModsMetadata
     @thumb_image_uris        = Array.new
     @fulltext_uris           = Array.new
     @logicaElements          = Array.new
+    @physicalElements        = Array.new
 
     @fulltexts = Array.new
 
@@ -208,6 +210,9 @@ class MetsModsMetadata
     @logicaElements += logicalElement
   end
 
+  def addPhysicalElement(physicalElement)
+    @physicalElements += physicalElement
+  end
 
   def addFulltext=(fulltext)
     @fulltexts += fulltext
@@ -452,6 +457,34 @@ class MetsModsMetadata
     h.merge! ({:log_part_product => part_product})
     h.merge! ({:log_part_work => part_work})
     h.merge! ({:log_part_nlh_id => part_nlh_id})
+
+
+    # add physical info (e.g. ORDER, ORDERLABEL)
+    #:type, :id, :order, :orderlabel
+
+    id               = Array.new
+    type             = Array.new
+    order             = Array.new
+    orderlabel       = Array.new
+    level            = Array.new
+
+    @physicalElements.each { |el|
+
+      id << el.id
+      type << el.type
+      order << el.order.to_i
+      orderlabel << el.orderlabel
+      level << el.level
+
+    }
+
+    h.merge! ({:phys_id => id})
+    h.merge! ({:phys_type => type})
+    h.merge! ({:phys_order => order})
+    h.merge! ({:phys_orderlabel => orderlabel})
+    h.merge! ({:phys_level => level})
+
+    # ---
 
 
     h.merge! ({:nlh_id => @nlh_ids})

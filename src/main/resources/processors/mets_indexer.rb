@@ -20,7 +20,7 @@ require 'lib/subject'
 require 'lib/note'
 require 'lib/right'
 require 'lib/logical_element'
-
+require 'lib/physical_element'
 
 MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
 @oai_endpoint  = ENV['METS_VIA_OAI']
@@ -665,6 +665,47 @@ def getLogicalPageRange(smLinks)
   return hsh
 end
 
+def getAttributesFromPhysicalDiv(div, doctype, level)
+
+  physicalElement = PhysicalElement.new
+
+  type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
+
+  if type != nil
+    physicalElement.type = checkEmptyString(type.value)
+  else
+    physicalElement.type = ' '
+  end
+
+  id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
+  if id != nil
+    physicalElement.id = checkEmptyString(id.value)
+  else
+    physicalElement.id = ' '
+  end
+
+
+  label = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
+  if label != nil
+    physicalElement.label = checkEmptyString(label.value)
+  else
+    physicalElement.label = '-1'
+  end
+
+  label = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
+  if label != nil
+    physicalElement.label = checkEmptyString(label.value)
+  else
+    physicalElement.label = ' '
+  end
+
+
+  physicalElement.level = level
+
+
+  return physicalElement
+
+end
 
 def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
@@ -764,10 +805,29 @@ def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMap
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
 
-  divs.each { |innerdiv|
+  unless divs.empty?
+    divs.each { |innerdiv|
+      getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
+    }
+  end
 
-    getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
-  }
+
+end
+
+
+def getPhysicalElements(physicalElementArr, div, doctype, level)
+
+  physicalElementArr << getAttributesFromPhysicalDiv(div, doctype, level)
+
+  divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
+
+
+  unless divs.empty?
+    divs.each { |innerdiv|
+      getPhysicalElements(physicalElementArr, innerdiv, doctype, level+1)
+    }
+  end
+
 
 end
 
@@ -1123,6 +1183,23 @@ def parseDoc(doc, source)
 
 
   meta.addLogicalElement = logicalElementArr
+
+
+# physical structure
+
+  unless doctype == "collection"
+
+    physicalElementArr = Array.new
+
+    maindiv = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+
+    getPhysicalElements(physicalElementArr, maindiv, meta.doctype, 0)
+
+    meta.addPhysicalElement = physicalElementArr
+
+  end
+
+
 
   return meta
 
