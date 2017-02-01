@@ -275,6 +275,12 @@
         <field name="mods" type="string" indexed="true" stored="true"/>
         <field name="identifier" type="string" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="issn" type="string" indexed="true" stored="true"/>
+        <field name="zdb" type="string" indexed="true" stored="true"/>
+        <field name="vd" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="vd17" type="string" indexed="true" stored="true"/>
+        <field name="vd18" type="string" indexed="true" stored="true"/>
+
         <!-- added for nlh -->
         <field name="marc" type="string" indexed="true" stored="true"/>
 
@@ -307,12 +313,15 @@
         <!-- related image index position of fulltext (solr doc) -->
         <field name="image_index" type="string" indexed="true" stored="true"/>
 
-        <field name="product" type="string" indexed="true" stored="true"/>
         <field name="collection" type="string" indexed="true" stored="true"/>
+        <field name="product" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
         <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
+
+        <field name="url_pattern" type="string" indexed="false" stored="true"/>
+        <field name="baseurl" type="string" indexed="false" stored="true"/>
 
         <!-- todo: begin remove ()after full reindex -->
         <field name="volume_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -332,6 +341,11 @@
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_order" type="tint" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_orderlabel" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -355,6 +369,10 @@
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
         <field name="byperson" type="string" indexed="true" omitNorms="true"/>
         <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
+
+        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
 
         <!-- modified for nlh -->
         <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
@@ -403,15 +421,9 @@
         <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
-        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="part_type" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
-
 
         <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
         <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
-
 
 
         <field name="creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
@@ -497,9 +509,6 @@
 
     <!-- for TYPO3 Extension find -->
     <copyField source="pid" dest="id"/>
-
-
-
 
 
     <copyField source="title" dest="metadata"/>

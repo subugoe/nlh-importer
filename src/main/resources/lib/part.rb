@@ -1,5 +1,5 @@
 class Part
 
-  attr_accessor :order, :type, :number
+  attr_accessor :currentnosort, :currentno
 
 end

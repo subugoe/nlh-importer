@@ -2,6 +2,7 @@ require 'vertx/vertx'
 require 'rsolr'
 require 'logger'
 require 'nokogiri'
+require 'open-uri'
 require 'redis'
 require 'json'
 require 'set'
@@ -19,34 +20,34 @@ require 'lib/subject'
 require 'lib/note'
 require 'lib/right'
 require 'lib/logical_element'
+require 'lib/physical_element'
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-
-@solr = RSolr.connect :url => ENV['SOLR_ADR']
+MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
+@oai_endpoint  = ENV['METS_VIA_OAI']
+@short_product = ENV['SHORT_PRODUCT']
+@url_pattern   = ENV['URI_PATTERN']
 
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 @originpath         = ENV['ORIG']
-
 #@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 #@image_from_orig = ENV['GET_IMAGES_FROM_ORIG']
 @fulltext_from_orig = ENV['GET_FULLTEXT_FROM_ORIG']
-
-@fulltextexist     = ENV['FULLTEXTS_EXIST']
+@fulltextexist      = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
+@context            = ENV['CONTEXT']
+
+
+@logger       = Logger.new(STDOUT)
+@logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_indexer.log")
 @file_logger.level = Logger::DEBUG
 
-
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@context = ENV['CONTEXT']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 def modifyUrisInArray(images, object_uri)
@@ -75,7 +76,8 @@ def addDocsToSolr(document)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not add doc to solr\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not add doc to solr \t#{e.message}")
+    @file_logger.error("Could not add doc to solr \t#{e.message}\n\t#{e.backtrace}")
   end
 end
 
@@ -88,7 +90,7 @@ def checkEmptyString(str)
 end
 
 
-def getIdentifiers(mods, path)
+def getIdentifiers(mods, source)
 
   ids = Hash.new
 
@@ -100,14 +102,15 @@ def getIdentifiers(mods, path)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve an identifier #{path}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve an identifier for #{source} \t#{e.message}")
+    @file_logger.error("Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
 end
 
 
-def getRecordIdentifiers(mods, path)
+def getRecordIdentifiers(mods, source)
 
   ids = Hash.new
 
@@ -119,8 +122,8 @@ def getRecordIdentifiers(mods, path)
     end
 
     recordIdentifiers.each do |id_element|
-      source = id_element.attributes['source']
-      if source != nil
+      id_source = id_element.attributes['source']
+      if id_source != nil
         type = id_element.attributes['source'].value
       else
         type = 'recordIdentifier'
@@ -129,7 +132,8 @@ def getRecordIdentifiers(mods, path)
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve the recordidentifier #{path}\n\t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}")
+    @file_logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -405,20 +409,19 @@ end
 
 def getPart(modsPartElements)
 
- partArr = Array.new
+  partArr = Array.new
 
   modsPartElements.each { |p|
     part = Part.new
 
-    part.order = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
+    part.currentnosort = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     detail = p.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
 
     unless detail.empty?
-      part.type   = checkEmptyString detail.first.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
-      part.number = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+      part.currentno = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
     end
-    
+
     partArr << part
   }
 
@@ -436,7 +439,7 @@ def getRecordInfo(modsRecordInfoElements)
 end
 
 
-def processPresentationImages(meta, path)
+def processPresentationImages(meta)
 
   path_arr = Array.new
   id_arr   = Array.new
@@ -445,29 +448,63 @@ def processPresentationImages(meta, path)
   presentation_image_uris = meta.presentation_image_uris
 
 
-  # https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+  firstUri = presentation_image_uris[0]
 
-  firstUri                = presentation_image_uris[0]
+  unless @oai_endpoint == 'true'
 
-  match   = firstUri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-  product = match[2]
-  work    = match[3]
+    # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+    match = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+
+    baseurl = match[1]
+    product = match[3]
+    work    = match[4]
+
+    meta.baseurl      = baseurl
+    meta.url_pattern  = @url_pattern
+    meta.product      = product
+    meta.work         = work
+    meta.image_format = ENV['IMAGE_OUT_FORMAT']
+
+    presentation_image_uris.each { |image_uri|
+
+      match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+      page  = match[4]
+
+      id_arr << "#{product}:#{work}:#{page}"
+      page_arr << page
+      path_arr << {"image_uri" => image_uri}.to_json
+
+    }
+
+  else
+
+    # todo modify for gdz
+
+    # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
+    match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+
+    baseurl      = match[1]
+    work         = match[3]
+    image_format = match[7]
+    product      = @short_product
 
 
-  meta.product = product
-  meta.work    = work
+    meta.baseurl      = baseurl
+    meta.product      = product
+    meta.work         = work
+    meta.image_format = image_format
 
-  presentation_image_uris.each { |image_uri|
+    presentation_image_uris.each { |image_uri|
 
-    match = image_uri.match(/(\S*\/)(\S*:\S*:\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    id_arr << match[2]
+      match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      page  = match[6]
 
-    match2 = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-    page_arr << match2[4]
+      id_arr << "#{product}:#{work}:#{page}"
+      page_arr << page
+      path_arr << {"image_uri" => image_uri}.to_json
 
-    path_arr << {"path" => path, "image_uri" => image_uri}.to_json
-
-  }
+    }
+  end
 
   meta.addNlh_id = id_arr
   meta.addPage   = page_arr
@@ -495,52 +532,106 @@ def getFulltext(path)
     end
 
   rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @file_logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Could not open file #{path} \t#{e.message}")
+    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
 
 end
 
-def processFulltexts(meta, path)
+def processFulltexts(meta)
 
   if @fulltextexist == 'true'
 
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
 
-    meta.fulltext_uris.each { |fulltexturi|
+    unless @oai_endpoint == 'true'
 
       # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-      match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+      match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
 
-      product  = match[2]
-      work     = match[3]
-      file     = match[4]
-      filename = match[4] + '.tei.xml'
+      product = match[2]
+      work    = match[3]
 
-      if @fulltext_from_orig == 'true'
-        release = @rredis.hget('mapping', work)
-        from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-        to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-      else
-        from = "#{@teiinpath}/#{work}/#{filename}"
-        to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-      end
+      meta.fulltext_uris.each { |fulltexturi|
+
+        match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+
+        file     = match[4]
+        filename = match[4] + '.tei.xml'
+
+        if @fulltext_from_orig == 'true'
+          release = @rredis.hget('mapping', work)
+          from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+          to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+        else
+          from = "#{@teiinpath}/#{work}/#{filename}"
+          to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+        end
 
 
-      to_dir = "#{@teioutpath}/#{product}/#{work}"
+        to_dir = "#{@teioutpath}/#{product}/#{work}"
 
 
-      if @fulltextexist == 'true'
-        fulltextArr << getFulltext(from)
+        if @fulltextexist == 'true'
+          fulltextArr << getFulltext(from)
+        end
 
-      end
-      fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
-    }
+        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+      }
+
+    else
+
+      # todo modify for gdz
+
+      # gdzocr_url": [
+      #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
+
+      match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+
+      product = @short_product
+      work    = match[3]
+
+      meta.fulltext_uris.each { |fulltexturi|
+
+        match = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+
+        page     = match[4]
+        format   = match[5]
+        filename = "#{page}.#{format}"
+
+        #product  = match[2]
+        #work     = match[3]
+        #file     = match[4]
+        #filename = match[4] + '.tei.xml'
+
+        #if @fulltext_from_orig == 'true'
+        #  release = @rredis.hget('mapping', work)
+        #  from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
+        #  to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
+        #else
+        #  from = "#{@teiinpath}/#{work}/#{filename}"
+        #  to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
+        #end
+
+        from     = match[0]
+
+        to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+
+        if @fulltextexist == 'true'
+          fulltextArr << getFulltext(from)
+        end
+
+        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+      }
+
+    end
+
 
     meta.addFulltext = fulltextArr
 
@@ -572,6 +663,47 @@ def getLogicalPageRange(smLinks)
   return hsh
 end
 
+def getAttributesFromPhysicalDiv(div, doctype, level)
+
+  physicalElement = PhysicalElement.new
+
+  type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
+
+  if type != nil
+    physicalElement.type = checkEmptyString(type.value)
+  else
+    physicalElement.type = ' '
+  end
+
+  id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
+  if id != nil
+    physicalElement.id = checkEmptyString(id.value)
+  else
+    physicalElement.id = ' '
+  end
+
+
+  label = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
+  if label != nil
+    physicalElement.label = checkEmptyString(label.value)
+  else
+    physicalElement.label = '-1'
+  end
+
+  label = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
+  if label != nil
+    physicalElement.label = checkEmptyString(label.value)
+  else
+    physicalElement.label = ' '
+  end
+
+
+  physicalElement.level = level
+
+
+  return physicalElement
+
+end
 
 def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
@@ -666,18 +798,34 @@ end
 
 def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, level)
 
-
-  # todo abschließen
-
   logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
 
-  divs.each { |innerdiv|
+  unless divs.empty?
+    divs.each { |innerdiv|
+      getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
+    }
+  end
 
-    getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
-  }
+
+end
+
+
+def getPhysicalElements(physicalElementArr, div, doctype, level)
+
+  physicalElementArr << getAttributesFromPhysicalDiv(div, doctype, level)
+
+  divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
+
+
+  unless divs.empty?
+    divs.each { |innerdiv|
+      getPhysicalElements(physicalElementArr, innerdiv, doctype, level+1)
+    }
+  end
+
 
 end
 
@@ -712,6 +860,10 @@ def metsRigthsMDElements(metsRightsMDElements)
 
 end
 
+def metsUri(ppn)
+  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
+end
+
 def push_many(queue, arr)
   @rredis.lpush(queue, arr)
 
@@ -738,12 +890,39 @@ def parsePath(path)
       }
     }
   rescue Exception => e
-    @logger.warn("Problem to open file #{path}")
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} #{e.message}")
+    @logger.error("Could not open file #{path} \t#{e.message}")
+    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
+
+  return parseDoc(doc, path)
+
+end
+
+def parsePPN(ppn)
+
+  uri = metsUri(ppn)
+
+  attempts = 0
+  doc      = ""
+
+  begin
+    doc = Nokogiri::XML(open(uri))
+  rescue Exception => e
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error("Could not open uri #{uri} \t#{e.message}")
+    @file_logger.error("Could not open uri #{uri} \t#{e.message}\n\t#{e.backtrace}")
+    return
+  end
+
+  return parseDoc(doc, uri)
+
+end
+
+def parseDoc(doc, source)
 
   meta = MetsModsMetadata.new
 
@@ -756,15 +935,17 @@ def parsePath(path)
   begin
     meta.mods = mods.to_xml
   rescue Exception => e
-    @logger.debug "#{path}, #{e.message}"
+    @logger.error "Could not get MODS XML for #{source} \t#{e.message}"
+    @file_logger.error("Could not get MODS XML for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
-  meta.addIdentifiers      = getIdentifiers(mods, path)
-  meta.addRecordIdentifiers= getRecordIdentifiers(mods, path)
+
+  meta.addIdentifiers      = getIdentifiers(mods, source)
+  meta.addRecordIdentifiers= getRecordIdentifiers(mods, source)
 
   meta.product = ENV['SHORT_PRODUCT']
 
 
-  # Titel
+# Titel
   begin
     modsTitleInfoElements = mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3')
 
@@ -772,11 +953,12 @@ def parsePath(path)
       meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:titleInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:titleInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-  # Erscheinungsort
+# Erscheinungsort
   begin
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -786,11 +968,12 @@ def parsePath(path)
       meta.addEditionInfo  = originInfoHash[:edition]
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:originInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:originInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-  # Name
+# Name
   begin
     modsNameElements = mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -798,10 +981,11 @@ def parsePath(path)
       meta.addName = getName(modsNameElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:name #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:name for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # TypeOfResource:
+# TypeOfResource:
   begin
     modsTypeOfResourceElements = mods.xpath('mods:typeOfResource', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -809,10 +993,11 @@ def parsePath(path)
       meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:typeOfResource #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # Genre
+# Genre
   begin
     modsGenreElements = mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -820,10 +1005,11 @@ def parsePath(path)
       meta.addGenre = getGenre(modsGenreElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:genre #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:genre for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # Language
+# Language
   begin
     modsLanguageElements = mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -831,10 +1017,11 @@ def parsePath(path)
       meta.addLanguage = getLanguage(modsLanguageElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:language #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:language for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # PhysicalDescription:
+# PhysicalDescription:
   begin
     modsPhysicalDescriptionElements = mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -842,22 +1029,38 @@ def parsePath(path)
       meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:physicalDescription #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-  # Note:
+# Note:
   begin
-    modsNoteElements = mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+    modsNoteElements= mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
     unless modsNoteElements.empty?
       meta.addNote = getNote(modsNoteElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:note #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:note for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # Subject:
+# Sponsor:
+  begin
+    modsSponsorElements = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/') # [0].text
+
+    unless modsSponsorElements.empty?
+      meta.addSponsor = modsSponsorElements.text
+    end
+
+  rescue Exception => e
+    @logger.error("Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
+
+# Subject:
   begin
     modsSubjectElements = mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -865,10 +1068,11 @@ def parsePath(path)
       meta.addSubject = getSubject(modsSubjectElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:subject #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:subject for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # RelatedItem
+# RelatedItem
   begin
     modsRelatedItemElements = mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -876,10 +1080,11 @@ def parsePath(path)
       meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:relatedItem #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:relatedItem for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  # Part (of multipart Documents)
+# Part (of multipart Documents)
   begin
     modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -887,11 +1092,12 @@ def parsePath(path)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part #{path} (#{e.message})\n#{e.backtrace}")
+    @logger.error("Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
+    @file_logger.error("Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-  # RecordInfo:
+# RecordInfo:
   begin
     modsRecordInfoElements = mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
@@ -899,11 +1105,12 @@ def parsePath(path)
       meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo #{path} (#{e.message})")
+    @logger.error("Problems to resolve mods:recordInfo for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-  # rights info
+# rights info
   begin
     metsRightsMDElements = doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -911,7 +1118,8 @@ def parsePath(path)
       meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve rights info #{path} (#{e.message})")
+    @logger.error("Problems to resolve rights info for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 #=end
@@ -927,10 +1135,11 @@ def parsePath(path)
 
       unless metsPresentationImageUriElements.empty?
         meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processPresentationImages(meta, path)
+        processPresentationImages(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve presentation images #{path} (#{e.message})")
+      @logger.error("Problems to resolve presentation images for #{source} (#{e.message})")
+      @file_logger.error("Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
     # =begin
@@ -941,10 +1150,11 @@ def parsePath(path)
 
       unless metsFullTextUriElements.empty?
         meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processFulltexts(meta, path)
+        processFulltexts(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve full texts #{path} (#{e.message})")
+      @logger.error("Problems to resolve full texts for #{source} (#{e.message})")
+      @file_logger.error("Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
 # =end
@@ -958,7 +1168,7 @@ def parsePath(path)
   end
 
 
-  # logical structure
+# logical structure
 
   logicalElementArr = Array.new
 
@@ -971,46 +1181,111 @@ def parsePath(path)
 
   meta.addLogicalElement = logicalElementArr
 
+
+# physical structure
+
+  unless doctype == "collection"
+
+    physicalElementArr = Array.new
+
+    maindiv = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+
+    getPhysicalElements(physicalElementArr, maindiv, meta.doctype, 0)
+
+    meta.addPhysicalElement = physicalElementArr
+
+  end
+
+
+
   return meta
+
 end
 
 
 $vertx.execute_blocking(lambda { |future|
 
-  while true do
+  unless @oai_endpoint == 'true'
 
-    res = @rredis.brpop("metsindexer")
+    while true do
 
-    attempts = 0
-    begin
-      if (res != '' && res != nil)
+      res = @rredis.brpop("metsindexer")
 
-        json = JSON.parse res[1]
-        path = json['path']
+      attempts = 0
+      begin
+        if (res != '' && res != nil)
 
-
-        @logger.debug "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-        metsModsMetadata = parsePath(path)
-
-        if metsModsMetadata != nil
-          addDocsToSolr(metsModsMetadata.to_solr_string)
+          json = JSON.parse res[1]
+          path = json['path']
 
 
-          @logger.debug "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+          metsModsMetadata = parsePath(path)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.to_solr_string)
+
+            @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "\tCould not process #{path} metadata, object is nil"
+          end
         else
-          @logger.debug "\tCould not process #{path} metadata object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.error "Get empty string or nil from redis (#{res[1]})"
+          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
         end
-      else
-        @logger.error "Get empty string or nil from redis"
+
+
+      rescue Exception => e
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
       end
 
+    end
 
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+  else
+
+    while true do
+
+      res = @rredis.brpop("metsindexer")
+
+      attempts = 0
+      begin
+        if (res != '' && res != nil)
+
+          json = JSON.parse res[1]
+          ppn  = json['ppn']
+
+
+          @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+          metsModsMetadata = parsePPN(ppn)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.to_solr_string)
+
+
+            @logger.info "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "\tCould not process #{path} metadata, object is nil"
+          end
+        else
+          @logger.error "Get empty string or nil from redis (#{res[1]})"
+          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
+        end
+
+
+      rescue Exception => e
+        attempts = attempts + 1
+        retry if (attempts < MAX_ATTEMPTS)
+        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
+      end
+
     end
 
   end
