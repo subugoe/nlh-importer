@@ -210,7 +210,7 @@ class MetsModsMetadata
     @logicaElements += logicalElement
   end
 
-  def addPhysicalElement(physicalElement)
+  def addPhysicalElement=(physicalElement)
     @physicalElements += physicalElement
   end
 
