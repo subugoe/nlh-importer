@@ -683,18 +683,18 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
   end
 
 
-  label = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
-  if label != nil
-    physicalElement.label = checkEmptyString(label.value)
+  order = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
+  if order != nil
+    physicalElement.order = checkEmptyString(order.value)
   else
-    physicalElement.label = '-1'
+    physicalElement.order = '-1'
   end
 
-  label = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
-  if label != nil
-    physicalElement.label = checkEmptyString(label.value)
+  orderlabel = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
+  if orderlabel != nil
+    physicalElement.orderlabel = checkEmptyString(orderlabel.value)
   else
-    physicalElement.label = ' '
+    physicalElement.orderlabel = ' '
   end
 
 
@@ -1184,7 +1184,7 @@ def parseDoc(doc, source)
 
 # physical structure
 
-  unless doctype == "collection"
+  unless meta.doctype == "collection"
 
     physicalElementArr = Array.new
 
