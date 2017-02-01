@@ -550,7 +550,7 @@ def processFulltexts(meta)
     fulltextArr    = Array.new
 
     fulltext_uris = meta.fulltext_uris
-    firstUri = fulltext_uris[0]
+    firstUri      = fulltext_uris[0]
 
     unless @oai_endpoint == 'true'
 
@@ -644,24 +644,49 @@ def processFulltexts(meta)
 
 end
 
+def addToHash(hsh, pos, val)
+  if hsh[pos] == nil
+    hsh[pos] = [val]
+  else
+    hsh[pos] << val
+  end
+end
+
 def getLogicalPageRange(smLinks)
 
-  logIdSet = Set.new
+
+  logPhyHsh = Hash.new
+
+  #logIdSet = Set.new
   smLinks.each { |link|
-    logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    from = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").match(/(\S*_)(\S*)/)[2].to_i
+
+    addToHash(logPhyHsh, from, to)
   }
+
+
 
   hsh = Hash.new
-  logIdSet.each { |logid|
+  #logIdSet.each { |logid|
 
-    arr = smLinks.select { |link| link.xpath("@xlink:from='#{logid}'", 'xlink' => "http://www.w3.org/1999/xlink") }
+  #  arr = smLinks.select { |link| link.xpath("@xlink:from='#{logid}'", 'xlink' => "http://www.w3.org/1999/xlink") }
 
-    physId = Array.new
-    arr.each { |link| physId << link.attr('xlink:to').match(/(\S*_)(\S*)/)[2].to_i }
+  #  physId = Array.new
+  #  arr.each { |link| physId << link.attr('xlink:to').match(/(\S*_)(\S*)/)[2].to_i }
 
-    physId.sort!
-    hsh[logid] = {"start" => physId.min, "end" => physId.max}
+  #  physId.sort!
+  #  hsh[logid] = {"start" => physId.min, "end" => physId.max}
+  #}
+
+  logPhyHsh.each { |key, value|
+
+    value.sort!
+
+    hsh[key] = {"start" => value.min, "end" => value.max}
   }
+
 
   return hsh
 end
@@ -1198,7 +1223,6 @@ def parseDoc(doc, source)
     meta.addPhysicalElement = physicalElementArr
 
   end
-
 
 
   return meta
