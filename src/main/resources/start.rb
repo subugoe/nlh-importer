@@ -39,7 +39,7 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 8,
+    'instances'                  => 4,
     'worker'                     => true,
     #'workerPoolName'             => 'index_worker_pool',
     #'workerPoolSize'             => 1,
@@ -82,7 +82,7 @@ pdf_retriever_options = {
 }
 
 pdf_converter_options = {
-    'instances'                  => 1,
+    'instances'                  => 5,
     'worker'                     => true,
     #  'workerPoolName'             => 'pdf_converter_worker_pool',
     #  'workerPoolSize'             => 1,
@@ -180,15 +180,15 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'checkmets'
 
 
-  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
+#  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
+  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-##  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
 
 else
 
-    $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+   $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
   #  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", indexer_options)
   #  $vertx.deploy_verticle("processors/check_existence_in_index.rb", indexer_options)
 
@@ -196,12 +196,12 @@ else
   #  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
 
   #  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
-  #  $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
+##    $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
 
   #  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
   #  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-##    $vertx.deploy_verticle("processors/image_to_pdf_converter.rb", image_processor_options)
+#    $vertx.deploy_verticle("processors/image_to_pdf_converter.rb", image_processor_options)
 
   #  if ENV['FULLTEXTS_EXIST'] == 'true'
   #    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
@@ -212,6 +212,4 @@ else
 
 
 end
-
-
 

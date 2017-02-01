@@ -16,7 +16,7 @@ services:
     #depends_on:
     #  - solr
     #  - redis
-    mem_limit: 8GB
+    mem_limit: 13GB
     env_file:
       - .env
     environment:
@@ -60,13 +60,13 @@ services:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
       - ./storage/solr/:/opt/solr/nlh/data/
-    mem_limit: 6GB
+    mem_limit: 2GB
     user: $USER_UID
     env_file:
       - .env
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx6G
-      - SOLR_JAVA_MEM=-Xms512M -Xmx6G
+      - JAVA_OPTS=-Xms512M -Xmx2G
+      - SOLR_JAVA_MEM=-Xms512M -Xmx2G
 
   redis:
     #build: docker/redis/
@@ -80,8 +80,8 @@ services:
       - ./storage/redis/:/data/
       #- $STORAGE/redis/:/data/
 #    user: $USER_UID
-    mem_limit: 2GB
+    mem_limit: 1GB
     env_file:
       - .env
     environment:
-      - JAVA_OPTS=-Xms256M -Xmx2G
+      - JAVA_OPTS=-Xms256M -Xmx1G
