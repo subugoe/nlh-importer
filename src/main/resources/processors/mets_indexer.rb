@@ -694,20 +694,22 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
 
   physicalElement = PhysicalElement.new
 
-  type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
 
-  if type != nil
-    physicalElement.type = checkEmptyString(type.value)
-  else
-    physicalElement.type = ' '
-  end
-
-  id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
-  if id != nil
-    physicalElement.id = checkEmptyString(id.value)
-  else
-    physicalElement.id = ' '
-  end
+  # type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
+  # if type != nil
+  #   physicalElement.type = checkEmptyString(type.value)
+  # else
+  #   physicalElement.type = ' '
+  # end
+  #
+  # id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
+  # if id != nil
+  #   physicalElement.id = checkEmptyString(id.value)
+  # else
+  #   physicalElement.id = ' '
+  # end
+  #
+  # physicalElement.level = level
 
 
   order = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
@@ -723,9 +725,6 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
   else
     physicalElement.orderlabel = ' '
   end
-
-
-  physicalElement.level = level
 
 
   return physicalElement

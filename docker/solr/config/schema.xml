@@ -341,11 +341,14 @@
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <!--
         <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="phys_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        -->
         <field name="phys_order" type="tint" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_orderlabel" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="phys_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+
 
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -371,8 +374,10 @@
         <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
+        <!--
         <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
         <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
+        -->
 
         <!-- modified for nlh -->
         <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>

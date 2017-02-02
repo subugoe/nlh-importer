@@ -462,27 +462,30 @@ class MetsModsMetadata
     # add physical info (e.g. ORDER, ORDERLABEL)
     #:type, :id, :order, :orderlabel
 
-    id               = Array.new
-    type             = Array.new
+    #id               = Array.new
+    #type             = Array.new
+    #level            = Array.new
     order             = Array.new
     orderlabel       = Array.new
-    level            = Array.new
+
 
     @physicalElements.each { |el|
 
-      id << el.id
-      type << el.type
+      #id << el.id
+      #type << el.type
+      #level << el.level
       order << el.order.to_i
       orderlabel << el.orderlabel
-      level << el.level
+
 
     }
 
-    h.merge! ({:phys_id => id})
-    h.merge! ({:phys_type => type})
+    #h.merge! ({:phys_id => id})
+    #h.merge! ({:phys_type => type})
+    #h.merge! ({:phys_level => level})
     h.merge! ({:phys_order => order})
     h.merge! ({:phys_orderlabel => orderlabel})
-    h.merge! ({:phys_level => level})
+
 
     # ---
 

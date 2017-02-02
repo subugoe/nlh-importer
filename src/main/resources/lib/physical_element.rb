@@ -1,5 +1,5 @@
 class PhysicalElement
 
-  attr_accessor :type, :id, :order, :orderlabel, :level
+  attr_accessor :order, :orderlabel #, :type, :id, :level
 
 end
