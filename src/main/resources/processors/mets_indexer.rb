@@ -778,19 +778,14 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     if !mptrs.empty?
 
+      part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
       unless @oai_endpoint == 'true'
-        part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
 
         # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
         match    = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
         product  = match[2]
         work     = match[3]
-
-
-        logicalElement.part_product = product
-        logicalElement.part_work    = work
-        #logicalElement.volume_uri = volume_uri
-        logicalElement.part_nlh_id  = "#{product}:#{work}"
 
         #meta.product              = product if i == 0
 
@@ -806,17 +801,17 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       else
 
         # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
-        match = firstUri.match(/(\S*PPN=)(\S*)/)
-
-        baseurl      = match[1]
-        work         = match[2]
+        match = part_uri.match(/(\S*PPN=)(\S*)/)
         product      = @short_product
-
-        meta.baseurl      = baseurl
-        meta.product      = product
-        meta.work         = work
+        work         = match[2]
 
       end
+
+      logicalElement.part_product = product
+      logicalElement.part_work    = work
+      #logicalElement.volume_uri = volume_uri
+      logicalElement.part_nlh_id  = "#{product}:#{work}"
+
     end
 
   else
