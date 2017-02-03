@@ -56,6 +56,9 @@ class MetsModsMetadata
                 :fulltext_uris,
                 :logicalElements,
                 :physicalElements,
+                :phys_first_page_index,
+                :phys_last_page_index,
+
 
                 :fulltexts,
 
@@ -465,8 +468,8 @@ class MetsModsMetadata
     #id               = Array.new
     #type             = Array.new
     #level            = Array.new
-    order             = Array.new
-    orderlabel       = Array.new
+    order      = Array.new
+    orderlabel = Array.new
 
 
     @physicalElements.each { |el|
@@ -477,7 +480,6 @@ class MetsModsMetadata
       order << el.order.to_i
       orderlabel << el.orderlabel
 
-
     }
 
     #h.merge! ({:phys_id => id})
@@ -486,6 +488,8 @@ class MetsModsMetadata
     h.merge! ({:phys_order => order})
     h.merge! ({:phys_orderlabel => orderlabel})
 
+    h.merge! ({:phys_first_page_index => @phys_first_page_index})
+    h.merge! ({:phys_last_page_index => @phys_last_page_index})
 
     # ---
 

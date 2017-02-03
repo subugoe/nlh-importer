@@ -652,20 +652,29 @@ def addToHash(hsh, pos, val)
   end
 end
 
-def getLogicalPageRange(smLinks)
+def getLogicalPageRange(smLinks, meta)
 
 
   logPhyHsh = Hash.new
+  max       = 1
+  min       = 1
 
   #logIdSet = Set.new
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     from = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s.match(/(\S*_)(\S*)/)[2].to_i
-
+    if meta.doctype == "work"
+      max = to if to > max
+      min = to if to < min
+    end
     addToHash(logPhyHsh, from, to)
   }
 
+  if meta.doctype == "work"
+    meta.phys_first_page_index = min
+    meta.phys_last_page_index  = max
+  end
 
   hsh = Hash.new
   #logIdSet.each { |logid|
@@ -1223,7 +1232,7 @@ def parseDoc(doc, source)
 
   maindiv                        = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
   links                          = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
-  logicalElementStartStopMapping = getLogicalPageRange(links)
+  logicalElementStartStopMapping = getLogicalPageRange(links, meta)
 
   getLogicalElements(logicalElementArr, maindiv, links, logicalElementStartStopMapping, meta.doctype, 0)
 

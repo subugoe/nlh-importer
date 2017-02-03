@@ -329,14 +329,14 @@
         <field name="volume_label" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <!-- end remove -->
 
-        <field name="log_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="log_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_label" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_dmdid" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_admid" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_start_page_index" type="tint" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_end_page_index" type="tint" indexed="true" stored="true" multiValued="true"/>
+        <field name="log_dmdid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_admid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_level" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_start_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_part_product" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -346,9 +346,10 @@
         <field name="phys_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         -->
-        <field name="phys_order" type="tint" indexed="true" stored="true" multiValued="true"/>
-        <field name="phys_orderlabel" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
+        <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
 
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -450,42 +451,10 @@
 
         <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
-        <!-- ###### END NEW INDEX ################################################-->
 
 
         <!-- ###### OLD INDEX ####################################################-->
         <field name="IDDOC" type="string" indexed="true" stored="true"/>
-        <!--
-           <field name="IDPARENTDOC" type="text_ci" indexed="true" stored="true" multiValued="true" />
-           <field name="STRUCTRUN" type="text_ci" indexed="true" stored="true" />
-           <field name="DATEINDEXED" type="text_ci" indexed="true" stored="true" />
-           <field name="DATEMODIFIED" type="text_ci" indexed="true" stored="true" />
-           <field name="DOCSTRCT" type="text_ci" indexed="true" stored="true" />
-           <field name="ISWORK" type="text_ci" indexed="true" stored="false" />
-
-           <field name="METADATA" type="text_ci" indexed="true" stored="false" />
-           <field name="CURRENTNO" type="text_ci" indexed="true" stored="true" />
-           <field name="CURRENTNOSORT" type="pint" indexed="true" stored="true" />
-           <field name="TITLE" type="text_ci" indexed="true" stored="true" multiValued="true" />
-           <field name="BYTITLE" type="text_ci" indexed="true" stored="true" />
-           <field name="PUBLISHER" type="text_ci" indexed="true" stored="true" />
-           <field name="PLACEPUBLISH" type="text_ci" indexed="true" stored="true" />
-           <field name="YEARPUBLISH" type="text_ci" indexed="true" stored="true" />
-           <field name="CREATOR" type="text_ci" indexed="true" stored="true" multiValued="true" />
-           <field name="PARENTCREATOR" type="text_ci" indexed="true" stored="true" multiValued="true" />
-           <field name="BYCREATOR" type="text_ci" indexed="true" stored="true" />
-           <field name="ISSN" type="text_ci" indexed="true" stored="true" />
-           <field name="ZDB" type="text_ci" indexed="true" stored="true" />
-           <field name="SPONSOR" type="text_ci" indexed="true" stored="true" />
-           <field name="LOCATION" type="text_ci" indexed="false" stored="true" />
-           <field name="DEFAULT" type="text_ci" indexed="true" stored="false" />
-           <field name="FULLTEXT" type="text_ci" indexed="true" stored="false" />
-           <field name="PPN" type="text_ci" indexed="true" stored="true" />
-           <field name="DMDID" type="text_ci" indexed="true" stored="true" />
-           <field name="VD17" type="text_ci" indexed="true" stored="true" required="true" />
-           <field name="VD18" type="text_ci" indexed="true" stored="true" required="true" />
-        -->
-        <!-- ###### END OLD INDEX ################################################-->
 
 
     </fields>
@@ -496,23 +465,8 @@
 
     <!-- <uniqueKey>uid</uniqueKey> -->
     <uniqueKey>pid</uniqueKey>
-    <!-- <uniqueKey>IDDOC</uniqueKey> -->
 
 
-    <!-- field for the QueryParser to use when an explicit fieldname is absent
-   DEPRECATED: specify "df" in your request handler instead.
-   <defaultSearchField>text</defaultSearchField> -->
-
-    <!-- SolrQueryParser configuration: defaultOperator="AND|OR"
-   DEPRECATED: specify "q.op" in your request handler to switch from the default of OR.
-   <solrQueryParser defaultOperator="OR"/> -->
-
-    <!-- copyField commands copy one field to another at the time a document
-          is added to the index.  It's used either to index the same field differently,
-          or to add multiple fields to the same field for easier/faster searching.  -->
-
-
-    <!-- for TYPO3 Extension find -->
     <copyField source="pid" dest="id"/>
 
 
