@@ -712,7 +712,7 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
   # physicalElement.level = level
 
 
-  order = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
+  order           = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
   if order != nil
     physicalElement.order = checkEmptyString(order.value)
   else
@@ -782,9 +782,9 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       unless @oai_endpoint == 'true'
 
         # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
-        match    = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-        product  = match[2]
-        work     = match[3]
+        match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+        product = match[2]
+        work    = match[3]
 
         #meta.product              = product if i == 0
 
@@ -800,9 +800,9 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       else
 
         # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
-        match = part_uri.match(/(\S*PPN=)(\S*)/)
-        product      = @short_product
-        work         = match[2]
+        match   = part_uri.match(/(\S*PPN=)(\S*)/)
+        product = @short_product
+        work    = match[2]
 
       end
 
