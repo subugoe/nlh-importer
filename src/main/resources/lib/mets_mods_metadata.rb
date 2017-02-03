@@ -571,21 +571,21 @@ class MetsModsMetadata
 
     # order, :type, :number
 
-    part_order    = Array.new
+    #part_order    = Array.new
     currentnosort = Array.new
-    part_number   = Array.new
+    #part_number   = Array.new
     currentno     = Array.new
 
     @parts.each { |part|
-      part_order << part.currentnosort
+      #part_order << part.currentnosort
       currentnosort << part.currentnosort.to_i
-      part_number << part.currentno
+      #part_number << part.currentno
       currentno << part.currentno
     }
 
-    h.merge! ({:part_order => part_order})
+    #h.merge! ({:part_order => part_order})
     h.merge! ({:currentnosort => currentnosort})
-    h.merge! ({:part_number => part_number})
+    #h.merge! ({:part_number => part_number})
     h.merge! ({:currentno => currentno})
 
     # @record_infos.each { |recInfo|
