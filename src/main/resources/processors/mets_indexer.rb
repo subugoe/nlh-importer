@@ -916,6 +916,8 @@ end
 
 def parsePath(path)
 
+  @path = path
+
   attempts = 0
   doc      = ""
 
@@ -938,6 +940,8 @@ def parsePath(path)
 end
 
 def parsePPN(ppn)
+
+  @ppn = ppn
 
   uri = metsUri(ppn)
 
@@ -1200,6 +1204,15 @@ def parseDoc(doc, source)
     meta.iswork   = false
     meta.doctype  = "collection"
     meta.isanchor = true
+
+    unless @oai_endpoint == 'true'
+      # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
+      match     = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
+      meta.collection = match[4]
+      meta.product = match[3]
+    else
+      meta.collection = @ppn
+    end
 
   end
 
