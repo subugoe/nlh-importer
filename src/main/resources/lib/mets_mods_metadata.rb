@@ -363,7 +363,7 @@ class MetsModsMetadata
       place << ei.place
       placeFacet << ei.placeFacet
       date_captured_start = ei.date_captured_start
-      date_captured_end = ei.date_captured_end
+      date_captured_end   = ei.date_captured_end
       publisher << ei.publisher
       publisherFacet << ei.publisherFacet
     }
@@ -389,7 +389,7 @@ class MetsModsMetadata
       place << oi.place
       placeFacet << oi.placeFacet
       date_issued_start = oi.date_issued_start
-      date_issued_end = oi.date_issued_end
+      date_issued_end   = oi.date_issued_end
       publisher << oi.publisher
       publisherFacet << oi.publisherFacet
     }

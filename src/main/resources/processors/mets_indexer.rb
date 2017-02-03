@@ -1225,9 +1225,9 @@ def parseDoc(doc, source)
 
     unless @oai_endpoint == 'true'
       # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
-      match     = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
+      match           = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
       meta.collection = match[4]
-      meta.product = match[3]
+      meta.product    = match[3]
     else
       meta.collection = @ppn
     end
