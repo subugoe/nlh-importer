@@ -259,7 +259,7 @@ class MetsModsMetadata
     @title_infos.each { |ti|
       title << ti.nonsort + ti.title
       subtitle << ti.subtitle
-      sorttitle << ti.title[0].upcase + ti.title[1..-1]
+      sorttitle << ti.title[0].upcase + ti.title[1..-1] unless ti.title == nil
     }
 
     h.merge! ({:title => title})
