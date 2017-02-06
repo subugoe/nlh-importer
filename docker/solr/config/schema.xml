@@ -320,7 +320,7 @@
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
 
-        <field name="url_pattern" type="string" indexed="false" stored="true"/>
+        <field name="url_pattern" type="string" indexed="true" stored="true"/>
         <field name="baseurl" type="string" indexed="false" stored="true"/>
 
         <!-- todo: begin remove ()after full reindex -->
@@ -348,8 +348,8 @@
         -->
         <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
-        <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
+        <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
 
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
