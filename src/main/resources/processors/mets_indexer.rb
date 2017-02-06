@@ -821,8 +821,8 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
           product = match[2]
           work    = match[3]
         rescue Exception => e
-          @logger.error("No regex match for part URI #{part_uri} \t#{e.message}")
-          @file_logger.error("No regex match for part URI #{part_uri} \t#{e.message}\n\t#{e.backtrace}")
+          @logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
+          @file_logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
           raise
         end
 
@@ -840,6 +840,8 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
       else
 
+        count = 0
+
         # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
         begin
           match = part_uri.match(/(\S*PPN=)(\S*)/)
@@ -847,10 +849,20 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
             # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
             match = part_uri.match(/(\S*)\/mets\/(\S*).xml/)
           end
+
           work = match[2]
         rescue Exception => e
-          @logger.error("No regex match for part URI #{part_uri} \t#{e.message}")
-          @file_logger.error("No regex match for part URI #{part_uri} \t#{e.message}\n\t#{e.backtrace}")
+          if (match == nil && count < 1)
+            count += 1
+            part_uri.gsub!(' ', '')
+
+            @logger.error("Space in part URI #{part_uri} in parent #{@ppn}")
+            @file_logger.error("Space in part URI #{part_uri} in parent #{@ppn}")
+
+            retry
+          end
+          @logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}")
+          @file_logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
           raise
         end
 
