@@ -440,10 +440,7 @@ end
 
 
 def getRecordInfo(modsRecordInfoElements)
-
   recordInfoArr = Array.new
-
-
   return recordInfoArr
 end
 
@@ -461,12 +458,17 @@ def processPresentationImages(meta)
 
   unless @oai_endpoint == 'true'
 
-    # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
-    match = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-
-    baseurl = match[1]
-    product = match[3]
-    work    = match[4]
+    begin
+      # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
+      match   = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+      baseurl = match[1]
+      product = match[3]
+      work    = match[4]
+    rescue Exception => e
+      @logger.error("No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}")
+      @file_logger.error("No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+      raise
+    end
 
     meta.baseurl      = baseurl
     meta.url_pattern  = @url_pattern
@@ -476,8 +478,14 @@ def processPresentationImages(meta)
 
     presentation_image_uris.each { |image_uri|
 
-      match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-      page  = match[4]
+      begin
+        match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+        page  = match[4]
+      rescue Exception => e
+        @logger.error("No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}")
+        @file_logger.error("No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
 
       id_arr << "#{product}:#{work}:#{page}"
       page_arr << page
@@ -487,16 +495,20 @@ def processPresentationImages(meta)
 
   else
 
-    # todo modify for gdz
+    begin
+      # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
+      match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
 
-    # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
-    match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      baseurl      = match[1]
+      work         = match[3]
+      image_format = match[7]
+    rescue Exception => e
+      @logger.error("No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}")
+      @file_logger.error("No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+      raise
+    end
 
-    baseurl      = match[1]
-    work         = match[3]
-    image_format = match[7]
-    product      = @short_product
-
+    product = @short_product
 
     meta.baseurl      = baseurl
     meta.product      = product
@@ -505,8 +517,14 @@ def processPresentationImages(meta)
 
     presentation_image_uris.each { |image_uri|
 
-      match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-      page  = match[6]
+      begin
+        match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        page  = match[6]
+      rescue Exception => e
+        @logger.error("No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
+        @file_logger.error("No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
 
       id_arr << "#{product}:#{work}:#{page}"
       page_arr << page
@@ -563,18 +581,28 @@ def processFulltexts(meta)
 
     unless @oai_endpoint == 'true'
 
-      # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-      match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-
-      product = match[2]
-      work    = match[3]
+      begin
+        # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
+        match   = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+        product = match[2]
+        work    = match[3]
+      rescue Exception => e
+        @logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}")
+        @file_logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
 
       fulltext_uris.each { |fulltexturi|
 
-        match = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-
-        file     = match[4]
-        filename = match[4] + '.tei.xml'
+        begin
+          match    = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+          file     = match[4]
+          filename = match[4] + '.tei.xml'
+        rescue Exception => e
+          @logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
+          @file_logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
+          raise
+        end
 
         if @fulltext_from_orig == 'true'
           release = @rredis.hget('mapping', work)
@@ -600,40 +628,33 @@ def processFulltexts(meta)
 
       # todo modify for gdz
 
-      # gdzocr_url": [
-      #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
-
-      match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+      begin
+        # gdzocr_url": [
+        #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
+        match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        work  = match[3]
+      rescue Exception => e
+        @logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}")
+        @file_logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
 
       product = @short_product
-      work    = match[3]
 
       fulltext_uris.each { |fulltexturi|
 
-        match = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-
-        page     = match[4]
-        format   = match[5]
-        filename = "#{page}.#{format}"
-
-        #product  = match[2]
-        #work     = match[3]
-        #file     = match[4]
-        #filename = match[4] + '.tei.xml'
-
-        #if @fulltext_from_orig == 'true'
-        #  release = @rredis.hget('mapping', work)
-        #  from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-        #  to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-        #else
-        #  from = "#{@teiinpath}/#{work}/#{filename}"
-        #  to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-        #end
-
-        from     = match[0]
+        begin
+          match  = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+          page   = match[4]
+          format = match[5]
+          from   = match[0]
+        rescue Exception => e
+          @logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
+          @file_logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
+          raise
+        end
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
-
 
         if @fulltextexist == 'true'
           fulltextArr << getFulltext(from)
@@ -663,20 +684,27 @@ end
 
 def getLogicalPageRange(smLinks, meta)
 
-
   logPhyHsh = Hash.new
   max       = 1
   min       = 1
 
-  #logIdSet = Set.new
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     from = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
-    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s.match(/(\S*_)(\S*)/)[2].to_i
+    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    begin
+      to.match(/(\S*_)(\S*)/)[2].to_i
+    rescue Exception => e
+      @logger.error("No regex match for link target #{to} \t#{e.message}")
+      @file_logger.error("No regex match for link target #{to} \t#{e.message}\n\t#{e.backtrace}")
+      raise
+    end
+
     if meta.doctype == "work"
       max = to if to > max
       min = to if to < min
     end
+
     addToHash(logPhyHsh, from, to)
   }
 
@@ -686,21 +714,9 @@ def getLogicalPageRange(smLinks, meta)
   end
 
   hsh = Hash.new
-  #logIdSet.each { |logid|
-
-  #  arr = smLinks.select { |link| link.xpath("@xlink:from='#{logid}'", 'xlink' => "http://www.w3.org/1999/xlink") }
-
-  #  physId = Array.new
-  #  arr.each { |link| physId << link.attr('xlink:to').match(/(\S*_)(\S*)/)[2].to_i }
-
-  #  physId.sort!
-  #  hsh[logid] = {"start" => physId.min, "end" => physId.max}
-  #}
 
   logPhyHsh.each { |key, value|
-
     value.sort!
-
     hsh[key] = {"start" => value.min, "end" => value.max}
   }
 
@@ -799,10 +815,17 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
       unless @oai_endpoint == 'true'
 
-        # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
-        match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-        product = match[2]
-        work    = match[3]
+        begin
+          # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
+          match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+          product = match[2]
+          work    = match[3]
+        rescue Exception => e
+          @logger.error("No regex match for part URI #{part_uri} \t#{e.message}")
+          @file_logger.error("No regex match for part URI #{part_uri} \t#{e.message}\n\t#{e.backtrace}")
+          raise
+        end
+
 
         #meta.product              = product if i == 0
 
@@ -818,9 +841,21 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       else
 
         # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
-        match   = part_uri.match(/(\S*PPN=)(\S*)/)
+        begin
+          match = part_uri.match(/(\S*PPN=)(\S*)/)
+          if match == nil
+            # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
+            match = part_uri.match(/(\S*)\/mets\/(\S*).xml/)
+          end
+          work = match[2]
+        rescue Exception => e
+          @logger.error("No regex match for part URI #{part_uri} \t#{e.message}")
+          @file_logger.error("No regex match for part URI #{part_uri} \t#{e.message}\n\t#{e.backtrace}")
+          raise
+        end
+
         product = @short_product
-        work    = match[2]
+
 
       end
 
@@ -1225,9 +1260,17 @@ def parseDoc(doc, source)
 
     unless @oai_endpoint == 'true'
       # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
-      match           = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
-      meta.collection = match[4]
-      meta.product    = match[3]
+
+      begin
+        match           = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
+        meta.collection = match[4]
+        meta.product    = match[3]
+      rescue Exception => e
+        @logger.error("No regex match for collection #{@path} \t#{e.message}")
+        @file_logger.error("No regex match for collection #{@path} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
+
     else
       meta.collection = @ppn
     end
