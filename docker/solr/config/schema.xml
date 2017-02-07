@@ -372,7 +372,7 @@
         <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
         <field name="byperson" type="string" indexed="true" omitNorms="true"/>
-        <field name="currentnosort" type="tlong" indexed="true" stored="true" multiValued="false"/>
+        <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
         <!--
