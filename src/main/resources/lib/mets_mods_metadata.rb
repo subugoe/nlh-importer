@@ -259,20 +259,23 @@ class MetsModsMetadata
     @title_infos.each { |ti|
       title << ti.nonsort + ti.title
       subtitle << ti.subtitle
-      sorttitle << ti.title[0].upcase + ti.title[1..-1] unless ti.title == nil
+      unless (ti.title == nil)
+        if ti.title.size > 1
+          sorttitle << ti.title[0].upcase + ti.title[1..-1]
+        elsif ti.title.size == 1
+          sorttitle << ti.title[0].upcase
+        else
+          sorttitle << ''
+        end
+      end
     }
 
     h.merge! ({:title => title})
     h.merge! ({:subtitle => subtitle})
     h.merge! ({:bytitle => sorttitle.join('; ')})
 
-    begin
-      h.merge! ({:pid => @record_identifiers.first[1]})
-    rescue Exception => e
-      puts e.message
-      puts @record_identifiers
-      puts @identifiers
-    end
+
+    h.merge! ({:pid => @record_identifiers.first[1]})
 
     # --- :displayform, :type, :role, :namepart, :date
 
