@@ -690,13 +690,19 @@ def getLogicalPageRange(smLinks, meta)
 
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
-    from = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
-    to   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    from_ = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+    to_   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     begin
-      to.match(/(\S*_)(\S*)/)[2].to_i
+      if to_.downcase.include? "phys_"
+        to = to_.match(/(\S*_)(\S*)/)[2].to_i
+      elsif to_.downcase.include? "phys"
+        to = to_.downcase.gsub('phys', '').to_i
+      else
+        raise "Link target (#{to_}) doesn't match the expected pattern"
+      end
     rescue Exception => e
-      @logger.error("No regex match for link target #{to} \t#{e.message}")
-      @file_logger.error("No regex match for link target #{to} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("No regex match for link target #{to_} \t#{e.message}")
+      @file_logger.error("No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
       raise
     end
 
@@ -705,7 +711,7 @@ def getLogicalPageRange(smLinks, meta)
       min = to if to < min
     end
 
-    addToHash(logPhyHsh, from, to)
+    addToHash(logPhyHsh, from_, to_)
   }
 
   if meta.doctype == "work"
@@ -852,12 +858,13 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
           work = match[2]
         rescue Exception => e
-          if (match == nil && count < 1)
+          if (match == nil) && (count < 1)
             count += 1
-            part_uri.gsub!(' ', '')
 
-            @logger.error("Space in part URI #{part_uri} in parent #{@ppn}")
-            @file_logger.error("Space in part URI #{part_uri} in parent #{@ppn}")
+            @logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
+            @file_logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
+
+            part_uri.gsub!(' ', '')
 
             retry
           end
