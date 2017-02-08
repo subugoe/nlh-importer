@@ -6,6 +6,7 @@ require 'redis'
 require 'json'
 require 'rsolr'
 
+# config: 5GB importer, 4GB redis, 7GB solr
 
 #outpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 outpath   = ENV['OUT']
@@ -34,7 +35,7 @@ context   = ENV['CONTEXT']
 @logger.debug "[update before date_indexed worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 i           = 0
-rows        = 10
+rows        = 100
 works       = 0
 collections = 0
 pages       = 0
@@ -50,12 +51,11 @@ $vertx.execute_blocking(lambda { |future|
 
     while true
 
-      solr_works_with_fulltext = @solr.get 'select', :params => {:q => "fulltext:*", :fl => 'pid, product, work, page, doctype', :start => i*rows, :rows => rows}
+      solr_works_with_fulltext = @solr.get 'select', :params => {:q => "fulltext:*", :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
       unless solr_works_with_fulltext['response']['docs'].size == 0
 
         arr = Array.new
         solr_works_with_fulltext['response']['docs'].each { |doc|
-          puts doc['page'].size
           doctype = doc['doctype']
           if doctype == "work"
             works        += 1
@@ -65,17 +65,20 @@ $vertx.execute_blocking(lambda { |future|
             work         = doc['work']
             page         = doc['page']
 
-            fullpdfpath = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
-            arr << {"path" => fullpdfpath}.to_json
+            fullpdf_path = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
+            arr << {"path" => fullpdf_path}.to_json
 
             page.each { |p|
               pages     += 1
-              imagepath = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
-              arr << {"path" => imagepath}.to_json
-              pagepdfpath = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
-              arr << {"path" => pagepdfpath}.to_json
-              fulltextpath = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
-              arr << {"path" => fulltextpath}.to_json
+
+              image_path = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
+              arr << {"path" => image_path}.to_json
+
+              pagepdf_path = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
+              arr << {"path" => pagepdf_path}.to_json
+
+              fulltext_path = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
+              arr << {"path" => fulltext_path}.to_json
             }
           else
             collections += 1
