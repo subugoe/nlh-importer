@@ -5,15 +5,15 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
+inpath = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger.debug "[tei_path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-
-inpath = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 
 
 def pushToQueue(arr, queue)

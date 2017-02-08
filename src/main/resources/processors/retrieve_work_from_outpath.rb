@@ -5,17 +5,15 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
+outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+product = ENV['SHORT_PRODUCT']
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger.debug "[retrieve work from outpath worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-
-outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-product = ENV['SHORT_PRODUCT']
-
 
 
 def pushToQueue(arr, queue)

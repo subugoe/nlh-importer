@@ -5,19 +5,21 @@ require 'json'
 require 'fileutils'
 
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_copier.log")
-@file_logger.level = Logger::DEBUG
-
-
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-
+context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['METS_OUT_SUB_PATH']
+
+
+@logger       = Logger.new(STDOUT)
+@logger.level = Logger::DEBUG
+
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_mets_copier_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger.level = Logger::DEBUG
+
+@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+
 
 @logger.debug "[mets_copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

@@ -6,19 +6,16 @@ require 'json'
 require 'digest'
 
 
+context = ENV['CONTEXT']
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fixity.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_fixity_checker_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
-
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-
-#----------------
-
 
 @logger.debug "[fixity_checker worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

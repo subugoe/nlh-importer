@@ -22,6 +22,7 @@ require 'lib/right'
 require 'lib/logical_element'
 require 'lib/physical_element'
 
+context = ENV['CONTEXT']
 MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
 @oai_endpoint  = ENV['METS_VIA_OAI']
 @short_product = ENV['SHORT_PRODUCT']
@@ -41,7 +42,7 @@ MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_mets_indexer.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_mets_indexer_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"

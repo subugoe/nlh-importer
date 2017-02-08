@@ -8,6 +8,14 @@ require 'lib/mets_mods_metadata'
 require 'fileutils'
 require 'mini_magick'
 
+context = ENV['CONTEXT']
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
+@inpath     = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+@outpath    = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@originpath = ENV['ORIG']
+
+@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
@@ -18,18 +26,9 @@ require 'mini_magick'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_image_processing.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_processing_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-
-@inpath     = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
-@outpath    = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@originpath = ENV['ORIG']
-
-@from_orig = ENV['GET_IMAGES_FROM_ORIG']
 
 @logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

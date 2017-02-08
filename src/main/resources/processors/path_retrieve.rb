@@ -6,13 +6,14 @@ require 'redis'
 require 'json'
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+context = ENV['CONTEXT']
 inpath       = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 oai_endpoint = ENV['METS_VIA_OAI']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/gdz_path_retrieval.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_path_retrieval_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"

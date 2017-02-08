@@ -6,6 +6,9 @@ require 'redis'
 require 'json'
 require 'rsolr'
 
+product = ENV['SHORT_PRODUCT']
+inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
@@ -13,9 +16,6 @@ require 'rsolr'
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-product = ENV['SHORT_PRODUCT']
-inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 
 
 def pushToQueue(arr, queue)
@@ -61,7 +61,7 @@ $vertx.execute_blocking(lambda { |future|
           images       = images_paths.collect { |p| File.basename(p, '.jpg') }
 
           pdf_paths = Dir.glob("#{pdfoutpath}/#{product}/#{work}/*", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-          pdfs      = pdf_paths.collect { |p| File.basename(p, ".pdf" }
+          pdfs      = pdf_paths.collect { |p| File.basename(p, '.pdf') }
 
           @logger.debug "Full PDF #{product}/#{work}/#{work}.#{image_format} not found" if !pdfs.include? work
 

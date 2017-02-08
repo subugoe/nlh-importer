@@ -8,20 +8,21 @@ require 'lib/mets_mods_metadata'
 require 'fileutils'
 
 
+context = ENV['CONTEXT']
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
+@inpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+@outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+
+
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_input_path_mapper_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
-
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-
-@inpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
-@outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
 
 #----------------

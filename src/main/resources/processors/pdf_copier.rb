@@ -10,16 +10,7 @@ require 'fileutils'
 require 'mini_magick'
 
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
-
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
-@file_logger.level = Logger::DEBUG
-
-
+context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
@@ -30,6 +21,17 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 @originpath   = ENV['ORIG']
 @pdfdensity   = ENV['PDFDENSITY']
+
+
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+
+@logger       = Logger.new(STDOUT)
+@logger.level = Logger::DEBUG
+
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_pdf_copier_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger.level = Logger::DEBUG
+
 
 #----------------
 

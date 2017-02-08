@@ -6,18 +6,20 @@ require 'redis'
 require 'json'
 require 'fileutils'
 
+context = ENV['CONTEXT']
+outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+product = ENV['SHORT_PRODUCT']
+
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_fileNotFound.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_fileNotFound_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 @logger.debug "[tei copier worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
-product = ENV['SHORT_PRODUCT']
 
 
 def copyFile(from, to, to_dir)

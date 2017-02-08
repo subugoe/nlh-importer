@@ -5,6 +5,12 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
+
+pdf_inpath    = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
+mets_inpath   = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
+
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
@@ -12,10 +18,6 @@ require 'json'
 
 @logger.debug "[pdf_path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-
-pdf_inpath    = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
-mets_inpath   = ENV['IN'] + ENV['METS_IN_SUB_PATH']
-from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
 def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)

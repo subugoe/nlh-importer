@@ -3,6 +3,9 @@ require 'logger'
 require 'redis'
 require 'json'
 
+
+inpath = ENV['ORIG']
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
@@ -10,7 +13,6 @@ require 'json'
 
 @logger.debug "[image_input_paths_mapper worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-inpath = ENV['ORIG']
 
 arr_2  = Array.new
 

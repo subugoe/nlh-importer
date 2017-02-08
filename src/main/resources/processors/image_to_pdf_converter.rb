@@ -9,6 +9,13 @@ require 'fileutils'
 require 'mini_magick'
 
 
+context = ENV['CONTEXT']
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+
+@imageinpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+@imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
@@ -18,16 +25,8 @@ require 'mini_magick'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/nlh_image_to_pdf_converter.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
-
-
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-
-
-@imageinpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
-@imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 
 @logger.debug "[image to pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
