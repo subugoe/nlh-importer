@@ -13,6 +13,7 @@ services:
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
       - ./log:$LOG
+      - ./src/main/resources:/usr/verticles
     #depends_on:
     #  - solr
     #  - redis

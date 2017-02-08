@@ -39,7 +39,7 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 4,
+    'instances'                  => 10,
     'worker'                     => true,
     #'workerPoolName'             => 'index_worker_pool',
     #'workerPoolSize'             => 1,
@@ -178,17 +178,20 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'worksToProcess'
 
   @rredis.del 'checkmets'
+  @rredis.del 'check_path'
 
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
+  $vertx.deploy_verticle("processors/check_existence_of_resource.rb", retriever_options)
+
+#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
 #  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
 
 else
 
-   $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+   #$vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
   #  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", indexer_options)
   #  $vertx.deploy_verticle("processors/check_existence_in_index.rb", indexer_options)
 
