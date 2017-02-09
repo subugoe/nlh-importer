@@ -44,6 +44,10 @@ works       = 0
 collections = 0
 pages       = 0
 
+solrQueries = ["!fulltext:*", "fulltext:*"]
+redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
+
+
 def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
@@ -83,14 +87,11 @@ def retrievePaths(solr_works_with_fulltext, queue)
   }
 
   pushToQueue(arr, queue)
-  #pushToQueue(arr, 'check_path')
 
 end
 
 $vertx.execute_blocking(lambda { |future|
 
-  solrQueries = ["!fulltext:*", "fulltext:*"]
-  redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
   qi = 0
 
   catch (:stop) do
@@ -106,10 +107,15 @@ $vertx.execute_blocking(lambda { |future|
           retrievePaths(solr_works_with_fulltext, redisQueues[qi])
 
         else
-          @logger.debug "Response from solr is empty. Retrieved #{works} works with fulltext #{Java::JavaLang::Thread.current_thread().get_name()}"
+          @logger.debug "Response from solr is empty. Retrieved #{works} works without fulltext. Start next query. #{Java::JavaLang::Thread.current_thread().get_name()}"
           if qi < solrQueries.size
             qi += 1
+            works = 0
+            collections = 0
+            pages = 0
+            i = -1
           else
+            @logger.debug "All Queries processed. Retrieved #{works} works with fulltext #{Java::JavaLang::Thread.current_thread().get_name()}"
             throw :stop
           end
         end
@@ -127,10 +133,6 @@ $vertx.execute_blocking(lambda { |future|
 
     end
   end
-
-  @logger.debug "works=#{works}, collections=#{collections}, pages=#{pages}"
-
-  #solr_works_without_fulltext = @solr.get 'select', :params => {:q => "!fulltext:*", :fl => 'pid, product, work, page', :fq => solr_fq, :rows => 100000}
 
 
   # future.complete(doc.to_s)

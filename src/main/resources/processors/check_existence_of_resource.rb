@@ -36,84 +36,53 @@ prepare      = ENV['REPARE']
 @rredis = Redis.new(:host => redishost, :port => redisport.to_i, :db => redisdb.to_i)
 @solr   = RSolr.connect :url => solradr
 
-@logger.debug "[check_existence_of_resource_prepare.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.debug "[check_existence_of_resource.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-i           = 0
-rows        = 100
-works       = 0
-collections = 0
-pages       = 0
+redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
+
 
 def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
+def check res
+  attempts = 0
+  begin
+
+    if (res != '' && res != nil)
+
+      json = JSON.parse(res[1])
+
+      path = json['path']
+
+      if File.exist? (path)
+        if (File.size (path)) > 0
+          @logger.info "File exists"
+        else
+          @logger.error "File #{path} is empty"
+        end
+      else
+        @logger.error "File #{path} doesn't exist"
+      end
+
+    end
+  rescue Exception => e
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+    @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
+  end
+end
+
+
+
 
 $vertx.execute_blocking(lambda { |future|
 
-  catch (:stop) do
-
-    while true
-
-      attempts = 0
-      begin
-        solr_works_with_fulltext = @solr.get 'select', :params => {:q => "!fulltext:*", :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
-        unless solr_works_with_fulltext['response']['docs'].size == 0
-
-          arr = Array.new
-          solr_works_with_fulltext['response']['docs'].each { |doc|
-            doctype = doc['doctype']
-            if doctype == "work"
-              works        += 1
-              pid          = doc['pid']
-              image_format = doc['image_format']
-              product      = doc['product']
-              work         = doc['work']
-              page         = doc['page']
-
-              fullpdf_path = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
-              arr << {"path" => fullpdf_path}.to_json
-
-              page.each { |p|
-                pages += 1
-
-                image_path = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
-                arr << {"path" => image_path}.to_json
-
-                pagepdf_path = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
-                arr << {"path" => pagepdf_path}.to_json
-
-                fulltext_path = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
-                arr << {"path" => fulltext_path}.to_json
-              }
-            else
-              collections += 1
-            end
-          }
-
-          pushToQueue(arr, 'check_path_nofulltext')
-          #pushToQueue(arr, 'check_path')
-
-        else
-          @logger.debug "Response from solr is empty. Retrieved #{works} works with fulltext #{Java::JavaLang::Thread.current_thread().get_name()}"
-          throw :stop
-        end
-
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Problem to resolve Solr data for '#{res[1]}' (#{e.message})"
-        @file_logger.error "Problem to resolve Solr data for '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
-      end
-
-      i += 1
-      @logger.debug "works=#{works}, collections=#{collections}, pages=#{pages}"
-
-
-    end
+  while true
+    res = @rredis.brpop(redisQueues[0])
+    check res
   end
-
-  @logger.debug "works=#{works}, collections=#{collections}, pages=#{pages}"
 
   # future.complete(doc.to_s)
 
@@ -121,3 +90,15 @@ $vertx.execute_blocking(lambda { |future|
   #
 }
 
+$vertx.execute_blocking(lambda { |future|
+
+  while true
+    res = @rredis.brpop(redisQueues[1])
+    check res
+  end
+
+  # future.complete(doc.to_s)
+
+}) { |res_err, res|
+  #
+}
