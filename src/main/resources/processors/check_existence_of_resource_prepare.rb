@@ -13,9 +13,9 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 #outpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 outpath      = ENV['OUT']
 #metspath  = outpath + ENV['METS_OUT_SUB_PATH']
-imagepath    = outpath + ENV['IMAGE_OUT_SUB_PATH']
-teipath      = outpath + ENV['TEI_OUT_SUB_PATH']
-pdfpath      = outpath + ENV['PDF_OUT_SUB_PATH']
+@imagepath   = outpath + ENV['IMAGE_OUT_SUB_PATH']
+@teipath     = outpath + ENV['TEI_OUT_SUB_PATH']
+@pdfpath     = outpath + ENV['PDF_OUT_SUB_PATH']
 logpath      = ENV['LOG']
 redishost    = ENV['REDIS_HOST']
 redisport    = ENV['REDIS_EXTERNAL_PORT']
@@ -38,14 +38,11 @@ prepare      = ENV['REPARE']
 
 @logger.debug "[check_existence_of_resource_prepare.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-i           = 0
-rows        = 100
-works       = 0
-collections = 0
-pages       = 0
-
-solrQueries = ["!fulltext:*", "fulltext:*"]
-redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
+i            = 0
+rows         = 100
+@works       = 0
+@collections = 0
+@pages       = 0
 
 
 def pushToQueue(arr, queue)
@@ -59,30 +56,30 @@ def retrievePaths(solr_works_with_fulltext, queue)
   solr_works_with_fulltext['response']['docs'].each { |doc|
     doctype = doc['doctype']
     if doctype == "work"
-      works        += 1
+      @works       += 1
       pid          = doc['pid']
       image_format = doc['image_format']
       product      = doc['product']
       work         = doc['work']
       page         = doc['page']
 
-      fullpdf_path = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
+      fullpdf_path = "#{@pdfpath}/#{product}/#{work}/#{work}.pdf"
       arr << {"path" => fullpdf_path}.to_json
 
       page.each { |p|
-        pages += 1
+        @pages += 1
 
-        image_path = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
+        image_path = "#{@imagepath}/#{product}/#{work}/#{p}.#{image_format}"
         arr << {"path" => image_path}.to_json
 
-        pagepdf_path = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
+        pagepdf_path = "#{@pdfpath}/#{product}/#{work}/#{p}.pdf"
         arr << {"path" => pagepdf_path}.to_json
 
-        fulltext_path = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
+        fulltext_path = "#{@teipath}/#{product}/#{work}/#{p}.tei.xml"
         arr << {"path" => fulltext_path}.to_json
       }
     else
-      collections += 1
+      @collections += 1
     end
   }
 
@@ -90,54 +87,52 @@ def retrievePaths(solr_works_with_fulltext, queue)
 
 end
 
-$vertx.execute_blocking(lambda { |future|
 
-  qi = 0
+qi     = 0
+query  = "fulltext:*"
+queues = 'check_path_fulltext'
 
-  catch (:stop) do
 
-    while true
+catch (:stop) do
 
-      attempts = 0
-      begin
-        solr_works_with_fulltext = @solr.get 'select', :params => {:q => solrQueries[qi], :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
+  while true
 
-        unless solr_works_with_fulltext['response']['docs'].size == 0
+    attempts = 0
+    begin
 
-          retrievePaths(solr_works_with_fulltext, redisQueues[qi])
+      solr_works_with_fulltext = @solr.get 'select', :params => {:q => query, :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
 
+      unless solr_works_with_fulltext['response']['docs'].size == 0
+
+        retrievePaths(solr_works_with_fulltext, redisQueues[qi])
+
+      else
+        @logger.info "Response from solr is empty. Retrieved #{@works} works with fulltext. Start query for works without fulltext."
+        if qi < 2
+          qi           += 1
+          query        = "!fulltext:*"
+          queues       ="check_path_nofulltext"
+          @works       = 0
+          @collections = 0
+          @pages       = 0
+          i            = -1
         else
-          @logger.debug "Response from solr is empty. Retrieved #{works} works without fulltext. Start next query. #{Java::JavaLang::Thread.current_thread().get_name()}"
-          if qi < solrQueries.size
-            qi += 1
-            works = 0
-            collections = 0
-            pages = 0
-            i = -1
-          else
-            @logger.debug "All Queries processed. Retrieved #{works} works with fulltext #{Java::JavaLang::Thread.current_thread().get_name()}"
-            throw :stop
-          end
+          @logger.debug "Retrieved #{@works} works without fulltext. All Queries processed."
+          throw :stop
         end
-
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Problem to resolve Solr data for '#{res[1]}' (#{e.message})"
-        @file_logger.error "Problem to resolve Solr data for '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
       end
 
-      i += 1
-      @logger.debug "works=#{works}, collections=#{collections}, pages=#{pages}"
-
-
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      @logger.error "Problem to get Solr data (#{e.message})"
+      @file_logger.error "Problem to get Solr data \t#{e.message}\n\t#{e.backtrace}"
     end
+
+    i += 1
+    @logger.debug "works=#{@works}, collections=#{@collections}, pages=#{@pages}"
+
+
   end
-
-
-  # future.complete(doc.to_s)
-
-}) { |res_err, res|
-  #
-}
+end
 
