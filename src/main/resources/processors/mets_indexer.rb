@@ -26,7 +26,7 @@ context = ENV['CONTEXT']
 MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
 @oai_endpoint  = ENV['METS_VIA_OAI']
 @short_product = ENV['SHORT_PRODUCT']
-@url_pattern   = ENV['URI_PATTERN']
+@url_pattern   = ENV['URL_PATTERN']
 
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
