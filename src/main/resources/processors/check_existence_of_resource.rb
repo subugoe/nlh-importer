@@ -6,7 +6,7 @@ require 'redis'
 require 'json'
 require 'rsolr'
 
-# prepare config: 1 instance, 5GB importer, 4GB redis, 7GB solr
+# prepare config: 1 instance, 6GB importer, 4GB redis, 6GB solr
 # process config: 20 instances, 10GB importer, 5GB redis, 1GB solr
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
@@ -48,8 +48,6 @@ def pushToQueue(arr, queue)
   @rredis.lpush(queue, arr)
 end
 
-
-#=begin
 
 $vertx.execute_blocking(lambda { |future|
 
@@ -117,62 +115,9 @@ $vertx.execute_blocking(lambda { |future|
 
   @logger.debug "works=#{works}, collections=#{collections}, pages=#{pages}"
 
-  #solr_works_without_fulltext = @solr.get 'select', :params => {:q => "!fulltext:*", :fl => 'pid, product, work, page', :fq => solr_fq, :rows => 100000}
-
-
   # future.complete(doc.to_s)
 
 }) { |res_err, res|
   #
 }
-
-
-#=end
-
-
-=begin
-$vertx.execute_blocking(lambda { |future|
-
-
-  while true
-
-    res = @rredis.brpop("check_path_nofulltext")
-
-    attempts = 0
-    begin
-
-      if (res != '' && res != nil)
-
-        json = JSON.parse(res[1])
-
-        path = json['path']
-
-        if File.exist? (path)
-          if (File.size (path)) > 0
-            @logger.info "File exists"
-          else
-            @logger.error "File #{path} is empty"
-          end
-        else
-          @logger.error "File #{path} doesn't exist"
-        end
-
-      end
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
-      @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
-    end
-
-  end
-
-
-  # future.complete(doc.to_s)
-
-}) { |res_err, res|
-  #
-}
-
-=end
 
