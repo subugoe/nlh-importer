@@ -49,9 +49,49 @@ def pushToQueue(arr, queue)
 end
 
 
-#=begin
+def retrievePaths(solr_works_with_fulltext, queue)
+
+  arr = Array.new
+  solr_works_with_fulltext['response']['docs'].each { |doc|
+    doctype = doc['doctype']
+    if doctype == "work"
+      works        += 1
+      pid          = doc['pid']
+      image_format = doc['image_format']
+      product      = doc['product']
+      work         = doc['work']
+      page         = doc['page']
+
+      fullpdf_path = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
+      arr << {"path" => fullpdf_path}.to_json
+
+      page.each { |p|
+        pages += 1
+
+        image_path = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
+        arr << {"path" => image_path}.to_json
+
+        pagepdf_path = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
+        arr << {"path" => pagepdf_path}.to_json
+
+        fulltext_path = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
+        arr << {"path" => fulltext_path}.to_json
+      }
+    else
+      collections += 1
+    end
+  }
+
+  pushToQueue(arr, queue)
+  #pushToQueue(arr, 'check_path')
+
+end
 
 $vertx.execute_blocking(lambda { |future|
+
+  solrQueries = ["!fulltext:*", "fulltext:*"]
+  redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
+  qi = 0
 
   catch (:stop) do
 
@@ -59,46 +99,19 @@ $vertx.execute_blocking(lambda { |future|
 
       attempts = 0
       begin
-        solr_works_with_fulltext = @solr.get 'select', :params => {:q => "!fulltext:*", :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
+        solr_works_with_fulltext = @solr.get 'select', :params => {:q => solrQueries[qi], :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
+
         unless solr_works_with_fulltext['response']['docs'].size == 0
 
-          arr = Array.new
-          solr_works_with_fulltext['response']['docs'].each { |doc|
-            doctype = doc['doctype']
-            if doctype == "work"
-              works        += 1
-              pid          = doc['pid']
-              image_format = doc['image_format']
-              product      = doc['product']
-              work         = doc['work']
-              page         = doc['page']
-
-              fullpdf_path = "#{pdfpath}/#{product}/#{work}/#{work}.pdf"
-              arr << {"path" => fullpdf_path}.to_json
-
-              page.each { |p|
-                pages += 1
-
-                image_path = "#{imagepath}/#{product}/#{work}/#{p}.#{image_format}"
-                arr << {"path" => image_path}.to_json
-
-                pagepdf_path = "#{pdfpath}/#{product}/#{work}/#{p}.pdf"
-                arr << {"path" => pagepdf_path}.to_json
-
-                fulltext_path = "#{teipath}/#{product}/#{work}/#{p}.tei.xml"
-                arr << {"path" => fulltext_path}.to_json
-              }
-            else
-              collections += 1
-            end
-          }
-
-          pushToQueue(arr, 'check_path_nofulltext')
-          #pushToQueue(arr, 'check_path')
+          retrievePaths(solr_works_with_fulltext, redisQueues[qi])
 
         else
           @logger.debug "Response from solr is empty. Retrieved #{works} works with fulltext #{Java::JavaLang::Thread.current_thread().get_name()}"
-          throw :stop
+          if qi < solrQueries.size
+            qi += 1
+          else
+            throw :stop
+          end
         end
 
       rescue Exception => e
@@ -125,54 +138,4 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
   #
 }
-
-
-#=end
-
-
-=begin
-$vertx.execute_blocking(lambda { |future|
-
-
-  while true
-
-    res = @rredis.brpop("check_path_nofulltext")
-
-    attempts = 0
-    begin
-
-      if (res != '' && res != nil)
-
-        json = JSON.parse(res[1])
-
-        path = json['path']
-
-        if File.exist? (path)
-          if (File.size (path)) > 0
-            @logger.info "File exists"
-          else
-            @logger.error "File #{path} is empty"
-          end
-        else
-          @logger.error "File #{path} doesn't exist"
-        end
-
-      end
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
-      @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
-    end
-
-  end
-
-
-  # future.complete(doc.to_s)
-
-}) { |res_err, res|
-  #
-}
-
-=end
 

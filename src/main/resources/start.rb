@@ -52,20 +52,19 @@ indexer_options = {
 image_processor_options = {
     'instances'                  => 8,
     'worker'                     => true,
-#    'workerPoolName'             => 'image_worker_pool',
-#    'workerPoolSize'             => 1,
+    #    'workerPoolName'             => 'image_worker_pool',
+    #    'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
 
-
 mets_copier_options = {
     'instances'                  => 10,
     'worker'                     => true,
-#    'workerPoolName'             => 'mets_copier_worker_pool',
-#    'workerPoolSize'             => 1,
+    #    'workerPoolName'             => 'mets_copier_worker_pool',
+    #    'workerPoolSize'             => 1,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
@@ -179,10 +178,10 @@ if ENV['PREPARE'] == 'true'
 
   @rredis.del 'checkmets'
   @rredis.del 'check_path'
-
+  @rredis.del 'check_path_nofulltext'
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-#$vertx.deploy_verticle("processors/check_existence_of_resource.rb", retriever_options)
+$vertx.deploy_verticle("processors/check_existence_of_resource_prepare.rb", retriever_options)
 
 #  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
@@ -190,7 +189,8 @@ if ENV['PREPARE'] == 'true'
 #  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
 
 else
-  $vertx.deploy_verticle("processors/check_existence_of_resource.rb", retriever_options)
+
+$vertx.deploy_verticle("processors/check_existence_of_resource_prepare.rb", retriever_options)
 #$vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
 #  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", indexer_options)
 #  $vertx.deploy_verticle("processors/check_existence_in_index.rb", indexer_options)
