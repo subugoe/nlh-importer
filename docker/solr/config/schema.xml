@@ -320,7 +320,7 @@
         <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
 
-        <field name="url_pattern" type="string" indexed="true" stored="true"/>
+        <field name="access_pattern" type="string" indexed="true" stored="true"/>
         <field name="baseurl" type="string" indexed="false" stored="true"/>
 
         <!-- todo: begin remove ()after full reindex -->

@@ -26,7 +26,7 @@ context = ENV['CONTEXT']
 MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
 @oai_endpoint  = ENV['METS_VIA_OAI']
 @short_product = ENV['SHORT_PRODUCT']
-@url_pattern   = ENV['URL_PATTERN']
+@access_pattern   = ENV['ACCESS_PATTERN']
 
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
@@ -472,7 +472,7 @@ def processPresentationImages(meta)
     end
 
     meta.baseurl      = baseurl
-    meta.url_pattern  = @url_pattern
+    meta.access_pattern  = @access_pattern
     meta.product      = product
     meta.work         = work
     meta.image_format = ENV['IMAGE_OUT_FORMAT']

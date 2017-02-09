@@ -17,7 +17,7 @@ class MetsModsMetadata
                 :context,
                 :doctype,
 
-                :url_pattern,
+                :access_pattern,
                 :baseurl,
 
                 :original_infos,
@@ -248,7 +248,7 @@ class MetsModsMetadata
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 
-    h.merge! ({:url_pattern => @url_pattern})
+    h.merge! ({:access_pattern => @access_pattern})
     h.merge! ({:baseurl => @baseurl})
 
 
