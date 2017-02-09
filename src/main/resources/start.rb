@@ -190,7 +190,7 @@ $vertx.deploy_verticle("processors/check_existence_of_resource_prepare.rb", retr
 
 else
 
-$vertx.deploy_verticle("processors/check_existence_of_resource.rb", retriever_options)
+$vertx.deploy_verticle("processors/check_existence_of_resource.rb", indexer_options)
 #$vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
 #  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", indexer_options)
 #  $vertx.deploy_verticle("processors/check_existence_in_index.rb", indexer_options)
