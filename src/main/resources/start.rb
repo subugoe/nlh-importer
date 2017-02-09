@@ -177,8 +177,8 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'worksToProcess'
 
   @rredis.del 'checkmets'
-  @rredis.del 'check_path'
-  @rredis.del 'check_path_nofulltext'
+  @rredis.del 'check_path_with_fulltext'
+  @rredis.del 'check_path_without_fulltext'
 
 #  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
 $vertx.deploy_verticle("processors/check_existence_of_resource_prepare.rb", retriever_options)

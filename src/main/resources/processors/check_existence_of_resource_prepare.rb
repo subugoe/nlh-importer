@@ -90,7 +90,7 @@ end
 
 qi     = 0
 query  = "fulltext:*"
-queues = 'check_path_fulltext'
+queue = 'check_path_with_fulltext'
 
 
 catch (:stop) do
@@ -104,14 +104,14 @@ catch (:stop) do
 
       unless solr_works_with_fulltext['response']['docs'].size == 0
 
-        retrievePaths(solr_works_with_fulltext, redisQueues[qi])
+        retrievePaths(solr_works_with_fulltext, queue)
 
       else
         @logger.info "Response from solr is empty. Retrieved #{@works} works with fulltext. Start query for works without fulltext."
         if qi < 2
           qi           += 1
           query        = "!fulltext:*"
-          queues       ="check_path_nofulltext"
+          queue       = "check_path_without_fulltext"
           @works       = 0
           @collections = 0
           @pages       = 0
