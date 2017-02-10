@@ -34,7 +34,7 @@ prepare      = ENV['REPARE']
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(logpath + "/#{context}_check_existence_of_resource_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(logpath + "/#{context}_check_existence_of_resource_prepare_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
 @rredis = Redis.new(:host => redishost, :port => redisport.to_i, :db => redisdb.to_i)
