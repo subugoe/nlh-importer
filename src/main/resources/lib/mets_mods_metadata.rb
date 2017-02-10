@@ -572,7 +572,7 @@ class MetsModsMetadata
     @parts.each { |part|
 
       cns = part.currentnosort.to_i
-      unless cns < 2147483647
+      if cns < 2147483647
         currentnosort << cns
       end
 
