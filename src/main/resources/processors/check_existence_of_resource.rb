@@ -77,10 +77,17 @@ end
 
 $vertx.execute_blocking(lambda { |future|
 
-  while true
-    res = @rredis.brpop(redisQueues[0])
+
+  while (len = @rredis.llen 'check_path_without_fulltext') != 0
+    res = @rredis.brpop('check_path_without_fulltext')
     check res
   end
+
+  while (len = @rredis.llen 'check_path_with_fulltext') != 0
+    res = @rredis.brpop('check_path_with_fulltext')
+    check res
+  end
+
 
   # future.complete(doc.to_s)
 
@@ -88,15 +95,3 @@ $vertx.execute_blocking(lambda { |future|
   #
 }
 
-$vertx.execute_blocking(lambda { |future|
-
-  while true
-    res = @rredis.brpop(redisQueues[1])
-    check res
-  end
-
-  # future.complete(doc.to_s)
-
-}) { |res_err, res|
-  #
-}
