@@ -54,13 +54,13 @@ def check res
       path = json['path']
 
       if File.exist? (path)
-        if (File.size (path)) > 0
-          @logger.info "File exists"
-        else
+        unless (File.size (path)) > 0
           @logger.error "File #{path} is empty"
+          @file_logger.error "File #{path} is empty"
         end
       else
         @logger.error "File #{path} doesn't exist"
+        @file_logger.error "File #{path} doesn't exist"
       end
 
     end
