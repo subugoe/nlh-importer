@@ -399,7 +399,6 @@ class MetsModsMetadata
 
     h.merge! ({:place_publish => place})
     h.merge! ({:facet_place_publish => placeFacet})
-    # todo the FE needs to use year_publish_start, instead of year_publish, when changed remove year_publish
     h.merge! ({:year_publish => date_issued_start})
     h.merge! ({:year_publish_start => date_issued_start})
     h.merge! ({:year_publish_end => date_issued_end})
@@ -454,8 +453,6 @@ class MetsModsMetadata
     h.merge! ({:log_type => type})
     h.merge! ({:log_label => label})
 
-    #h.merge! ({:log_dmdid => dmdid})
-    #h.merge! ({:log_admid => admid})
 
     h.merge! ({:log_start_page_index => start_page_index})
     h.merge! ({:log_end_page_index => end_page_index})
@@ -468,26 +465,17 @@ class MetsModsMetadata
     # add physical info (e.g. ORDER, ORDERLABEL)
     #:type, :id, :order, :orderlabel
 
-    #id               = Array.new
-    #type             = Array.new
-    #level            = Array.new
     order      = Array.new
     orderlabel = Array.new
 
 
     @physicalElements.each { |el|
 
-      #id << el.id
-      #type << el.type
-      #level << el.level
       order << el.order.to_i
       orderlabel << el.orderlabel
 
     }
 
-    #h.merge! ({:phys_id => id})
-    #h.merge! ({:phys_type => type})
-    #h.merge! ({:phys_level => level})
     h.merge! ({:phys_order => order})
     h.merge! ({:phys_orderlabel => orderlabel})
 
@@ -576,47 +564,31 @@ class MetsModsMetadata
     h.merge! ({:parentdoc_note => @related_items.collect { |rel_item| rel_item.note }})
     h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
 
-    # order, :type, :number
+    # currentno, currentnosort
 
-    #part_order    = Array.new
     currentnosort = Array.new
-    #part_number   = Array.new
     currentno     = Array.new
 
     @parts.each { |part|
-      #part_order << part.currentnosort
-      currentnosort << part.currentnosort.to_i
-      #part_number << part.currentno
+
+      cns = part.currentnosort.to_i
+      unless cns < 2147483647
+        currentnosort << cns
+      end
+
       currentno << part.currentno
     }
 
-    #h.merge! ({:part_order => part_order})
     h.merge! ({:currentnosort => currentnosort})
-    #h.merge! ({:part_number => part_number})
     h.merge! ({:currentno => currentno})
-
-    # @record_infos.each { |recInfo|
-    #   h.merge! recInfo.to_solr_string
-    # }
 
 
     if @iswork == true
       h.merge! ({:fulltext => @fulltexts})
-
-      #h.merge! ({:presentation_url => @presentation_image_uris})
-      #    h.merge! ({:thumbs_url => @thumb_image_uris})
-      #h.merge! ({:fulltext_url => @fulltext_uris})
-
     end
 
 
-    #h.merge! ({:presentation_url => @presentationImageURIs.collect { |uri| uri }})
-    #h.merge! ({:thumbs_url => @thumbImageURIs.collect { |uri| uri }})
-    #h.merge! ({:fulltext_url => @fulltextURIs.collect { |uri| uri }})
-
-
     h.merge! ({:dmdid => @dmdid})
-    #h.merge! ({:logid => @logid})
     h.merge! ({:mods => @mods})
     h.merge! ({:docstrct => @docstrct})
 
@@ -627,15 +599,11 @@ class MetsModsMetadata
   def checkInSolr
     inpath = '/Volumes/gdzs-1/nlh/mets/emo'
     paths  = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-    puts paths.size
     paths.each { |path|
 
       doc              = File.open(path) { |f| Nokogiri::XML(f) { |config| config.noblanks } }
       mods             = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
       recordIdentifier = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').first.text
-      #puts "path: #{path}, id: #{recordIdentifier}"
-
-      puts "#{path}, #{recordIdentifier}" unless recordIdentifier.include? 'emo_'
 
       solr = RSolr.connect :url => 'http://134.76.19.103:8443/solr/nlh'
 
@@ -656,13 +624,11 @@ class MetsModsMetadata
 
     inpath = '/Volumes/gdzs-1/nlh/mets/emo'
     paths  = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-    puts paths.size
     paths.each { |path|
 
       doc              = File.open(path) { |f| Nokogiri::XML(f) { |config| config.noblanks } }
       mods             = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
       recordIdentifier = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').first.text
-      #puts "path: #{path}, id: #{recordIdentifier}"
 
       unless hsh.include? recordIdentifier
         hsh[recordIdentifier] = [path]
