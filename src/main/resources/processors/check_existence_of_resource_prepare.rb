@@ -54,7 +54,7 @@ def pushToQueue(arr, queue)
 end
 
 
-def retrievePaths(solr_works_with_fulltext, queue)
+def retrievePaths(solr_works_with_fulltext, queue, with_fulltext)
 
   arr = Array.new
   solr_works_with_fulltext['response']['docs'].each { |doc|
@@ -79,8 +79,10 @@ def retrievePaths(solr_works_with_fulltext, queue)
         pagepdf_path = "#{@pdfpath}/#{product}/#{work}/#{p}.pdf"
         arr << {"path" => pagepdf_path}.to_json
 
-        fulltext_path = "#{@teipath}/#{product}/#{work}/#{p}.tei.xml"
-        arr << {"path" => fulltext_path}.to_json
+        if with_fulltext
+          fulltext_path = "#{@teipath}/#{product}/#{work}/#{p}.tei.xml"
+          arr << {"path" => fulltext_path}.to_json
+        end
       }
     else
       @collections += 1
@@ -92,10 +94,10 @@ def retrievePaths(solr_works_with_fulltext, queue)
 end
 
 
-qi     = 0
-query  = "fulltext:*"
-queue = 'check_path_with_fulltext'
-
+qi            = 0
+query         = "fulltext:*"
+queue         = 'check_path_with_fulltext'
+with_fulltext = true
 
 catch (:stop) do
 
@@ -104,22 +106,23 @@ catch (:stop) do
     attempts = 0
     begin
 
-      solr_works_with_fulltext = @solr.get 'select', :params => {:q => query, :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
+      solr_works = @solr.get 'select', :params => {:q => query, :fl => 'pid, product, work, page, doctype, image_format', :start => i*rows, :rows => rows}
 
-      unless solr_works_with_fulltext['response']['docs'].size == 0
+      unless solr_works['response']['docs'].size == 0
 
-        retrievePaths(solr_works_with_fulltext, queue)
+        retrievePaths(solr_works, queue, with_fulltext)
 
       else
         @logger.info "Response from solr is empty. Retrieved #{@works} works with fulltext. Start query for works without fulltext."
         if qi < 2
-          qi           += 1
-          query        = "!fulltext:*"
-          queue       = "check_path_without_fulltext"
-          @works       = 0
-          @collections = 0
-          @pages       = 0
-          i            = -1
+          qi            += 1
+          query         = "!fulltext:*"
+          queue         = "check_path_without_fulltext"
+          with_fulltext = false
+          @works        = 0
+          @collections  = 0
+          @pages        = 0
+          i             = -1
         else
           @logger.debug "Retrieved #{@works} works without fulltext. All Queries processed."
           throw :stop
