@@ -6,8 +6,10 @@ require 'redis'
 require 'json'
 require 'rsolr'
 
-# prepare config: 1 instance, 6GB importer, 4GB redis, 6GB solr
+
+# prepare config:   1 instance,  4GB importer, 7GB redis, 5GB solr
 # process config: 20 instances, 10GB importer, 5GB redis, 1GB solr
+
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 #outpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
@@ -22,9 +24,7 @@ redisport    = ENV['REDIS_EXTERNAL_PORT']
 redisdb      = ENV['REDIS_DB']
 solradr      = ENV['SOLR_ADR']
 
-#solr_fq = ENV['SOLR_FQ']
 context      = ENV['CONTEXT']
-prepare      = ENV['REPARE']
 
 
 @logger       = Logger.new(STDOUT)
@@ -37,8 +37,6 @@ prepare      = ENV['REPARE']
 @solr   = RSolr.connect :url => solradr
 
 @logger.debug "[check_existence_of_resource.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-redisQueues = ['check_path_nofulltext', 'check_path_fulltext']
 
 
 def pushToQueue(arr, queue)
