@@ -22,11 +22,20 @@ require 'lib/right'
 require 'lib/logical_element'
 require 'lib/physical_element'
 
-context = ENV['CONTEXT']
-MAX_ATTEMPTS   = ENV['MAX_ATTEMPTS'].to_i
-@oai_endpoint  = ENV['METS_VIA_OAI']
-@short_product = ENV['SHORT_PRODUCT']
-@access_pattern   = ENV['ACCESS_PATTERN']
+
+# prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
+# process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
+
+# prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
+# process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
+
+
+context         = ENV['CONTEXT']
+MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
+@oai_endpoint   = ENV['METS_VIA_OAI']
+@short_product  = ENV['SHORT_PRODUCT']
+@access_pattern = ENV['ACCESS_PATTERN']
+
 
 @teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
 @teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
@@ -119,6 +128,7 @@ def getRecordIdentifiers(mods, source)
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
 
     if recordIdentifiers.empty?
+      # check wrong written tag
       recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifer', 'mods' => 'http://www.loc.gov/mods/v3')
     end
 
@@ -471,11 +481,11 @@ def processPresentationImages(meta)
       raise
     end
 
-    meta.baseurl      = baseurl
-    meta.access_pattern  = @access_pattern
-    meta.product      = product
-    meta.work         = work
-    meta.image_format = ENV['IMAGE_OUT_FORMAT']
+    meta.baseurl        = baseurl
+    meta.access_pattern = @access_pattern
+    meta.product        = product
+    meta.work           = work
+    meta.image_format   = ENV['IMAGE_OUT_FORMAT']
 
     presentation_image_uris.each { |image_uri|
 
@@ -511,10 +521,11 @@ def processPresentationImages(meta)
 
     product = @short_product
 
-    meta.baseurl      = baseurl
-    meta.product      = product
-    meta.work         = work
-    meta.image_format = image_format
+    meta.baseurl        = baseurl
+    meta.access_pattern = @access_pattern
+    meta.product        = product
+    meta.work           = work
+    meta.image_format   = image_format
 
     presentation_image_uris.each { |image_uri|
 

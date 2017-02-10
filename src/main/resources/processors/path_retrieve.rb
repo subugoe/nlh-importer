@@ -5,6 +5,11 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
+
+# prepare config: 1 instance, 10GB importer, 3GB redis, 3GB solr
+# process config: 10 instances, 10GB importer, 3GB redis, 3GB solr  (indexing)
+
+
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 context = ENV['CONTEXT']
 inpath       = ENV['IN'] + ENV['METS_IN_SUB_PATH']
