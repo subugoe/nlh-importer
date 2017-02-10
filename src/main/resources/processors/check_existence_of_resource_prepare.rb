@@ -10,8 +10,6 @@ require 'rsolr'
 # prepare config: 1 instance, 5GB importer, 4GB redis, 7GB solr
 # process config: 20 instances, 5GB importer, 4GB redis, 7GB solr
 
-### process config: 20 instances, 10GB importer, 5GB redis, 1GB solr
-
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 #outpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']

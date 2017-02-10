@@ -7,8 +7,8 @@ require 'json'
 require 'rsolr'
 
 
-# prepare config:   1 instance,  4GB importer, 7GB redis, 5GB solr
-# process config: 20 instances, 10GB importer, 5GB redis, 1GB solr
+# prepare config: 1 instance, 5GB importer, 4GB redis, 7GB solr
+# process config: 20 instances, 5GB importer, 4GB redis, 7GB solr
 
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
