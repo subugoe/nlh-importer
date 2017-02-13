@@ -8,7 +8,7 @@ require 'rsolr'
 
 
 # prepare config: 1 instance, 5GB importer, 4GB redis, 7GB solr
-# process config: 20 instances, 5GB importer, 4GB redis, 7GB solr
+# process config: 20 instances, 3GB importer, 6GB redis, 7GB solr
 
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
@@ -122,7 +122,8 @@ catch (:stop) do
           @pages        = 0
           i             = -1
         else
-          @logger.debug "Retrieved #{@works} works without fulltext. All Queries processed."
+          @logger.debug "works=#{@works}, collections=#{@collections}, pages=#{@pages}"
+          @logger.debug "All Queries processed."
           throw :stop
         end
       end

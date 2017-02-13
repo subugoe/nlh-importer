@@ -38,20 +38,6 @@ def copyFile(from, to, to_dir)
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
-=begin
-    fixity = (Digest::MD5.file from).hexdigest
-
-    hsh = Hash.new
-    hsh.merge!({"from" => from})
-    hsh.merge!({"to" => to})
-    hsh.merge!({"fixity" => fixity})
-
-    pushToQueue("fixitychecker", hsh)
-
-
-    @rredis.incr 'imagescopied'
-=end
-
   rescue Exception => e
     @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
@@ -67,8 +53,6 @@ def convert(from, to, to_dir)
 
     MiniMagick::Tool::Convert.new do |convert|
       convert << "#{from}"
-      # convert << "-density" << "300"
-      # convert << "-crop" << "100%x100%"
       convert << "#{to}"
     end
 
@@ -83,7 +67,7 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("processImageURI")
+    res = @rredis.brpop("work")
 
     attempts = 0
     begin
@@ -91,26 +75,22 @@ $vertx.execute_blocking(lambda { |future|
       if (res != '' && res != nil)
 
 
-        json      = JSON.parse res[1]
-        image_uri = json['image_uri']
+        json    = JSON.parse res[1]
+        work    = json['work']
+        product = json['product']
 
 
         # image_uri = "https://nl.sub.uni-goettingen.de/image/ecj:worldvolume4:0653/full/800,/0/default.jpg"
-        match     = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-        product   = match[2]
-        work      = match[3]
-        file      = match[4]
-        format    = match[9]
+        match   = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        product = match[2]
+        work    = match[3]
+        file    = match[4]
+        format  = match[9]
 
         @logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-        if @from_orig == 'true'
-          release = @rredis.hget('mapping', work)
-          from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
-        else
-          from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
-        end
 
+        from   = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
         to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_out_format}"
         to_dir = "#{@outpath}/#{product}/#{work}"
 

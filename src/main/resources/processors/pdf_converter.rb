@@ -107,7 +107,6 @@ $vertx.execute_blocking(lambda { |future|
   while true do
 
     res     = @rredis.brpop("convertpdftoimage")
-    product = ENV['SHORT_PRODUCT']
 
     attempts = 0
     begin
