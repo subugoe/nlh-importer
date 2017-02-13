@@ -9,7 +9,6 @@ services:
     container_name: nlh_importer
 #    restart: always
     volumes:
-      - $INPATHORIG/:$ORIG:ro
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
       - ./log:$LOG
