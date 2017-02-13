@@ -104,13 +104,8 @@ $vertx.execute_blocking(lambda { |future|
 
         @logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-        if @from_orig == 'true'
-          release = @rredis.hget('mapping', work)
-          from    = "#{@originpath}/#{release}/#{work}/#{file}.#{@image_in_format}"
-        else
-          from = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
-        end
 
+        from   = "#{@inpath}/#{work}/#{file}.#{@image_in_format}"
         to     = "#{@outpath}/#{product}/#{work}/#{file}.#{@image_out_format}"
         to_dir = "#{@outpath}/#{product}/#{work}"
 
