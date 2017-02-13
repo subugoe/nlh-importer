@@ -8,7 +8,7 @@ require 'lib/mets_mods_metadata'
 require 'fileutils'
 require 'mini_magick'
 
-# process config (nlh): 10 instances, 8GB importer, 3GB redis, 3GB solr
+# process config (nlh): 8 instances, 10GB importer, 3GB redis, 3GB solr
 
 context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
@@ -44,7 +44,7 @@ productin = ENV['IN'] + '/' + ENV['PRODUCT']
 @file_logger.level = Logger::DEBUG
 
 
-@logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.debug "[work_based_converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def copyFile(from, to, to_dir)
@@ -97,7 +97,7 @@ def convert(from, to, to_dir, toPDF, removeBefore)
     end
 
   rescue Exception => e
-    @file_logger.error "Could not convert PDF: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @file_logger.error "Could not convert '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
 end
@@ -117,7 +117,7 @@ def mogrifyPDFs(from, to_dir, format)
     end
 
   rescue Exception => e
-    @file_logger.error "Could not convert PDFs: '#{from}' to: '#{to_dir}'\n\t#{e.message}"
+    @file_logger.error "Could not convert '#{from}' to: '#{to_dir}'\n\t#{e.message}"
   end
 
 end
@@ -128,7 +128,6 @@ $vertx.execute_blocking(lambda { |future|
   while true do
 
     res = @rredis.brpop("work_based_converter")
-
 
     attempts = 0
     begin
