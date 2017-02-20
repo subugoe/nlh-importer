@@ -224,6 +224,20 @@ def getGenre(modsGenreElements)
   return genreArr
 end
 
+def getClassification(modsClassificationElements)
+
+  classificationArr = Array.new
+  modsClassificationElements.each { |dc|
+    classification = Classification.new
+
+    classification.authority = checkEmptyString dc["authority"]
+    classification.value     = checkEmptyString dc.text
+
+    classificationArr << classification
+  }
+
+  return classificationArr
+end
 
 def getOriginInfo(modsOriginInfoElements)
 
@@ -1132,6 +1146,19 @@ def parseDoc(doc, source)
     @logger.error("Problems to resolve mods:genre for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
+
+# Classification
+  begin
+    modsClassificationElements = mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+
+    unless modsClassificationElements.empty?
+      meta.addClassification = getClassification(modsClassificationElements)
+    end
+  rescue Exception => e
+    @logger.error("Problems to resolve mods:classificationfor #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
 
 # Language
   begin

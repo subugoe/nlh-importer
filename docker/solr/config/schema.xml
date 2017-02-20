@@ -387,9 +387,13 @@
 
         <!-- facet fields -->
         <field name="docstrct" type="text_lc" indexed="true" stored="true"/>
-        <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="lang" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+
+        <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="dc_authority" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_dc" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+
         <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -480,6 +484,7 @@
     <copyField source="creator" dest="metadata"/>
     <copyField source="person" dest="metadata"/>
     <copyField source="genre" dest="metadata"/>
+    <copyField source="dc" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
     <copyField source="nlh_id" dest="metadata"/>
@@ -498,7 +503,7 @@
 
     <!-- copy fields into facetfields -->
 
-    <!--<copyField source="place_publish" dest="facet_place_publish"/>-->
+    <copyField source="dc" dest="facet_dc"/>-->
     <!--<copyField source="publisher" dest="facet_publisher"/>-->
 
     <!-- added for nlh -->

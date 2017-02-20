@@ -3,6 +3,7 @@
 *.iml
 env.sh
 .env
+env.yml
 tmp/*
 target/
 vertx/

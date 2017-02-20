@@ -9,6 +9,7 @@ class MetsModsMetadata
                 :names,
                 :type_of_resources,
                 :genres,
+                :classifications,
                 :sponsors,
 
                 :isnlh,
@@ -75,6 +76,7 @@ class MetsModsMetadata
     @names              = Array.new
     @type_of_resources  = Array.new
     @genres             = Array.new
+    @classifications    = Array.new
     @sponsors           = Array.new
 
     @original_infos        = Array.new
@@ -139,8 +141,12 @@ class MetsModsMetadata
     @type_of_resources += typeOfResource
   end
 
-  def addGenre=(name)
-    @genres += name
+  def addGenre=(genre)
+    @genres += genre
+  end
+
+  def addClassification=(classification)
+    @classifications += classification
   end
 
   def addOriginalInfo=(originInfo)
@@ -350,6 +356,19 @@ class MetsModsMetadata
 
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
 
+    # ---
+
+    dc = Array.new
+    dc_authority = Array.new
+
+    @classifications.each {|classification|
+
+      dc << classification.value
+      dc_authority << classification.authority
+    }
+
+    h.merge! ({:dc => dc})
+    h.merge! ({:dc_authority => dc_authority})
 
     # ---
 
