@@ -738,7 +738,7 @@ def getLogicalPageRange(smLinks, meta)
       min = to if to < min
     end
 
-    addToHash(logPhyHsh, from_, to_)
+    addToHash(logPhyHsh, from_, to)
   }
 
   if meta.doctype == "work"
