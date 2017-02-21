@@ -317,7 +317,7 @@
         <field name="product" type="string" indexed="true" stored="true"/>
         <field name="work" type="string" indexed="true" stored="true"/>
         <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
 
         <field name="access_pattern" type="string" indexed="true" stored="true"/>
@@ -339,7 +339,7 @@
         <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_part_product" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_part_nlh_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="log_part_page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <!--
         <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -487,7 +487,6 @@
     <copyField source="dc" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
-    <copyField source="nlh_id" dest="metadata"/>
     <copyField source="pid" dest="metadata"/>
     <copyField source="publisher_digitization" dest="metadata"/>
     <copyField source="place_digitization" dest="metadata"/>

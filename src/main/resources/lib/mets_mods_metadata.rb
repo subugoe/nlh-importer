@@ -31,7 +31,7 @@ class MetsModsMetadata
                 :collection,
                 :work,
                 :pages,
-                :nlh_ids,
+                :page_keys,
                 :image_format,
 
                 #          :volumes,
@@ -88,7 +88,7 @@ class MetsModsMetadata
     #@volumes =Array.new
 
     @pages                 = Array.new
-    @nlh_ids               = Array.new
+    @page_keys               = Array.new
     @subjects              = Array.new
     @related_items         = Array.new
     @parts                 = Array.new
@@ -174,8 +174,8 @@ class MetsModsMetadata
     @pages += page
   end
 
-  def addNlh_id=(nlh_id)
-    @nlh_ids += nlh_id
+  def addPage_key=(page_key)
+    @page_keys += page_key
   end
 
   #def addVolume=(volume)
@@ -446,7 +446,7 @@ class MetsModsMetadata
     end_page_index   = Array.new
     part_product     = Array.new
     part_work        = Array.new
-    part_nlh_id      = Array.new
+    part_page_key      = Array.new
     level            = Array.new
 
     @logicaElements.each { |el|
@@ -461,7 +461,7 @@ class MetsModsMetadata
       end_page_index << el.end_page_index
       part_product << el.part_product
       part_work << el.part_work
-      part_nlh_id << el.part_nlh_id
+      part_page_key << el.part_page_key
       level << el.level
 
     }
@@ -476,7 +476,7 @@ class MetsModsMetadata
     h.merge! ({:log_level => level})
     h.merge! ({:log_part_product => part_product})
     h.merge! ({:log_part_work => part_work})
-    h.merge! ({:log_part_nlh_id => part_nlh_id})
+    h.merge! ({:log_part_page_key => part_page_key})
 
 
     # add physical info (e.g. ORDER, ORDERLABEL)
@@ -502,7 +502,7 @@ class MetsModsMetadata
     # ---
 
 
-    h.merge! ({:nlh_id => @nlh_ids})
+    h.merge! ({:page_key => @page_keys})
 
 
     # ---

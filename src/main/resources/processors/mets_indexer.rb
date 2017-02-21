@@ -559,7 +559,7 @@ def processPresentationImages(meta)
     }
   end
 
-  meta.addNlh_id = id_arr
+  meta.addPage_key = id_arr
   meta.addPage   = page_arr
 
   push_many("processImageURI", path_arr)
@@ -868,7 +868,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
 
         #meta.addVolume = logicalElementArr
-        #meta.addNlh_id = id_arr
+        #meta.addPage_key = id_arr
 
       else
 
@@ -907,7 +907,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       logicalElement.part_product = product
       logicalElement.part_work    = work
       #logicalElement.volume_uri = volume_uri
-      logicalElement.part_nlh_id  = "#{product}:#{work}"
+      logicalElement.part_page_key  = "#{product}:#{work}"
 
     end
 
