@@ -303,7 +303,6 @@
 
         <!-- added for nlh -->
 
-        <field name="isnlh" type="boolean" indexed="true"/>
         <!-- {'fulltext' | 'work' | 'collection' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
 

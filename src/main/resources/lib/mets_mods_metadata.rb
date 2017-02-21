@@ -242,8 +242,6 @@ class MetsModsMetadata
 
     h.merge!({:image_format => @image_format})
 
-    # todo remove is... fields
-    h.merge! ({:isnlh => true})
     h.merge! ({:iswork => @iswork})
     h.merge! ({:isanchor => @isanchor})
 
