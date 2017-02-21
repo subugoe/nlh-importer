@@ -249,6 +249,7 @@ class MetsModsMetadata
     h.merge! ({:doctype => @doctype})
 
 
+    # todo should we put v in single quotes?, e.g.  "<key-type> <value>" -> "vd18 VD18 10268960" -> "vd18 'VD18 10268960'"
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
     h.merge! ({:pid => @record_identifiers.first[1]})
 

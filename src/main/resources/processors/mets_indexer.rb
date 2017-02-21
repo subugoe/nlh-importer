@@ -21,6 +21,7 @@ require 'lib/note'
 require 'lib/right'
 require 'lib/logical_element'
 require 'lib/physical_element'
+require 'lib/classification'
 
 
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
