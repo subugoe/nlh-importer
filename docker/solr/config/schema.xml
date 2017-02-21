@@ -100,7 +100,7 @@
           lexicographic ordering isn't equal to the numeric ordering)
         -->
 
-        <!-- deprecated - no longer supported       modified for nlh
+        <!-- deprecated - no longer supported
         <fieldType name="pint" class="solr.IntField"/>
         <fieldType name="plong" class="solr.LongField"/>
         <fieldType name="pfloat" class="solr.FloatField"/>
@@ -119,7 +119,7 @@
           so that range queries work correctly.
         -->
 
-        <!-- deprecated - no longer supported       modified for nlh
+        <!-- deprecated - no longer supported
         <fieldType name="sint" class="solr.SortableIntField" sortMissingLast="true" omitNorms="true"/>
         <fieldType name="slong" class="solr.SortableLongField" sortMissingLast="true" omitNorms="true"/>
         <fieldType name="sfloat" class="solr.SortableFloatField" sortMissingLast="true" omitNorms="true"/>
@@ -268,7 +268,8 @@
         <!-- Identifiers -->
         <field name="pid" type="string" indexed="true" stored="true" required="true"/>
         <field name="id" type="string" indexed="true" stored="true"/>
-        <!-- modified for nlh, set required to false -->
+
+
         <field name="logid" type="string" indexed="true" stored="true" required="false"/>
         <field name="dmdid" type="string" indexed="true" stored="true"/>
         <field name="id_parentdoc" type="string" indexed="true" multiValued="true"/>
@@ -281,7 +282,7 @@
         <field name="vd17" type="string" indexed="true" stored="true"/>
         <field name="vd18" type="string" indexed="true" stored="true"/>
 
-        <!-- added for nlh -->
+
         <field name="marc" type="string" indexed="true" stored="true"/>
 
         <field name="parentdoc_id" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -301,7 +302,7 @@
         <field name="ismets" type="boolean" indexed="true"/>
 
 
-        <!-- added for nlh -->
+
 
         <!-- {'fulltext' | 'work' | 'collection' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
@@ -379,7 +380,7 @@
         <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
         -->
 
-        <!-- modified for nlh -->
+
         <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
         <field name="date_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
 
@@ -400,7 +401,7 @@
         <field name="year_publish_start" type="tint" indexed="true" stored="true"/>
         <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
 
-        <!-- added for nlh -->
+
 
         <field name="facet_creator_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_person_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -442,7 +443,7 @@
         <field name="metadata" type="text_ci" indexed="true" stored="false"/>
         <field name="default" type="text_ci" indexed="true" stored="false"/>
 
-        <!-- modify field stored for nlh -->
+
         <field name="fulltext" type="text_ci" indexed="true" stored="true"/>
 
         <!-- only stored fields -->
@@ -504,8 +505,6 @@
 
     <copyField source="dc" dest="facet_dc"/>-->
     <!--<copyField source="publisher" dest="facet_publisher"/>-->
-
-    <!-- added for nlh -->
 
 
     <!--<copyField source="place_digitization" dest="facet_place_digitization"/>-->
