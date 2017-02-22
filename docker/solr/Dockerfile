@@ -24,6 +24,9 @@ ENV SOLR_HOME /opt/solr/
 #ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx3072M -XX:MaxPermSize=1024M"
 #ENV JAVA_OPTS -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M
 
+COPY KEYS /opt/KEYS
+RUN gpg --import /opt/KEYS
+
 RUN mkdir -p /opt/solr/nlh/data
 RUN wget -nv --output-document=/opt/solr.tgz http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz
 RUN wget -nv --output-document=/opt/solr.tgz.asc http://archive.apache.org/dist/lucene/solr/$SOLR_VERSION/solr-$SOLR_VERSION.tgz.asc
