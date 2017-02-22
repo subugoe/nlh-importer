@@ -251,7 +251,7 @@ class MetsModsMetadata
 
     # todo should we put v in single quotes?, e.g.  "<key-type> <value>" -> "vd18 VD18 10268960" -> "vd18 'VD18 10268960'"
     h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
-    h.merge! ({:pid => @record_identifiers.first[1]})
+    h.merge! ({:id => @record_identifiers.first[1]})
 
     h.merge! ({:access_pattern => @access_pattern})
     h.merge! ({:baseurl => @baseurl})
@@ -280,7 +280,7 @@ class MetsModsMetadata
     h.merge! ({:bytitle => sorttitle.join('; ')})
 
 
-    h.merge! ({:pid => @record_identifiers.first[1]})
+    h.merge! ({:id => @record_identifiers.first[1]})
 
     # --- :displayform, :type, :role, :namepart, :date
 
@@ -625,7 +625,7 @@ class MetsModsMetadata
 
       solr = RSolr.connect :url => 'http://134.76.19.103:8443/solr/nlh'
 
-      q        = "pid:#{recordIdentifier}"
+      q        = "id:#{recordIdentifier}"
       response = solr.get 'select', :params => {:q => q}
       if response['response']['docs'].empty?
         puts path
@@ -635,7 +635,7 @@ class MetsModsMetadata
     }
   end
 
-  def checkMupltipleUsedPid
+  def checkMupltipleUsedId
 
     hsh      = Hash.new
     err_keys = Set.new

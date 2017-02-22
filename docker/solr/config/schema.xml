@@ -266,8 +266,7 @@
         <!-- ###### NEW INDEX ####################################################-->
         <field name="uid" type="uuid" indexed="true" stored="true" default="NEW"/>
         <!-- Identifiers -->
-        <field name="pid" type="string" indexed="true" stored="true" required="true"/>
-        <field name="id" type="string" indexed="true" stored="true"/>
+        <field name="id" type="string" indexed="true" stored="true" required="true"/>
 
 
         <field name="logid" type="string" indexed="true" stored="true" required="false"/>
@@ -468,10 +467,9 @@
       -->
 
     <!-- <uniqueKey>uid</uniqueKey> -->
-    <uniqueKey>pid</uniqueKey>
+    <uniqueKey>id</uniqueKey>
 
 
-    <copyField source="pid" dest="id"/>
 
     <copyField source="title" dest="metadata"/>
     <copyField source="subtitle" dest="metadata"/>
@@ -483,7 +481,7 @@
     <copyField source="dc" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
-    <copyField source="pid" dest="metadata"/>
+    <copyField source="id" dest="metadata"/>
     <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
 
@@ -499,7 +497,7 @@
     <copyField source="dc" dest="default"/>
     <copyField source="work" dest="default"/>
     <copyField source="page" dest="default"/>
-    <copyField source="pid" dest="default"/>
+    <copyField source="id" dest="default"/>
     <copyField source="note" dest="default"/>
     <copyField source="subject" dest="default"/>
 
