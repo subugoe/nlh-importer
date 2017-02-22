@@ -950,7 +950,7 @@ end
 
 def getPhysicalElements(physicalElementArr, div, doctype, level)
 
-  physicalElementArr << getAttributesFromPhysicalDiv(div, doctype, level)
+  physicalElementArr << getAttributesFromPhysicalDiv(div, doctype, level) unless level == 0
 
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
