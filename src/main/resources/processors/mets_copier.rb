@@ -8,9 +8,9 @@ require 'fileutils'
 context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath  = productin + ENV['METS_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['METS_OUT_SUB_PATH']
-
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

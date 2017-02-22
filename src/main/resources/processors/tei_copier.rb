@@ -6,10 +6,10 @@ require 'redis'
 require 'json'
 require 'fileutils'
 
+
 context = ENV['CONTEXT']
 outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 product = ENV['SHORT_PRODUCT']
-
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

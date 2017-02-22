@@ -33,21 +33,18 @@ require 'lib/classification'
 
 context         = ENV['CONTEXT']
 MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
+
 @oai_endpoint   = ENV['METS_VIA_OAI']
 @short_product  = ENV['SHORT_PRODUCT']
 @access_pattern = ENV['ACCESS_PATTERN']
 
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@teiinpath  = productin + ENV['TEI_IN_SUB_PATH']
+@teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
-@teiinpath          = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
-@teioutpath         = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
-@originpath         = ENV['ORIG']
-#@from_orig = ENV['GET_IMAGES_FROM_ORIG']
-#@image_from_orig = ENV['GET_IMAGES_FROM_ORIG']
-@fulltext_from_orig = ENV['GET_FULLTEXT_FROM_ORIG']
-@fulltextexist      = ENV['FULLTEXTS_EXIST']
+@fulltextexist = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
-@context            = ENV['CONTEXT']
-
+@context       = ENV['CONTEXT']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
@@ -561,7 +558,7 @@ def processPresentationImages(meta)
   end
 
   meta.addPage_key = id_arr
-  meta.addPage   = page_arr
+  meta.addPage     = page_arr
 
   push_many("processImageURI", path_arr)
 
@@ -573,17 +570,13 @@ def getFulltext(path)
   fulltext = ""
 
   begin
-    if @fulltext_from_orig == 'true'
-      return File.read(path)
-    else
-      fulltext = File.open(path) { |f|
-        Nokogiri::XML(f) { |config|
-          #config.noblanks
-        }
+    fulltext = File.open(path) { |f|
+      Nokogiri::XML(f) { |config|
+        #config.noblanks
       }
+    }
 
-      return fulltext.root.text.gsub(/\s+/, " ").strip
-    end
+    return fulltext.root.text.gsub(/\s+/, " ").strip
 
   rescue Exception => e
     attempts = attempts + 1
@@ -631,14 +624,9 @@ def processFulltexts(meta)
           raise
         end
 
-        if @fulltext_from_orig == 'true'
-          release = @rredis.hget('mapping', work)
-          from    = "#{@originpath}/#{release}/#{work}/#{file}.txt"
-          to      = "#{@teioutpath}/#{product}/#{work}/#{file}.txt"
-        else
-          from = "#{@teiinpath}/#{work}/#{filename}"
-          to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-        end
+
+        from = "#{@teiinpath}/#{work}/#{filename}"
+        to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
 
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
@@ -905,10 +893,10 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
       end
 
-      logicalElement.part_product = product
-      logicalElement.part_work    = work
+      logicalElement.part_product  = product
+      logicalElement.part_work     = work
       #logicalElement.volume_uri = volume_uri
-      logicalElement.part_page_key  = "#{product}:#{work}"
+      logicalElement.part_page_key = "#{product}:#{work}"
 
     end
 

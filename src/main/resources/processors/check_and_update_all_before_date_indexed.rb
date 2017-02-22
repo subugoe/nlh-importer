@@ -7,7 +7,9 @@ require 'json'
 require 'rsolr'
 
 product = ENV['SHORT_PRODUCT']
-inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+inpath  = productin + ENV['METS_IN_SUB_PATH']
 solr_fq = ENV['SOLR_FQ']
 
 @logger       = Logger.new(STDOUT) # 'gdz_object.log')

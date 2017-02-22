@@ -6,8 +6,9 @@ require 'redis'
 require 'json'
 
 
-pdf_inpath    = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
-mets_inpath   = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+pdf_inpath    = productin + ENV['PDF_IN_SUB_PATH']
+mets_inpath   = productin + ENV['METS_IN_SUB_PATH']
 from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
 

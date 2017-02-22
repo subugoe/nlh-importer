@@ -21,14 +21,10 @@ def pushToQueue(arr, queue)
 end
 
 
-puts outpath
 
 paths = Dir.glob("#{outpath}/#{product}/*", File::FNM_CASEFOLD).select { |e| File.directory? e }
 
 arr = Array.new
-puts paths.first
-puts paths.last
-puts paths.size
 
 paths.each {|path|
   match = path.match(/([\S\W]*)\/([\S\W]*)/)

@@ -12,7 +12,8 @@ require 'mini_magick'
 context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@imageinpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@imageinpath  = productin + ENV['IMAGE_IN_SUB_PATH']
 @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 

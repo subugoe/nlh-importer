@@ -12,9 +12,8 @@ require 'rsolr'
 
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-#outpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
+
 outpath      = ENV['OUT']
-#metspath  = outpath + ENV['METS_OUT_SUB_PATH']
 @imagepath   = outpath + ENV['IMAGE_OUT_SUB_PATH']
 @teipath     = outpath + ENV['TEI_OUT_SUB_PATH']
 @pdfpath     = outpath + ENV['PDF_OUT_SUB_PATH']

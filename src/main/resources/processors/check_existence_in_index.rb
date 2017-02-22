@@ -7,7 +7,6 @@ require 'json'
 require 'rsolr'
 
 product = ENV['SHORT_PRODUCT']
-inpath  = ENV['IN'] + ENV['METS_IN_SUB_PATH']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

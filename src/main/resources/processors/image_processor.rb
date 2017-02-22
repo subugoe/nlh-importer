@@ -11,7 +11,8 @@ require 'mini_magick'
 context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@inpath  = ENV['IN'] + ENV['IMAGE_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath  = productin + ENV['IMAGE_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
@@ -38,19 +39,6 @@ def copyFile(from, to, to_dir)
   begin
     FileUtils.mkdir_p(to_dir)
     FileUtils.cp(from, to)
-=begin
-    fixity = (Digest::MD5.file from).hexdigest
-
-    hsh = Hash.new
-    hsh.merge!({"from" => from})
-    hsh.merge!({"to" => to})
-    hsh.merge!({"fixity" => fixity})
-
-    pushToQueue("fixitychecker", hsh)
-
-
-    @rredis.incr 'imagescopied'
-=end
 
   rescue Exception => e
     @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"

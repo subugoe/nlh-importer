@@ -11,9 +11,9 @@ require 'fileutils'
 context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-@inpath  = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath  = productin + ENV['TEI_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
-
 
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr        = RSolr.connect :url => ENV['SOLR_ADR']

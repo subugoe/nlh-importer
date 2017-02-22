@@ -16,10 +16,11 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-@inpath       = ENV['IN'] + ENV['PDF_IN_SUB_PATH']
+productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath       = productin + ENV['PDF_IN_SUB_PATH']
 @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
-@originpath   = ENV['ORIG']
+#@originpath   = ENV['ORIG']
 @pdfdensity   = ENV['PDFDENSITY']
 
 

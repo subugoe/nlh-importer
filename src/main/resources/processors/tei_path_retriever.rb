@@ -5,7 +5,9 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
-inpath = ENV['IN'] + ENV['TEI_IN_SUB_PATH']
+
+productin = ENV['IN'] + '/' + ENV['PRODUCT']
+inpath = productin + ENV['TEI_IN_SUB_PATH']
 
 
 @logger       = Logger.new(STDOUT)
