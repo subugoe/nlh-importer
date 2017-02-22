@@ -960,7 +960,8 @@
       <str name="echoParams">explicit</str>
       <str name="wt">json</str>
       <str name="indent">true</str>
-      <str name="df">text</str>
+      <str name="df">default</str>
+      <str name="q.op">AND</str>
     </lst>
   </requestHandler>
 
