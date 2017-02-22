@@ -30,6 +30,9 @@ require 'lib/classification'
 # prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
 # process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
+@dc_hsh = {
+    "vd18 digital" => "vd18.digital"
+}
 
 context         = ENV['CONTEXT']
 MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
@@ -228,8 +231,12 @@ def getClassification(modsClassificationElements)
   modsClassificationElements.each { |dc|
     classification = Classification.new
 
+    c = checkEmptyString dc.text
+    c = @dc_hsh[c] unless @dc_hsh[c] == nil
+
+    classification.value     = c
     classification.authority = checkEmptyString dc["authority"]
-    classification.value     = checkEmptyString dc.text
+
 
     classificationArr << classification
   }
@@ -962,6 +969,9 @@ def metsRigthsMDElements(metsRightsMDElements)
     ri = Right.new
 
     rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
+    rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de')[0] if rights == nil
+
+
     if rights != nil
       ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text
       ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
