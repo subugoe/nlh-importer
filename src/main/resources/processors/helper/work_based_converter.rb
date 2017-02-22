@@ -75,7 +75,6 @@ def copyDir(from, to)
 
 end
 
-
 def convert(from, to, to_dir, toPDF, removeBefore)
 
   begin
@@ -127,7 +126,7 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("work_based_converter")
+    res = @rredis.brpop("work_based_converter_eai2")
 
     attempts = 0
     begin
@@ -137,6 +136,9 @@ $vertx.execute_blocking(lambda { |future|
         json    = JSON.parse(res[1])
         product = json['product']
         work    = json['work']
+        t       = json['t']
+        fullpdf = json['fullpdf']
+
 
         if @from_full_pdf == "true"
 
@@ -148,12 +150,13 @@ $vertx.execute_blocking(lambda { |future|
 
           solr_page_arr = solr_work['response']['docs'].first['page']
 
-          to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
-          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
-          to_full_pdf  = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
+          to_image_dir    = "#{@imageoutpath}/#{product}/#{work}"
+          to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}"
+          to_full_pdf     = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
           copy_to_tei_dir = "#{@teioutpath}/#{product}"
 
           from = "#{@pdfinpath}#{work}/#{work}.pdf"
+
 
           solr_page_arr.each_index { |index|
 
@@ -161,15 +164,15 @@ $vertx.execute_blocking(lambda { |future|
             to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
 
 
-            convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) # convert to images
-            convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) # convert to page pdfs
+            convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) if t == 'image' # convert to images
+            convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) if (t == 'pdf') && (fullpdf == false) # convert to page pdfs
           }
 
-          copyFile(from, to_full_pdf, to_pdf_dir) # copy full pdf
+          copyFile(from, to_full_pdf, to_pdf_dir) if (t == 'pdf') && fullpdf # copy full pdf
 
-          if @fulltext_exist == 'true'
+          if (@fulltext_exist == 'true') && (t == 'pdf')
             from_tei = "#{@teiinpath}/#{work}"
-            copyDir(from_tei, copy_to_tei_dir) # copy full pdf
+            copyDir(from_tei, copy_to_tei_dir) # copy fulltext
           end
 
 
@@ -177,23 +180,23 @@ $vertx.execute_blocking(lambda { |future|
 
           @logger.debug "Convert page PDFs (from page PDFs) for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-          to_image_dir = "#{@imageoutpath}/#{product}/#{work}/"
-          to_pdf_dir   = "#{@pdfoutpath}/#{product}/#{work}/"
+          to_image_dir    = "#{@imageoutpath}/#{product}/#{work}"
+          to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}"
           copy_to_pdf_dir = "#{@pdfoutpath}/#{product}"
 
           from = "#{@pdfinpath}/#{work}"
 
           unless @image_out_format == 'pdf'
-            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) # convert page pdfs to page images
+            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) if t == 'image' # convert page pdfs to page images
           end
 
-          copyDir(from, copy_to_pdf_dir) # copy page pdfs to page pdfs
+          copyDir(from, copy_to_pdf_dir) if (t == 'pdf') && !fullpdf # copy page pdfs to page pdfs
 
-          convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page pdfs to full pdf
+          convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) if (t == 'pdf') && fullpdf # convert page pdfs to full pdf
 
-          if @fulltext_exist == 'true'
+          if (@fulltext_exist == 'true') && (t == 'tei')
             from_tei = "#{@teiinpath}/#{work}"
-            copyDir(from_tei, copy_to_tei_dir) # copy full pdf
+            copyDir(from_tei, copy_to_tei_dir) # copy fulltext
           end
 
 
@@ -201,20 +204,34 @@ $vertx.execute_blocking(lambda { |future|
 
           @logger.debug "Convert page images for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-          to_image_dir    = "#{@imageoutpath}/#{product}/#{work}/"
-          to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}/"
+          to_image_dir    = "#{@imageoutpath}/#{product}/#{work}"
+          to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}"
           copy_to_tei_dir = "#{@teioutpath}/#{product}"
 
           from = "#{@imageinpath}/#{work}"
+          #from_pdf_out = "#{@pdfoutpath}/#{product}/#{work}"
 
+          #          @logger.debug "t=#{t}, fullpdf=#{fullpdf}, @image_in_format=#{@image_in_format}, @image_out_format=#{@image_out_format}, @fulltext_exist=#{@fulltext_exist}"
 
-          mogrifyPDFs("#{from}/*.#{@image_in_format}", "#{to_image_dir}", @image_out_format) # convert page images to page images
-          mogrifyPDFs("#{from}/*.#{@image_in_format}", "#{to_pdf_dir}", 'pdf') # convert page images to page pdfs
-          convert("#{from}/*.#{@image_in_format}", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) # convert page images to full pdf
+          if t == 'image' # convert page images to page images
+            mogrifyPDFs("#{from}/*.#{@image_in_format}", "#{to_image_dir}", @image_out_format)
+            @logger.debug "convert page images to page images"
+          end
 
-          if @fulltext_exist == 'true'
+          if (t == 'pdf') && !fullpdf # convert page images to page pdfs
+            mogrifyPDFs("#{from}/*.#{@image_in_format}", "#{to_pdf_dir}", 'pdf')
+            @logger.debug "convert page images to page pdfs"
+          end
+
+          if (t == 'pdf') && fullpdf # convert page images to full pdf
+            convert("#{to_pdf_dir}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true)
+            @logger.debug "convert page images to full pdf"
+          end
+
+          if (@fulltext_exist == 'true') && (t == 'tei')
             from_tei = "#{@teiinpath}/#{work}"
-            copyDir(from_tei, copy_to_tei_dir) # copy full pdf
+            copyDir(from_tei, copy_to_tei_dir) # copy fulltext
+            @logger.debug "copy fulltexts"
           end
 
 
@@ -240,4 +257,3 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
   #
 }
-
