@@ -268,12 +268,12 @@ def getOriginInfo(modsOriginInfoElements)
       captured_end_date   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       unless captured_start_date == ''
-        originInfo.date_captured_start = captured_start_date
+        originInfo.date_captured_start = captured_start_date.to_i
       end
 
 
       unless captured_end_date == ''
-        originInfo.date_captured_end = captured_end_date
+        originInfo.date_captured_end = captured_end_date.to_i
       else
         originInfo.date_captured_end = originInfo.date_captured_start
       end
@@ -286,11 +286,11 @@ def getOriginInfo(modsOriginInfoElements)
       issued_end_date   = oi.xpath("mods:dateIssued[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       unless issued_start_date == ''
-        originInfo.date_issued_start = issued_start_date
+        originInfo.date_issued_start = issued_start_date.to_i
       end
 
       unless issued_end_date == ''
-        originInfo.date_issued_end = issued_end_date
+        originInfo.date_issued_end = issued_end_date.to_i
       else
         originInfo.date_issued_end = originInfo.date_issued_start
       end
