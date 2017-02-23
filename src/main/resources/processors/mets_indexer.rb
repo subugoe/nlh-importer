@@ -274,8 +274,6 @@ def getOriginInfo(modsOriginInfoElements)
 
       unless captured_end_date == ''
         originInfo.date_captured_end = captured_end_date.to_i
-      else
-        originInfo.date_captured_end = originInfo.date_captured_start
       end
 
 
@@ -291,8 +289,6 @@ def getOriginInfo(modsOriginInfoElements)
 
       unless issued_end_date == ''
         originInfo.date_issued_end = issued_end_date.to_i
-      else
-        originInfo.date_issued_end = originInfo.date_issued_start
       end
 
     end

@@ -391,8 +391,8 @@ class MetsModsMetadata
 
     h.merge! ({:place_digitization => place})
     h.merge! ({:facet_place_digitization => placeFacet})
-    h.merge! ({:year_digitization_start => date_captured_start})
-    h.merge! ({:year_digitization_end => date_captured_end})
+    h.merge! ({:year_digitization_start => date_captured_start}) unless date_captured_start == ''
+    h.merge! ({:year_digitization_end => date_captured_end}) unless date_captured_end == ''
     h.merge! ({:publisher_digitization => publisher})
     h.merge! ({:facet_publisher_digitization => publisherFacet})
 
@@ -417,9 +417,9 @@ class MetsModsMetadata
 
     h.merge! ({:place_publish => place})
     h.merge! ({:facet_place_publish => placeFacet})
-    h.merge! ({:year_publish => date_issued_start})
-    h.merge! ({:year_publish_start => date_issued_start})
-    h.merge! ({:year_publish_end => date_issued_end})
+    h.merge! ({:year_publish => date_issued_start}) unless date_issued_start == ''
+    h.merge! ({:year_publish_start => date_issued_start}) unless date_issued_start == ''
+    h.merge! ({:year_publish_end => date_issued_end}) unless date_issued_end == ''
     h.merge! ({:publisher => publisher})
     h.merge! ({:facet_publisher => publisherFacet})
 
