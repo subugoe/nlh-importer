@@ -374,8 +374,8 @@ class MetsModsMetadata
     # originInfo: edition
     place               = Array.new
     placeFacet          = Array.new
-    date_captured_start = -1
-    date_captured_end   = -1
+    date_captured_start = ''
+    date_captured_end   = ''
     publisher           = Array.new
     publisherFacet      = Array.new
 
@@ -399,8 +399,8 @@ class MetsModsMetadata
     # originInfo: original
     place             = Array.new
     placeFacet        = Array.new
-    date_issued_start = -1
-    date_issued_end   = -1
+    date_issued_start = ''
+    date_issued_end   = ''
     publisher         = Array.new
     publisherFacet    = Array.new
 
@@ -447,7 +447,7 @@ class MetsModsMetadata
     end_page_index   = Array.new
     part_product     = Array.new
     part_work        = Array.new
-    part_key      = Array.new
+    part_key         = Array.new
     level            = Array.new
 
     @logicaElements.each { |el|
