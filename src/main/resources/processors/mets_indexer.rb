@@ -774,7 +774,7 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
   if order != nil
     physicalElement.order = checkEmptyString(order.value)
   else
-    physicalElement.order = '-1'
+    physicalElement.order = ' '
   end
 
   orderlabel = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
@@ -907,11 +907,8 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     unless logicalElementStartStopMapping[logicalElement.id] == nil
 
-      logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"].to_i
-      logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"].to_i
-    else
-      logicalElement.start_page_index = -1
-      logicalElement.end_page_index   = -1
+      logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
+      logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"]
     end
   end
 
