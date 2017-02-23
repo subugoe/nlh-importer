@@ -338,7 +338,7 @@
         <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_part_product" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_part_page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="log_part_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <!--
         <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>

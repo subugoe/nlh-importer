@@ -447,7 +447,7 @@ class MetsModsMetadata
     end_page_index   = Array.new
     part_product     = Array.new
     part_work        = Array.new
-    part_page_key      = Array.new
+    part_key      = Array.new
     level            = Array.new
 
     @logicaElements.each { |el|
@@ -462,7 +462,7 @@ class MetsModsMetadata
       end_page_index << el.end_page_index
       part_product << el.part_product
       part_work << el.part_work
-      part_page_key << el.part_page_key
+      part_key << el.part_key
       level << el.level
 
     }
@@ -477,7 +477,7 @@ class MetsModsMetadata
     h.merge! ({:log_level => level})
     h.merge! ({:log_part_product => part_product})
     h.merge! ({:log_part_work => part_work})
-    h.merge! ({:log_part_page_key => part_page_key})
+    h.merge! ({:log_part_key => part_key})
 
 
     # add physical info (e.g. ORDER, ORDERLABEL)

@@ -903,7 +903,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       logicalElement.part_product  = product
       logicalElement.part_work     = work
       #logicalElement.volume_uri = volume_uri
-      logicalElement.part_page_key = "#{product}:#{work}"
+      logicalElement.part_key = "#{product}:#{work}"
 
     end
 
