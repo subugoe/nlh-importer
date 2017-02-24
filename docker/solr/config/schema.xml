@@ -318,6 +318,7 @@
         <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="image_format" type="string" indexed="true" stored="true"/>
+        <field name="mets_path" type="string" indexed="true" stored="true"/>
 
         <field name="access_pattern" type="string" indexed="true" stored="true"/>
         <field name="baseurl" type="string" indexed="false" stored="true"/>

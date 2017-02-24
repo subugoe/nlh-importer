@@ -432,8 +432,16 @@ class MetsModsMetadata
     if @doctype == "work"
       h.merge! ({:work => @work})
       h.merge! ({:page => @pages})
+
+      mets_path = "mets/#{@product}/#{@work}.mets.xml"
+      h.merge! ({:mets_path => mets_path})
+
     elsif @doctype == "collection"
       h.merge! ({:collection => @collection})
+
+      mets_path = "mets/#{@product}/#{@collection}.mets.xml"
+      h.merge! ({:mets_path => mets_path})
+
     end
 
     # add logical info (e.g. volume info)
