@@ -374,6 +374,7 @@ class MetsModsMetadata
     # originInfo: edition
     place               = Array.new
     placeFacet          = Array.new
+    date_captured_string = ''
     date_captured_start = ''
     date_captured_end   = ''
     publisher           = Array.new
@@ -383,6 +384,7 @@ class MetsModsMetadata
 
       place << ei.place
       placeFacet << ei.placeFacet
+      date_captured_string= ei.date_captured_string
       date_captured_start = ei.date_captured_start
       date_captured_end   = ei.date_captured_end
       publisher << ei.publisher
@@ -391,6 +393,7 @@ class MetsModsMetadata
 
     h.merge! ({:place_digitization => place})
     h.merge! ({:facet_place_digitization => placeFacet})
+    h.merge! ({:year_digitization_string => date_captured_string}) unless date_captured_string == ''
     h.merge! ({:year_digitization_start => date_captured_start}) unless date_captured_start == ''
     h.merge! ({:year_digitization_end => date_captured_end}) unless date_captured_end == ''
     h.merge! ({:publisher_digitization => publisher})
@@ -399,6 +402,7 @@ class MetsModsMetadata
     # originInfo: original
     place             = Array.new
     placeFacet        = Array.new
+    date_issued_string = ''
     date_issued_start = ''
     date_issued_end   = ''
     publisher         = Array.new
@@ -409,6 +413,7 @@ class MetsModsMetadata
 
       place << oi.place
       placeFacet << oi.placeFacet
+      date_issued_string = oi.date_issued_string
       date_issued_start = oi.date_issued_start
       date_issued_end   = oi.date_issued_end
       publisher << oi.publisher
@@ -417,6 +422,7 @@ class MetsModsMetadata
 
     h.merge! ({:place_publish => place})
     h.merge! ({:facet_place_publish => placeFacet})
+    h.merge! ({:year_publish_string => date_issued_string}) unless date_issued_string == ''
     h.merge! ({:year_publish => date_issued_start}) unless date_issued_start == ''
     h.merge! ({:year_publish_start => date_issued_start}) unless date_issued_start == ''
     h.merge! ({:year_publish_end => date_issued_end}) unless date_issued_end == ''

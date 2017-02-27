@@ -264,10 +264,12 @@ def getOriginInfo(modsOriginInfoElements)
       # The date on which the resource was digitized or a subsequent snapshot was taken.
       # multi_ dateCaptured[encoding, point, keyDate]/value
       # just the start
+
       captured_start_date = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
       captured_end_date   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       unless captured_start_date == ''
+        originInfo.date_captured_string = captured_start_date
         originInfo.date_captured_start = captured_start_date.to_i
       end
 
@@ -284,6 +286,7 @@ def getOriginInfo(modsOriginInfoElements)
       issued_end_date   = oi.xpath("mods:dateIssued[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       unless issued_start_date == ''
+        originInfo.date_issued_string = issued_start_date
         originInfo.date_issued_start = issued_start_date.to_i
       end
 

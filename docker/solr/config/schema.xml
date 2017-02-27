@@ -397,6 +397,7 @@
         <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="year_publish_string" type="string" indexed="true" stored="true"/>
         <field name="year_publish" type="tint" indexed="true" stored="true"/>
         <field name="year_publish_start" type="tint" indexed="true" stored="true"/>
         <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
@@ -411,6 +412,7 @@
 
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="year_digitization_string" type="string" indexed="true" stored="true"/>
         <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
         <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
 
