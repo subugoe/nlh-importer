@@ -1,6 +1,6 @@
 class OriginInfo
 
-  attr_accessor :place, :edition, :publisher, :date_issued_start, :date_issued_end, :date_captured_start, :date_captured_end #,  :issuance, :eventType
+  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
 
   # def initialize
   #   @publisher  = Array.new

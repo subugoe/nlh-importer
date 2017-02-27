@@ -276,8 +276,9 @@ class MetsModsMetadata
     }
 
     h.merge! ({:title => title})
+    h.merge! ({:sorttitle => sorttitle})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => sorttitle.join('; ')})
+    h.merge! ({:bytitle => sorttitle.sort.join('; ')})
 
 
     h.merge! ({:id => @record_identifiers.first[1]})
@@ -330,8 +331,8 @@ class MetsModsMetadata
 
     }
 
-    byc = creator_bycreator.join('; ')
-    byp = person_byperson.join('; ')
+    byc = creator_bycreator.sort.join('; ')
+    byp = person_byperson.sort.join('; ')
 
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
