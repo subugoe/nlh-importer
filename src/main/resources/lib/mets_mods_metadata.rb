@@ -88,7 +88,7 @@ class MetsModsMetadata
     #@volumes =Array.new
 
     @pages                 = Array.new
-    @page_keys               = Array.new
+    @page_keys             = Array.new
     @subjects              = Array.new
     @related_items         = Array.new
     @parts                 = Array.new
@@ -358,10 +358,10 @@ class MetsModsMetadata
 
     # ---
 
-    dc = Array.new
+    dc           = Array.new
     dc_authority = Array.new
 
-    @classifications.each {|classification|
+    @classifications.each { |classification|
 
       dc << classification.value
       dc_authority << classification.authority

@@ -11,9 +11,9 @@ require 'json'
 
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
-context = ENV['CONTEXT']
+context      = ENV['CONTEXT']
 
-productin = ENV['IN'] + '/' + ENV['PRODUCT']
+productin    = ENV['IN'] + '/' + ENV['PRODUCT']
 inpath       = productin + ENV['METS_IN_SUB_PATH']
 oai_endpoint = ENV['METS_VIA_OAI']
 

@@ -31,7 +31,10 @@ require 'lib/classification'
 # process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
 @dc_hsh = {
-    "vd18 digital" => "vd18.digital"
+    "vd18 digital" => "vd18.digital",
+    "VD18 digital" => "vd18.digital",
+    "vd18 göttingen" => "vd18.göttingen",
+    "VD18 göttingen" => "vd18.göttingen"
 }
 
 context         = ENV['CONTEXT']

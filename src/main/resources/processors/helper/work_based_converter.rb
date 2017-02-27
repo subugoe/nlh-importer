@@ -257,3 +257,4 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
   #
 }
+
