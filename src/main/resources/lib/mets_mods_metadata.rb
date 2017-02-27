@@ -393,13 +393,13 @@ class MetsModsMetadata
     # ---
 
     # originInfo: edition
-    place               = Array.new
-    placeFacet          = Array.new
+    place                = Array.new
+    placeFacet           = Array.new
     date_captured_string = ''
-    date_captured_start = ''
-    date_captured_end   = ''
-    publisher           = Array.new
-    publisherFacet      = Array.new
+    date_captured_start  = ''
+    date_captured_end    = ''
+    publisher            = Array.new
+    publisherFacet       = Array.new
 
     @edition_infos.each { |ei|
 
@@ -421,13 +421,13 @@ class MetsModsMetadata
     h.merge! ({:facet_publisher_digitization => publisherFacet})
 
     # originInfo: original
-    place             = Array.new
-    placeFacet        = Array.new
+    place              = Array.new
+    placeFacet         = Array.new
     date_issued_string = ''
-    date_issued_start = ''
-    date_issued_end   = ''
-    publisher         = Array.new
-    publisherFacet    = Array.new
+    date_issued_start  = ''
+    date_issued_end    = ''
+    publisher          = Array.new
+    publisherFacet     = Array.new
 
 
     @original_infos.each { |oi|
@@ -435,8 +435,8 @@ class MetsModsMetadata
       place << oi.place
       placeFacet << oi.placeFacet
       date_issued_string = oi.date_issued_string
-      date_issued_start = oi.date_issued_start
-      date_issued_end   = oi.date_issued_end
+      date_issued_start  = oi.date_issued_start
+      date_issued_end    = oi.date_issued_end
       publisher << oi.publisher
       publisherFacet << oi.publisherFacet
     }

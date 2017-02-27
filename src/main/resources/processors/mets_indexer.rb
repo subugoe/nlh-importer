@@ -31,14 +31,14 @@ require 'lib/classification'
 # process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
 @dc_hsh = {
-    "vd18 digital" => "vd18.digital",
-    "VD18 digital" => "vd18.digital",
+    "vd18 digital"   => "vd18.digital",
+    "VD18 digital"   => "vd18.digital",
     "vd18 göttingen" => "vd18.göttingen",
     "VD18 göttingen" => "vd18.göttingen"
 }
 
-context         = ENV['CONTEXT']
-MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
+context      = ENV['CONTEXT']
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 @oai_endpoint   = ENV['METS_VIA_OAI']
 @short_product  = ENV['SHORT_PRODUCT']
@@ -285,7 +285,7 @@ def getOriginInfo(modsOriginInfoElements)
 
       unless captured_start_date == ''
         originInfo.date_captured_string = captured_start_date
-        originInfo.date_captured_start = captured_start_date.to_i
+        originInfo.date_captured_start  = captured_start_date.to_i
       end
 
 
@@ -302,7 +302,7 @@ def getOriginInfo(modsOriginInfoElements)
 
       unless issued_start_date == ''
         originInfo.date_issued_string = issued_start_date
-        originInfo.date_issued_start = issued_start_date.to_i
+        originInfo.date_issued_start  = issued_start_date.to_i
       end
 
       unless issued_end_date == ''
@@ -910,10 +910,10 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
       end
 
-      logicalElement.part_product  = product
-      logicalElement.part_work     = work
+      logicalElement.part_product = product
+      logicalElement.part_work    = work
       #logicalElement.volume_uri = volume_uri
-      logicalElement.part_key = "#{product}:#{work}"
+      logicalElement.part_key     = "#{product}:#{work}"
 
     end
 
