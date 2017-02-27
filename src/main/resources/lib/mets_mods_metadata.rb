@@ -278,7 +278,7 @@ class MetsModsMetadata
     h.merge! ({:title => title})
     h.merge! ({:sorttitle => sorttitle})
     h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => sorttitle.sort.join('; ')})
+    h.merge! ({:bytitle => sorttitle.join('; ')})
 
 
     h.merge! ({:id => @record_identifiers.first[1]})
@@ -295,26 +295,36 @@ class MetsModsMetadata
     creator_displayform = Array.new
     creator_type        = Array.new
     creator_bycreator   = Array.new
-
+    creator_gndURI      = Array.new
 
     person_displayform = Array.new
     person_type        = Array.new
     person_byperson    = Array.new
+    person_gndURI      = Array.new
 
 
     @names.each { |name|
 
-      if name.role == 'aut'
+      if (name.role == 'aut') || (name.role == 'cre')
         creator_displayform << name.displayform
         creator_type << name.type
 
         if name.type == 'personal'
-          facet_creator_personal << name.namepart
+          facet_creator_personal << name.displayform
         elsif name.type == 'corporate'
-          facet_creator_corporate << name.namepart
+          facet_creator_corporate << name.displayform
         end
 
-        creator_bycreator << name.namepart
+        if name.family != ' '
+          creator_bycreator << name.family
+        elsif name.displayform != ' '
+          creator_bycreator << name.displayform
+        elsif name.namepart != ' '
+          creator_bycreator << name.namepart
+        end
+
+        creator_gndURI << name.gndURI
+
       else
         person_displayform << name.displayform
         person_type << name.type
@@ -325,21 +335,31 @@ class MetsModsMetadata
           facet_person_corporate << name.namepart
         end
 
-        person_byperson << name.namepart
+        if name.family != ' '
+          person_byperson << name.family
+        elsif name.displayform != ' '
+          person_byperson << name.displayform
+        elsif name.namepart != ' '
+          person_byperson << name.namepart
+        end
+
+        person_gndURI << name.gndURI
 
       end
 
     }
 
-    byc = creator_bycreator.sort.join('; ')
-    byp = person_byperson.sort.join('; ')
+    byc = creator_bycreator.join('; ')
+    byp = person_byperson.join('; ')
 
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
+    h.merge! ({:creator_gndURI => creator_gndURI})
     h.merge! ({:bycreator => byc})
 
     h.merge! ({:person => person_displayform})
     h.merge! ({:person_type => person_type})
+    h.merge! ({:person_gndURI => person_gndURI})
     h.merge! ({:byperson => byp})
 
     h.merge! ({:facet_creator_personal => facet_creator_personal})

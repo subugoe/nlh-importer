@@ -191,13 +191,25 @@ def getName(modsNameElements)
 
     n = Name.new
 
-    n.type        = checkEmptyString name['type']
+    n.type    = checkEmptyString name['type']
+    authority = name['authority']
+    if authority == 'gnd'
+      n.gndURI = checkEmptyString name['valueURI']
+    else
+      n.gndURI = ' '
+    end
+
+    n.role = checkEmptyString name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    n.family = checkEmptyString name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+    n.given  = checkEmptyString name.xpath('mods:namePart[@type="given"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+
     n.displayform = checkEmptyString name.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
-    n.role        = checkEmptyString name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-    namepart      = name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3')
-    namepart      = name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3') if namepart.empty?
-    n.namepart    = checkEmptyString namepart.text
-    n.date        = checkEmptyString name.xpath('mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    n.namepart = checkEmptyString name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3')
+
+    n.date = checkEmptyString name.xpath('mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
+
 
     nameArr << n
   }

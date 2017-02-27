@@ -1,6 +1,5 @@
 class Name
 
-  attr_accessor :displayform, :type, :role, :namepart, :date#, :usage, :nameparts, :roles
-
+  attr_accessor :type, :role, :family, :given, :displayform, :namepart, :date, :gndURI
 
 end
