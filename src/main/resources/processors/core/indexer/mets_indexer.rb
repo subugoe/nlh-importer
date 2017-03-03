@@ -803,9 +803,68 @@ def getAttributesFromPhysicalDiv(div, doctype, level)
 
 end
 
+def getInfoFromMetsMptrs(mptrs)
+
+  if !mptrs.empty?
+
+    part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
+    unless @oai_endpoint == 'true'
+
+      begin
+        # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
+        match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+        product = match[2]
+        work    = match[3]
+      rescue Exception => e
+        @logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
+        @file_logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
+
+    else
+
+      count = 0
+
+      # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
+      begin
+        match = part_uri.match(/(\S*PPN=)(\S*)/)
+        if match == nil
+          # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
+          match = part_uri.match(/(\S*)\/mets\/(\S*).xml/)
+        end
+
+        work = match[2]
+      rescue Exception => e
+        if (match == nil) && (count < 1)
+          count += 1
+
+          @logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
+          @file_logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
+
+          part_uri.gsub!(' ', '')
+
+          retry
+        end
+        @logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}")
+        @file_logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
+
+      product = @short_product
+
+
+    end
+
+    return {'work' => work, 'product' => product}
+
+  end
+
+
 def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
   logicalElement = LogicalElement.new
+
 
   type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
   if type != nil
@@ -843,93 +902,40 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
   end
 
 
+  mptrs = div.xpath("mets:mptr[@LOCTYPE='URL']", 'mets' => 'http://www.loc.gov/METS/')
   if doctype == "collection"
 
-    mptrs = div.xpath("mets:mptr[@LOCTYPE='URL']", 'mets' => 'http://www.loc.gov/METS/')
+    hsh = getInfoFromMetsMptrs(mptrs)
 
-    if !mptrs.empty?
+    logicalElement.part_product = hsh['product']
+    logicalElement.part_work    = hsh['work']
+    #logicalElement.volume_uri = volume_uri
+    logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
 
-      part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+  elsif level == 0
 
-      unless @oai_endpoint == 'true'
+    hsh = getInfoFromMetsMptrs(mptrs)
 
-        begin
-          # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
-          match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-          product = match[2]
-          work    = match[3]
-        rescue Exception => e
-          @logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
-          @file_logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
-          raise
-        end
+    logicalElement.parentdoc_work    = hsh['work']
 
-
-        #meta.product              = product if i == 0
-
-        #id_arr << "#{product}:#{vol}"
-        #logicalElementArr << logicalElement
-
-        #i += 1
-
-
-        #meta.addVolume = logicalElementArr
-        #meta.addPage_key = id_arr
-
-      else
-
-        count = 0
-
-        # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
-        begin
-          match = part_uri.match(/(\S*PPN=)(\S*)/)
-          if match == nil
-            # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
-            match = part_uri.match(/(\S*)\/mets\/(\S*).xml/)
-          end
-
-          work = match[2]
-        rescue Exception => e
-          if (match == nil) && (count < 1)
-            count += 1
-
-            @logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
-            @file_logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
-
-            part_uri.gsub!(' ', '')
-
-            retry
-          end
-          @logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}")
-          @file_logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
-          raise
-        end
-
-        product = @short_product
-
-
-      end
-
-      logicalElement.part_product = product
-      logicalElement.part_work    = work
-      #logicalElement.volume_uri = volume_uri
-      logicalElement.part_key     = "#{product}:#{work}"
-
-    end
-
-  else
-
-    unless logicalElementStartStopMapping[logicalElement.id] == nil
-
-      logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
-      logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"]
-    end
   end
 
-  logicalElement.level = level
+else
+
+  unless logicalElementStartStopMapping[logicalElement.id] == nil
+    logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
+    logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"]
+  else
+    logicalElement.start_page_index = -1
+    logicalElement.end_page_index   = -1
+    #logicalElement.parentdoc_work = work
+  end
+end
+
+logicalElement.level = level
 
 
-  return logicalElement
+return logicalElement
 
 end
 

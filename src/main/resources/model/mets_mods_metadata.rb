@@ -491,8 +491,10 @@ class MetsModsMetadata
       if (el.start_page_index != -1) && (el.end_page_index != -1)
         arr << el
       else
-        h.merge! ({:parent_id => el.id})
-        h.merge! ({:parent_title => el.label})
+        h.merge! ({:parentdoc_work => el.parentdoc_work})
+        h.merge! ({:parentdoc_label => el.label})
+        h.merge! ({:parentdoc_type => el.type})
+        #h.merge! ({:parentdoc_url => el.urls})
       end
     }
 
@@ -622,12 +624,12 @@ class MetsModsMetadata
     h.merge! ({:rights_reference => @right_infos.collect { |rights| rights.reference }})
 
 
-    h.merge! ({:parentdoc_id => @related_items.collect { |rel_item| rel_item.id }})
-    h.merge! ({:parentdoc_title => @related_items.collect { |rel_item| rel_item.title }})
-    h.merge! ({:parentdoc_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
-    h.merge! ({:parentdoc_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
-    h.merge! ({:parentdoc_note => @related_items.collect { |rel_item| rel_item.note }})
-    h.merge! ({:parentdoc_type => @related_items.collect { |rel_item| rel_item.type }})
+    h.merge! ({:relateditem_id => @related_items.collect { |rel_item| rel_item.id }})
+    h.merge! ({:relateditem_title => @related_items.collect { |rel_item| rel_item.title }})
+    h.merge! ({:relateditem_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
+    h.merge! ({:relateditem_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
+    h.merge! ({:relateditem_note => @related_items.collect { |rel_item| rel_item.note }})
+    h.merge! ({:relateditem_type => @related_items.collect { |rel_item| rel_item.type }})
 
     # currentno, currentnosort
 
