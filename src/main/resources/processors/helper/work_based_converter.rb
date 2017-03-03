@@ -4,11 +4,11 @@ require 'logger'
 require 'nokogiri'
 require 'redis'
 require 'json'
-require 'lib/mets_mods_metadata'
 require 'fileutils'
 require 'mini_magick'
+require 'model/mets_mods_metadata'
 
-# process config (nlh): 8 instances, 10GB importer, 3GB redis, 3GB solr
+# process config (nlh): 20 instances, 11GB importer, 2GB redis, 3GB solr
 
 context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i

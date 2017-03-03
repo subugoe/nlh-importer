@@ -180,38 +180,50 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'check_path_with_fulltext'
   @rredis.del 'check_path_without_fulltext'
 
-#  $vertx.deploy_verticle("processors/path_retrieve.rb", retriever_options)
-$vertx.deploy_verticle("processors/check_existence_of_resource_prepare.rb", retriever_options)
+# info_retriever
+$vertx.deploy_verticle("processors/core/info_retriever/path_retriever.rb", retriever_options)
+#  $vertx.deploy_verticle("processors/core/info_retriever/pdf_path_retriever.rb", pdf_retriever_options)
+#  $vertx.deploy_verticle("processors/core/info_retriever/tei_path_retriever.rb", tei_retriever_options)
+#  $vertx.deploy_verticle("processors/core/info_retriever/work_from_outpath_retriever.rb", retriever_options)
 
-#  $vertx.deploy_verticle("processors/pdf_path_retriever.rb", pdf_retriever_options)
-#  $vertx.deploy_verticle("processors/tei_path_retriever.rb", tei_retriever_options)
-#  $vertx.deploy_verticle("processors/image_input_paths_mapper.rb", mapper_options)
-#  $vertx.deploy_verticle("processors/retrieve_work_from_outpath.rb", retriever_options)
+# helper
+#  $vertx.deploy_verticle("processors/helper/check_existence_of_resource_prepare.rb", retriever_options)
 
 else
 
-$vertx.deploy_verticle("processors/check_existence_of_resource.rb", indexer_options)
-#$vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
-#  $vertx.deploy_verticle("processors/check_and_update_all_before_date_indexed.rb", indexer_options)
-#  $vertx.deploy_verticle("processors/check_existence_in_index.rb", indexer_options)
+
+# converter
+#  $vertx.deploy_verticle("processors/core/converter/image_to_pdf_converter.rb", image_processor_options)
+#  $vertx.deploy_verticle("processors/core/converter/pdf_converter.rb", converter_options)
+
+# copier
+#  $vertx.deploy_verticle("processors/core/copier/mets_copier.rb", mets_copier_options)
+#  $vertx.deploy_verticle("processors/core/copier/pdf_copier.rb", pdf_copier_options)
+#  $vertx.deploy_verticle("processors/core/copier/tei_copier.rb", tei_copier_options)
+
+# indexer
+#  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+
+# resource_processor
+#  $vertx.deploy_verticle("processors/core/resource_processor/fulltext_processor.rb", fulltext_processor_options)
+#  $vertx.deploy_verticle("processors/core/resource_processor/image_processor.rb", image_processor_options)
+
+# validator
 
 
-#  $vertx.deploy_verticle("processors/mets_copier.rb", mets_copier_options)
+# helper
+#  $vertx.deploy_verticle("processors/helper/check_and_update_all_before_date_indexed.rb", indexer_options)
+#  $vertx.deploy_verticle("processors/helper/check_existence_in_index.rb", indexer_options)
+#  $vertx.deploy_verticle("processors/helper/check_existence_of_resource.rb", indexer_options)
+#  $vertx.deploy_verticle("processors/helper/fixity_checker.rb", checker_options)
+#  $vertx.deploy_verticle("processors/helper/work_based_converter.rb", converter_options)
 
-#  $vertx.deploy_verticle("processors/pdf_copier.rb", pdf_copier_options)
-##    $vertx.deploy_verticle("processors/pdf_converter.rb", pdf_converter_options)
 
-#  $vertx.deploy_verticle("processors/tei_copier.rb", tei_copier_options)
 
-#  $vertx.deploy_verticle("processors/image_processor.rb", image_processor_options)
-#    $vertx.deploy_verticle("processors/image_to_pdf_converter.rb", image_processor_options)
 
-#  if ENV['FULLTEXTS_EXIST'] == 'true'
-#    c = $vertx.deploy_verticle("processors/fulltext_processor.rb", fulltext_processor_options)
-#  end
 
-# f = $vertx.deploy_verticle("processors/fixity_checker.rb", checker_options)
-# g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", pdf_converter_options)
+
+# g = $vertx.deploy_verticle("de.unigoettingen.sub.converter.PdfFromImagesConverterVerticle", converter_options)
 
 
 end
