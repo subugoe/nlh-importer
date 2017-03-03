@@ -5,6 +5,10 @@ require 'open-uri'
 require 'redis'
 require 'json'
 
+# prepare config (NLH): 1 instance, 11GB importer, 2GB redis, 3GB solr
+# process config (gdz): 20 instances, 11GB importer, 2GB redis, 3GB solr
+
+
 outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 product = ENV['SHORT_PRODUCT']
 

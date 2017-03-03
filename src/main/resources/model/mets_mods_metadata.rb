@@ -485,7 +485,19 @@ class MetsModsMetadata
     part_key         = Array.new
     level            = Array.new
 
-    @logicaElements.each { |el|
+
+    arr = Array.new
+    @logicaElements.each {|el|
+      if (el.start_page_index != -1) && (el.end_page_index != -1)
+        arr << el
+      else
+        h.merge! ({:parent_id => el.id})
+        h.merge! ({:parent_title => el.label})
+      end
+    }
+
+    # todo check this: with this range, the root div is removed and the doctype of the current work is not clear
+    arr[1..-1].each { |el|
 
       id << el.id
       type << el.type

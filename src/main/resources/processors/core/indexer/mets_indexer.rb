@@ -206,7 +206,7 @@ def getName(modsNameElements)
 
     n.displayform = checkEmptyString name.xpath('mods:displayForm', 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    n.namepart = checkEmptyString name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3')
+    n.namepart = checkEmptyString name.xpath('mods:namePart[not(@type="date")]', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     n.date = checkEmptyString name.xpath('mods:namePart[@type="date"]', 'mods' => 'http://www.loc.gov/mods/v3').text
 
@@ -1469,3 +1469,23 @@ $vertx.execute_blocking(lambda { |future|
 #
 }
 
+
+require 'open-uri'
+i = 1
+while i <= 50
+  file_ = "/Users/jpanzer/Documents/projects/test/nlh-importer/tmp/convert_variants/PPN792390792/tiff/%08d.tif" % i
+  path_ = "http://wwwuser.gwdg.de/~subtypo3/gdz/tiff/PPN792390792/%08d.tif" % i
+
+  begin
+    open(path_) do |uri|
+      open(file_, "wb") do |file|
+        file.write(uri.read)
+        file.flush
+      end
+    end
+  rescue Exception => e
+    puts e.message
+  end
+
+  i += 1
+end

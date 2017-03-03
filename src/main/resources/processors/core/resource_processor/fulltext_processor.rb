@@ -4,9 +4,8 @@ require 'logger'
 require 'nokogiri'
 require 'redis'
 require 'json'
-require 'lib/mets_mods_metadata'
 require 'fileutils'
-
+require 'model/mets_mods_metadata'
 
 context = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i

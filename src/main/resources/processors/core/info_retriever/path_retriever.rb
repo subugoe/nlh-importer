@@ -141,3 +141,83 @@ $vertx.execute_blocking(lambda { |future|
 #
 }
 
+def getyear_publishArr
+
+  count    = 0
+  endpoint = "http://gdz.sub.uni-goettingen.de/oai2"
+  client   = OAI::Client.new endpoint
+
+
+  catch (:stop) do
+
+    arr = Array.new
+
+      sum      = 0
+      client   = OAI::Client.new ENV['GDZ_OAI_ENDPOINT']
+
+      # Get the first page of identifiers
+      response = client.list_records(:metadataPrefix => "mets")
+
+      sum += response.count
+
+      arr = Array.new
+      response.each do |record|
+        identifier = record.identifier
+        ppn        = parseId(identifier)
+        arr << {"ppn" => ppn}.to_json
+      end
+
+      pushToQueue(arr, 'metsindexer')
+      pushToQueue(arr, 'metscopier')
+
+      @logger.debug("sum=#{sum}")
+
+      while true do
+
+        attempts = 0
+
+        begin
+
+          arr = Array.new
+
+          response = client.list_identifiers(:resumption_token => response.resumption_token)
+
+          sum += response.count
+
+          @logger.debug("resumption_token: #{response.resumption_token}") if sum > 54000
+
+          response.each do |record|
+            next if record == nil
+
+            begin
+              next if record.identifier == nil
+              identifier = record.identifier
+              ppn        = parseId(identifier)
+              arr << {"ppn" => ppn}.to_json
+            rescue Exception => e
+              @logger.debug("Problem to parse identifier: #{e.message}")
+            end
+
+          end
+
+        rescue Exception => e
+          attempts = attempts + 1
+          retry if (attempts < MAX_ATTEMPTS)
+          @logger.error("Exception while identifiers retrieval from OAI: (#{Java::JavaLang::Thread.current_thread().get_name()})")
+          @file_logger.error "Exception while identifiers retrieval from OAI: (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+        end
+
+        unless arr.empty?
+          pushToQueue(arr, 'metsindexer')
+          pushToQueue(arr, 'metscopier')
+          @logger.debug("sum=#{sum}")
+        else
+          throw :stop
+        end
+
+      end
+
+
+  end
+
+end
