@@ -83,7 +83,8 @@ def convert(from, to, to_dir, toPDF, removeBefore)
 
     MiniMagick::Tool::Convert.new do |convert|
 
-      convert << "-define" << "pdf:use-cropbox=true"
+      convert << "-define" << "pdf:use-cropbox=true" # for pdf's
+
       unless toPDF
         convert << "-density" << "400"
       else
@@ -126,7 +127,7 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("work_based_converter_eai2")
+    res = @rredis.brpop("worksToProcess")
 
     attempts = 0
     begin
@@ -136,8 +137,8 @@ $vertx.execute_blocking(lambda { |future|
         json    = JSON.parse(res[1])
         product = json['product']
         work    = json['work']
-        t       = json['t']
-        fullpdf = json['fullpdf']
+        #t       = json['t']
+        #fullpdf = json['fullpdf']
 
 
         if @from_full_pdf == "true"
@@ -207,6 +208,8 @@ $vertx.execute_blocking(lambda { |future|
           to_image_dir    = "#{@imageoutpath}/#{product}/#{work}"
           to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}"
           copy_to_tei_dir = "#{@teioutpath}/#{product}"
+
+          # works must be in the rigth order (in the full pdf)
 
           from = "#{@imageinpath}/#{work}"
           #from_pdf_out = "#{@pdfoutpath}/#{product}/#{work}"

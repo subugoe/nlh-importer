@@ -80,7 +80,7 @@ pdf_retriever_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-pdf_converter_options = {
+converter_options = {
     'instances'                  => 5,
     'worker'                     => true,
     #  'workerPoolName'             => 'pdf_converter_worker_pool',
