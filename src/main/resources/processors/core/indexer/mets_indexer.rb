@@ -908,16 +908,20 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     hsh = getInfoFromMetsMptrs(mptrs)
 
-    logicalElement.part_product = hsh['product']
-    logicalElement.part_work    = hsh['work']
-    #logicalElement.volume_uri = volume_uri
-    logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
+    if hsh != nil
+      logicalElement.part_product = hsh['product']
+      logicalElement.part_work    = hsh['work']
+      #logicalElement.volume_uri = volume_uri
+      logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
+    end
 
   elsif level == 0
 
     hsh = getInfoFromMetsMptrs(mptrs)
 
-    logicalElement.parentdoc_work = hsh['work']
+    if hsh != nil
+      logicalElement.parentdoc_work = hsh['work']
+    end
 
   end
 
