@@ -97,7 +97,7 @@ class MetsModsMetadata
     @presentation_image_uris = Array.new
     @thumb_image_uris        = Array.new
     @fulltext_uris           = Array.new
-    @logicaElements          = Array.new
+    @logicalElements         = Array.new
     @physicalElements        = Array.new
 
     @fulltexts = Array.new
@@ -215,7 +215,7 @@ class MetsModsMetadata
 
 
   def addLogicalElement=(logicalElement)
-    @logicaElements += logicalElement
+    @logicalElements += logicalElement
   end
 
   def addPhysicalElement=(physicalElement)
