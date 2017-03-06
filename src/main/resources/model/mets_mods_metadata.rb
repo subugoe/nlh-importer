@@ -486,14 +486,19 @@ class MetsModsMetadata
 
 
     arr = Array.new
-    @logicaElements.each {|el|
-      if (el.start_page_index != -1) && (el.end_page_index != -1)
-        arr << el
+
+    @logicalElements.each { |el|
+      unless @doctype == "collection"
+        if (el.start_page_index != -1) && (el.end_page_index != -1)
+          arr << el
+        else
+          h.merge! ({:parentdoc_work => el.parentdoc_work})
+          h.merge! ({:parentdoc_label => el.label})
+          h.merge! ({:parentdoc_type => el.type})
+          #h.merge! ({:parentdoc_url => el.urls})
+        end
       else
-        h.merge! ({:parentdoc_work => el.parentdoc_work})
-        h.merge! ({:parentdoc_label => el.label})
-        h.merge! ({:parentdoc_type => el.type})
-        #h.merge! ({:parentdoc_url => el.urls})
+        arr << el
       end
     }
 
