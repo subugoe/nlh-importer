@@ -156,26 +156,28 @@ $vertx.execute_blocking(lambda { |future|
           to_full_pdf     = "#{@pdfoutpath}/#{product}/#{work}/#{work}.pdf"
           copy_to_tei_dir = "#{@teioutpath}/#{product}"
 
-          from = "#{@pdfinpath}#{work}/#{work}.pdf"
+          from = "#{@pdfinpath}/#{work}.pdf"
 
-
+          # copy or generate image/pdf
           solr_page_arr.each_index { |index|
 
             to_page_image = "#{@imageoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.#{@image_out_format}"
             to_page_pdf   = "#{@pdfoutpath}/#{product}/#{work}/#{solr_page_arr[index]}.pdf"
 
 
-            convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) if t == 'image' # convert to images
-            convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) if (t == 'pdf') && (fullpdf == false) # convert to page pdfs
+            convert(from + "[#{index}]", to_page_image, to_image_dir, false, false) #if t == 'image' # convert to images
+            convert(from + "[#{index}]", to_page_pdf, to_pdf_dir, true, false) #if (t == 'pdf') && (fullpdf == false) # convert to page pdfs
           }
 
-          copyFile(from, to_full_pdf, to_pdf_dir) if (t == 'pdf') && fullpdf # copy full pdf
+          copyFile(from, to_full_pdf, to_pdf_dir) #if (t == 'pdf') && fullpdf # copy full pdf
 
-          if (@fulltext_exist == 'true') && (t == 'pdf')
+          # copy fulltext
+          if (@fulltext_exist == 'true')# && (t == 'pdf')
             from_tei = "#{@teiinpath}/#{work}"
             copyDir(from_tei, copy_to_tei_dir) # copy fulltext
           end
 
+          # copy mets
 
         elsif @from_pdf == 'true'
 
@@ -185,17 +187,19 @@ $vertx.execute_blocking(lambda { |future|
           to_pdf_dir      = "#{@pdfoutpath}/#{product}/#{work}"
           copy_to_pdf_dir = "#{@pdfoutpath}/#{product}"
 
+          # works must be in the rigth order (in the full pdf)
+
           from = "#{@pdfinpath}/#{work}"
 
           unless @image_out_format == 'pdf'
-            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) if t == 'image' # convert page pdfs to page images
+            mogrifyPDFs("#{from}/*.pdf", "#{to_image_dir}", @image_out_format) #if t == 'image' # convert page pdfs to page images
           end
 
-          copyDir(from, copy_to_pdf_dir) if (t == 'pdf') && !fullpdf # copy page pdfs to page pdfs
+          copyDir(from, copy_to_pdf_dir) if (t == 'pdf') #&& !fullpdf # copy page pdfs to page pdfs
 
-          convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) if (t == 'pdf') && fullpdf # convert page pdfs to full pdf
+          convert("#{from}/*.pdf", "#{to_pdf_dir}/#{work}.pdf", to_pdf_dir, true, true) #if (t == 'pdf') && fullpdf # convert page pdfs to full pdf
 
-          if (@fulltext_exist == 'true') && (t == 'tei')
+          if (@fulltext_exist == 'true') #&& (t == 'tei')
             from_tei = "#{@teiinpath}/#{work}"
             copyDir(from_tei, copy_to_tei_dir) # copy fulltext
           end

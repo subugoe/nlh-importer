@@ -860,6 +860,7 @@ def getInfoFromMetsMptrs(mptrs)
 
   end
 
+end
 
 def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
@@ -916,11 +917,10 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     hsh = getInfoFromMetsMptrs(mptrs)
 
-    logicalElement.parentdoc_work    = hsh['work']
+    logicalElement.parentdoc_work = hsh['work']
 
   end
 
-else
 
   unless logicalElementStartStopMapping[logicalElement.id] == nil
     logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
@@ -930,12 +930,12 @@ else
     logicalElement.end_page_index   = -1
     #logicalElement.parentdoc_work = work
   end
-end
-
-logicalElement.level = level
 
 
-return logicalElement
+  logicalElement.level = level
+
+
+  return logicalElement
 
 end
 
@@ -1475,7 +1475,7 @@ $vertx.execute_blocking(lambda { |future|
 #
 }
 
-
+=begin
 require 'open-uri'
 i = 1
 while i <= 50
@@ -1495,3 +1495,4 @@ while i <= 50
 
   i += 1
 end
+=end
