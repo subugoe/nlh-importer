@@ -181,7 +181,7 @@ if ENV['PREPARE'] == 'true'
   @rredis.del 'check_path_without_fulltext'
 
 # info_retriever
-$vertx.deploy_verticle("processors/core/info_retriever/path_retriever.rb", retriever_options)
+#$vertx.deploy_verticle("processors/core/info_retriever/path_retriever.rb", retriever_options)
 #  $vertx.deploy_verticle("processors/core/info_retriever/pdf_path_retriever.rb", pdf_retriever_options)
 #  $vertx.deploy_verticle("processors/core/info_retriever/tei_path_retriever.rb", tei_retriever_options)
 #  $vertx.deploy_verticle("processors/core/info_retriever/work_from_outpath_retriever.rb", retriever_options)
@@ -202,7 +202,7 @@ else
 #  $vertx.deploy_verticle("processors/core/copier/tei_copier.rb", tei_copier_options)
 
 # indexer
-#  $vertx.deploy_verticle("processors/mets_indexer.rb", indexer_options)
+#  $vertx.deploy_verticle("processors/core/indexer/mets_indexer.rb", indexer_options)
 
 # resource_processor
 #  $vertx.deploy_verticle("processors/core/resource_processor/fulltext_processor.rb", fulltext_processor_options)

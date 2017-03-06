@@ -46,7 +46,6 @@ class MetsModsMetadata
                 :logid,
                 :admid,
 
-                :docstrct,
                 :bytitle,
 
                 :right_infos,
@@ -502,6 +501,7 @@ class MetsModsMetadata
 
     h.merge! ({:docstrct => arr[0].type})
 
+
     arr[1..-1].each { |el|
 
       id << el.id
@@ -658,9 +658,7 @@ class MetsModsMetadata
     end
 
 
-    h.merge! ({:dmdid => @dmdid})
     h.merge! ({:mods => @mods})
-    h.merge! ({:docstrct => @docstrct})
 
     return h
   end
