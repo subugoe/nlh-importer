@@ -499,6 +499,9 @@ class MetsModsMetadata
     }
 
     # todo check this: with this range, the root div is removed and the doctype of the current work is not clear
+
+    h.merge! ({:docstrct => arr[0].type})
+
     arr[1..-1].each { |el|
 
       id << el.id
