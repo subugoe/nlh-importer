@@ -812,8 +812,10 @@ def getInfoFromMetsMptrs(mptrs)
     unless @oai_endpoint == 'true'
 
       begin
-        # https//nl.sub.uni-goettingen.de/mets/emo:zanzibarvol1.mets.xml
+        # https://nl.sub.uni-goettingen.de/mets/ecj:busybody.mets.xml
         match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+        match   = part_uri.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
+
         product = match[2]
         work    = match[3]
       rescue Exception => e
