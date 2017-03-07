@@ -486,9 +486,9 @@ class MetsModsMetadata
 
 
     arr = Array.new
+    unless @doctype == "collection"
+      @logicalElements.each { |el|
 
-    @logicalElements.each { |el|
-      unless @doctype == "collection"
         if (el.start_page_index != -1) && (el.end_page_index != -1)
           arr << el
         else
@@ -497,10 +497,10 @@ class MetsModsMetadata
           h.merge! ({:parentdoc_type => el.type})
           #h.merge! ({:parentdoc_url => el.urls})
         end
-      else
-        arr << el
-      end
-    }
+      }
+    else
+      arr = @logicalElements
+    end
 
     # todo check this: with this range, the root div is removed and the doctype of the current work is not clear
 
@@ -515,8 +515,8 @@ class MetsModsMetadata
 
       dmdid << el.dmdid
       admid << el.admid
-      start_page_index << el.start_page_index
-      end_page_index << el.end_page_index
+      start_page_index << el.start_page_index  unless @doctype == "collection"
+      end_page_index << el.end_page_index  unless @doctype == "collection"
       part_product << el.part_product
       part_work << el.part_work
       part_key << el.part_key
