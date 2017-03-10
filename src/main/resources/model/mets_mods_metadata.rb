@@ -291,15 +291,19 @@ class MetsModsMetadata
     facet_person_personal  = Array.new
     facet_person_corporate = Array.new
 
-    creator_displayform = Array.new
-    creator_type        = Array.new
-    creator_bycreator   = Array.new
-    creator_gndURI      = Array.new
+    creator_displayform        = Array.new
+    creator_type               = Array.new
+    creator_bycreator          = Array.new
+    creator_gndURI             = Array.new
+    creator_roleterm           = Array.new
+    creator_roleterm_authority = Array.new
 
-    person_displayform = Array.new
-    person_type        = Array.new
-    person_byperson    = Array.new
-    person_gndURI      = Array.new
+    person_displayform        = Array.new
+    person_type               = Array.new
+    person_byperson           = Array.new
+    person_gndURI             = Array.new
+    person_roleterm           = Array.new
+    person_roleterm_authority = Array.new
 
 
     @names.each { |name|
@@ -323,6 +327,8 @@ class MetsModsMetadata
         end
 
         creator_gndURI << name.gndURI
+        creator_roleterm << name.roleterm
+        creator_roleterm_authority << name.roleterm_authority
 
       else
         person_displayform << name.displayform
@@ -343,6 +349,8 @@ class MetsModsMetadata
         end
 
         person_gndURI << name.gndURI
+        person_roleterm << name.roleterm
+        person_roleterm_authority << name.roleterm_authority
 
       end
 
@@ -354,11 +362,15 @@ class MetsModsMetadata
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
     h.merge! ({:creator_gndURI => creator_gndURI})
+    h.merge! ({:creator_roleterm => creator_roleterm})
+    h.merge! ({:creator_roleterm_authority => creator_roleterm_authority})
     h.merge! ({:bycreator => byc})
 
     h.merge! ({:person => person_displayform})
     h.merge! ({:person_type => person_type})
     h.merge! ({:person_gndURI => person_gndURI})
+    h.merge! ({:person_roleterm => person_roleterm})
+    h.merge! ({:person_roleterm_authority => person_roleterm_authority})
     h.merge! ({:byperson => byp})
 
     h.merge! ({:facet_creator_personal => facet_creator_personal})

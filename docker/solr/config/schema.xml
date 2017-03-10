@@ -451,6 +451,12 @@
         <field name="creator_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="creator_roleterm" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_roleterm" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+
+
         <!-- only indexed  text fields -->
         <field name="metadata" type="text_ci" indexed="true" stored="false"/>
         <field name="default" type="text_ci" indexed="true" stored="false"/>

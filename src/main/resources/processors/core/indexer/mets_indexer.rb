@@ -199,8 +199,10 @@ def getName(modsNameElements)
       n.gndURI = ' '
     end
 
-    n.role = checkEmptyString name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3').text
-
+    roleterm = name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3')
+    n.roleterm_authority = checkEmptyString roleterm.xpath('@authority', 'mods' => 'http://www.loc.gov/mods/v3').text
+    n.roleterm_type      = checkEmptyString roleterm.text
+    
     n.family = checkEmptyString name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3').text
     n.given  = checkEmptyString name.xpath('mods:namePart[@type="given"]', 'mods' => 'http://www.loc.gov/mods/v3').text
 
@@ -813,8 +815,8 @@ def getInfoFromMetsMptrs(mptrs)
 
       begin
         # https://nl.sub.uni-goettingen.de/mets/ecj:busybody.mets.xml
-        match   = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-        match   = part_uri.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
+        match = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+        match = part_uri.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
 
         product = match[2]
         work    = match[3]
