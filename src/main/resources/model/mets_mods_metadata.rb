@@ -8,6 +8,7 @@ class MetsModsMetadata
                 #:corporateNames,
                 :names,
                 :type_of_resources,
+                :locations,
                 :genres,
                 :classifications,
                 :sponsors,
@@ -74,6 +75,7 @@ class MetsModsMetadata
     #@corporateNames     = Array.new
     @names              = Array.new
     @type_of_resources  = Array.new
+    @locations          = Array.new
     @genres             = Array.new
     @classifications    = Array.new
     @sponsors           = Array.new
@@ -138,6 +140,10 @@ class MetsModsMetadata
 
   def addTypeOfResource=(typeOfResource)
     @type_of_resources += typeOfResource
+  end
+
+  def addLocation=(location)
+    @locations += location
   end
 
   def addGenre=(genre)
@@ -385,6 +391,8 @@ class MetsModsMetadata
 
     # ---
 
+    h.merge! ({:shelfmark => @locations.collect { |location| location.shelfmark }})
+
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
 
     # ---
@@ -527,8 +535,8 @@ class MetsModsMetadata
 
       dmdid << el.dmdid
       admid << el.admid
-      start_page_index << el.start_page_index  unless @doctype == "collection"
-      end_page_index << el.end_page_index  unless @doctype == "collection"
+      start_page_index << el.start_page_index unless @doctype == "collection"
+      end_page_index << el.end_page_index unless @doctype == "collection"
       part_product << el.part_product
       part_work << el.part_work
       part_key << el.part_key

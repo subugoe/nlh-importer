@@ -199,10 +199,10 @@ def getName(modsNameElements)
       n.gndURI = ' '
     end
 
-    roleterm = name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3')
+    roleterm             = name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3')
     n.roleterm_authority = checkEmptyString roleterm.xpath('@authority', 'mods' => 'http://www.loc.gov/mods/v3').text
     n.roleterm_type      = checkEmptyString roleterm.text
-    
+
     n.family = checkEmptyString name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3').text
     n.given  = checkEmptyString name.xpath('mods:namePart[@type="given"]', 'mods' => 'http://www.loc.gov/mods/v3').text
 
@@ -228,6 +228,18 @@ def getTypeOfResource(modsTypeOfResourceElements)
 end
 
 
+def getLocation(modsLocationElements)
+
+  locationArr = Array.new
+
+  modsLocationElements.each { |li|
+    locationInfo           = Location.new
+    locationInfo.shelfmark = li.xpath("mods:physicalLocation[@type='shelfmark']", 'mods' => 'http://www.loc.gov/mods/v3').text
+    locationArr << locationInfo
+  }
+  return locationArr
+end
+
 def getGenre(modsGenreElements)
 
   genreArr = Array.new
@@ -244,7 +256,6 @@ end
 
 def getClassification(modsClassificationElements)
 
-  classificationArr = Array.new
   modsClassificationElements.each { |dc|
     classification = Classification.new
 
@@ -1153,6 +1164,19 @@ def parseDoc(doc, source)
   rescue Exception => e
     @logger.error("Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
+
+# Location (shelfmark)
+  begin
+    modsLocationElements = mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3')[0] # [0].text
+
+    unless modsLocationElements.empty?
+      meta.addLocation = getLocation(modsLocationElements)
+    end
+  rescue Exception => e
+    @logger.error("Problems to resolve mods:location for #{source} (#{e.message})")
+    @file_logger.error("Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Genre
