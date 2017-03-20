@@ -270,9 +270,19 @@ def getLocation(modsLocationElements)
   locationArr = Array.new
 
   modsLocationElements.each { |li|
-    locationInfo           = Location.new
-    locationInfo.shelfmark = li.xpath("mods:physicalLocation[@type='shelfmark']", 'mods' => 'http://www.loc.gov/mods/v3').text
+    locationInfo = Location.new
+
+    shelfmark_l1 = li.xpath("mods:physicalLocation[@type='shelfmark']", 'mods' => 'http://www.loc.gov/mods/v3').text
+    shelfmark_l2 = li.xpath("mods:shelfLocator", 'mods' => 'http://www.loc.gov/mods/v3').text
+
+    if shelfmark_l1 != nil
+      locationInfo.shelfmark = shelfmark_l1
+    elsif shelfmark_l2 != nil
+      locationInfo.shelfmark = shelfmark_l2
+    end
     locationArr << locationInfo
+
+
   }
   return locationArr
 end
