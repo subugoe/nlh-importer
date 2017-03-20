@@ -275,11 +275,12 @@ def getLocation(modsLocationElements)
     shelfmark_l1 = li.xpath("mods:physicalLocation[@type='shelfmark']", 'mods' => 'http://www.loc.gov/mods/v3').text
     shelfmark_l2 = li.xpath("mods:shelfLocator", 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    if shelfmark_l1 != nil
+    if (shelfmark_l1 != nil && shelfmark_l1 != '')
       locationInfo.shelfmark = shelfmark_l1
-    elsif shelfmark_l2 != nil
+    elsif (shelfmark_l2 != nil && shelfmark_l2 != '')
       locationInfo.shelfmark = shelfmark_l2
     end
+
     locationArr << locationInfo
 
 
