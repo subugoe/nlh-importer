@@ -114,7 +114,7 @@ def getIdentifiers(mods, source)
     identifiers.each do |id_element|
       type = id_element.attributes['type'].value
       id   = id_element.text
-      ids << "#{type} #{id.gsub(/\s+/, "")}"
+      ids << "#{type} #{id}"
     end
 
     identifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
@@ -126,7 +126,7 @@ def getIdentifiers(mods, source)
       end
 
       id = id_element.text
-      ids << "#{type} #{id.gsub(/\s+/, "")}"
+      ids << "#{type} #{id}"
     end
 
 
