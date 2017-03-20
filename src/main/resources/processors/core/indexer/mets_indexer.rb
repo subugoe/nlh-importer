@@ -782,8 +782,7 @@ end
 def getLogicalPageRange(smLinks, meta)
 
   logPhyHsh = Hash.new
-  max       = 1
-  min       = 1
+  min, max, to       = 1,1,1
 
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s

@@ -3,7 +3,9 @@ class LanguageTerm
   attr_accessor :authority # :languageterm, :authority, :type, :valueURI
 
 
-  codesHsh = {
+  CODE_HASH = {
+
+
       "aa"      => ["aar", "Afar", "afar"],
       "ab"      => ["abk", "Abkhazian", "abkhaze"],
       "af"      => ["afr", "Afrikaans", "afrikaans"],
@@ -20,18 +22,18 @@ class LanguageTerm
       "az"      => ["aze", "Azerbaijani", "azéri"],
       "ba"      => ["bak", "Bashkir", "bachkir"],
       "bm"      => ["bam", "Bambara", "bambara"],
-      "eu"      => ["baq", "Basque", "basque"],
+      #"eu"      => ["baq", "Basque", "basque"],
       "be"      => ["bel", "Belarusian", "biélorusse"],
       "bn"      => ["ben", "Bengali", "bengali"],
       "bh"      => ["bih", "Bihari languages", "langues biharis"],
       "bi"      => ["bis", "Bislama", "bichlamar"],
-      "bo"      => ["bod", "Tibetan", "tibétain"],
+      #"bo"      => ["bod", "Tibetan", "tibétain"],
       "bs"      => ["bos", "Bosnian", "bosniaque"],
       "br"      => ["bre", "Breton", "breton"],
       "bg"      => ["bul", "Bulgarian", "bulgare"],
       "my"      => ["bur", "Burmese", "birman"],
       "ca"      => ["cat", "Catalan |  Valencian", "catalan |  valencien"],
-      "cs"      => ["ces", "Czech", "tchèque"],
+      #"cs"      => ["ces", "Czech", "tchèque"],
       "ch"      => ["cha", "Chamorro", "chamorro"],
       "ce"      => ["che", "Chechen", "tchétchène"],
       "zh"      => ["chi", "Chinese", "chinois"],
@@ -40,24 +42,24 @@ class LanguageTerm
       "kw"      => ["cor", "Cornish", "cornique"],
       "co"      => ["cos", "Corsican", "corse"],
       "cr"      => ["cre", "Cree", "cree"],
-      "cy"      => ["cym", "Welsh", "gallois"],
+      #"cy"      => ["cym", "Welsh", "gallois"],
       "cs"      => ["cze", "Czech", "tchèque"],
       "da"      => ["dan", "Danish", "danois"],
-      "de"      => ["deu", "German", "allemand"],
+      #"de"      => ["deu", "German", "allemand"],
       "dv"      => ["div", "Divehi |  Dhivehi |  Maldivian", "maldivien"],
       "nl"      => ["dut", "Dutch |  Flemish", "néerlandais |  flamand"],
       "dz"      => ["dzo", "Dzongkha", "dzongkha"],
-      "el"      => ["ell", "Greek", "Modern (1453-)"],
+      #"el"      => ["ell", "Greek", "Modern (1453-)"],
       "en"      => ["eng", "English", "anglais"],
       "eo"      => ["epo", "Esperanto", "espéranto"],
       "et"      => ["est", "Estonian", "estonien"],
       "eu"      => ["eus", "Basque", "basque"],
       "ee"      => ["ewe", "Ewe", "éwé"],
       "fo"      => ["fao", "Faroese", "féroïen"],
-      "fa"      => ["fas", "Persian", "persan"],
+      #"fa"      => ["fas", "Persian", "persan"],
       "fj"      => ["fij", "Fijian", "fidjien"],
       "fi"      => ["fin", "Finnish", "finnois"],
-      "fr"      => ["fra", "French", "français"],
+      #"fr"      => ["fra", "French", "français"],
       "fr"      => ["fre", "French", "français"],
       "fy"      => ["fry", "Western Frisian", "frison occidental"],
       "ff"      => ["ful", "Fulah", "peul"],
@@ -78,7 +80,7 @@ class LanguageTerm
       "ho"      => ["hmo", "Hiri Motu", "hiri motu"],
       "hr"      => ["hrv", "Croatian", "croate"],
       "hu"      => ["hun", "Hungarian", "hongrois"],
-      "hy"      => ["hye", "Armenian", "arménien"],
+      #"hy"      => ["hye", "Armenian", "arménien"],
       "ig"      => ["ibo", "Igbo", "igbo"],
       "is"      => ["ice", "Icelandic", "islandais"],
       "io"      => ["ido", "Ido", "ido"],
@@ -88,14 +90,14 @@ class LanguageTerm
       "ia"      => ["ina", "Interlingua (International Auxiliary Language Association)", "interlingua (langue auxiliaire internationale)"],
       "id"      => ["ind", "Indonesian", "indonésien"],
       "ik"      => ["ipk", "Inupiaq", "inupiaq"],
-      "is"      => ["isl", "Icelandic", "islandais"],
+      #"is"      => ["isl", "Icelandic", "islandais"],
       "it"      => ["ita", "Italian", "italien"],
       "jv"      => ["jav", "Javanese", "javanais"],
       "ja"      => ["jpn", "Japanese", "japonais"],
-      "kl"      => ["kal", "Kalaallisut |  Greenlandic", "groenlandais"],
+      #"kl"      => ["kal", "Kalaallisut |  Greenlandic", "groenlandais"],
       "kn"      => ["kan", "Kannada", "kannada"],
       "ks"      => ["kas", "Kashmiri", "kashmiri"],
-      "ka"      => ["kat", "Georgian", "géorgien"],
+      #"ka"      => ["kat", "Georgian", "géorgien"],
       "kr"      => ["kau", "Kanuri", "kanouri"],
       "kk"      => ["kaz", "Kazakh", "kazakh"],
       "km"      => ["khm", "Central Khmer", "khmer central"],
@@ -122,20 +124,20 @@ class LanguageTerm
       "mi"      => ["mao", "Maori", "maori"],
       "mr"      => ["mar", "Marathi", "marathe"],
       "ms"      => ["may", "Malay", "malais"],
-      "mk"      => ["mkd", "Macedonian", "macédonien"],
+      #"mk"      => ["mkd", "Macedonian", "macédonien"],
       "mg"      => ["mlg", "Malagasy", "malgache"],
       "mt"      => ["mlt", "Maltese", "maltais"],
       "mn"      => ["mon", "Mongolian", "mongol"],
-      "mi"      => ["mri", "Maori", "maori"],
-      "ms"      => ["msa", "Malay", "malais"],
-      "my"      => ["mya", "Burmese", "birman"],
+      #"mi"      => ["mri", "Maori", "maori"],
+      #"ms"      => ["msa", "Malay", "malais"],
+      #"my"      => ["mya", "Burmese", "birman"],
       "na"      => ["nau", "Nauru", "nauruan"],
       "nv"      => ["nav", "Navajo |  Navaho", "navaho"],
       "nr"      => ["nbl", "Ndebele", "South |  South Ndebele"],
       "nd"      => ["nde", "Ndebele", "North |  North Ndebele"],
       "ng"      => ["ndo", "Ndonga", "ndonga"],
       "ne"      => ["nep", "Nepali", "népalais"],
-      "nl"      => ["nld", "Dutch |  Flemish", "néerlandais |  flamand"],
+      #"nl"      => ["nld", "Dutch |  Flemish", "néerlandais |  flamand"],
       "nn"      => ["nno", "Norwegian Nynorsk |  Nynorsk", "Norwegian"],
       "nb"      => ["nob", "Bokmål", "Norwegian |  Norwegian Bokmål"],
       "no"      => ["nor", "Norwegian", "norvégien"],
@@ -154,13 +156,13 @@ class LanguageTerm
       "qu"      => ["que", "Quechua", "quechua"],
       "rm"      => ["roh", "Romansh", "romanche"],
       "ro"      => ["ron", "Romanian |  Moldavian |  Moldovan", "roumain |  moldave"],
-      "ro"      => ["rum", "Romanian |  Moldavian |  Moldovan", "roumain |  moldave"],
+      #"ro"      => ["rum", "Romanian |  Moldavian |  Moldovan", "roumain |  moldave"],
       "rn"      => ["run", "Rundi", "rundi"],
       "ru"      => ["rus", "Russian", "russe"],
       "sg"      => ["sag", "Sango", "sango"],
       "sa"      => ["san", "Sanskrit", "sanskrit"],
       "si"      => ["sin", "Sinhala |  Sinhalese", "singhalais"],
-      "sk"      => ["slk", "Slovak", "slovaque"],
+      #"sk"      => ["slk", "Slovak", "slovaque"],
       "sk"      => ["slo", "Slovak", "slovaque"],
       "sl"      => ["slv", "Slovenian", "slovène"],
       "se"      => ["sme", "Northern Sami", "sami du Nord"],
@@ -170,7 +172,7 @@ class LanguageTerm
       "so"      => ["som", "Somali", "somali"],
       "st"      => ["sot", "Sotho", "Southern"],
       "es"      => ["spa", "Spanish |  Castilian", "espagnol |  castillan"],
-      "sq"      => ["sqi", "Albanian", "albanais"],
+      #"sq"      => ["sqi", "Albanian", "albanais"],
       "sc"      => ["srd", "Sardinian", "sarde"],
       "sr"      => ["srp", "Serbian", "serbe"],
       "ss"      => ["ssw", "Swati", "swati"],
@@ -206,7 +208,7 @@ class LanguageTerm
       "yi"      => ["yid", "Yiddish", "yiddish"],
       "yo"      => ["yor", "Yoruba", "yoruba"],
       "za"      => ["zha", "Zhuang |  Chuang", "zhuang |  chuang"],
-      "zh"      => ["zho", "Chinese", "chinois"],
+      #"zh"      => ["zho", "Chinese", "chinois"],
       "zu"      => ["zul", "Zulu", "zoulou"],
 
 
@@ -514,10 +516,10 @@ class LanguageTerm
       "zza"     => ["zza", "Zaza |  Dimili |  Dimli |  Kirdki |  Kirmanjki |  Zazaki", "zaza |  dimili |  dimli |  kirdki |  kirmanjki |  zazaki"]
   }
 
-
   def languageterm=(languageterm)
-    lang          = codesHsh[languageterm]
-    lang          = languageterm if lang == nil
+    lang = CODE_HASH[languageterm]
+    lang = languageterm if lang == nil
+
     @languageterm = lang
   end
 
