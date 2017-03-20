@@ -309,6 +309,7 @@ class MetsModsMetadata
     creator_type               = Array.new
     creator_bycreator          = Array.new
     creator_gndURI             = Array.new
+    creator_gndNumber          = Array.new
     creator_roleterm           = Array.new
     creator_roleterm_authority = Array.new
 
@@ -316,6 +317,7 @@ class MetsModsMetadata
     person_type               = Array.new
     person_byperson           = Array.new
     person_gndURI             = Array.new
+    person_gndNumber          = Array.new
     person_roleterm           = Array.new
     person_roleterm_authority = Array.new
 
@@ -346,6 +348,7 @@ class MetsModsMetadata
 
 
         creator_gndURI << name.gndURI
+        creator_gndNumber << name.gndNumber
         creator_roleterm << name.roleterm
         creator_roleterm_authority << name.roleterm_authority
 
@@ -364,6 +367,7 @@ class MetsModsMetadata
         end
 
         person_gndURI << name.gndURI
+        person_gndNumber << name.gndNumber
         person_roleterm << name.roleterm
         person_roleterm_authority << name.roleterm_authority
 
@@ -377,6 +381,7 @@ class MetsModsMetadata
     h.merge! ({:creator => creator_displayform})
     h.merge! ({:creator_type => creator_type})
     h.merge! ({:creator_gndURI => creator_gndURI})
+    h.merge! ({:creator_gndNumber => creator_gndNumber})
     h.merge! ({:creator_roleterm => creator_roleterm})
     h.merge! ({:creator_roleterm_authority => creator_roleterm_authority})
     h.merge! ({:bycreator => byc})
@@ -384,6 +389,7 @@ class MetsModsMetadata
     h.merge! ({:person => person_displayform})
     h.merge! ({:person_type => person_type})
     h.merge! ({:person_gndURI => person_gndURI})
+    h.merge! ({:person_gndNumber => person_gndNumber})
     h.merge! ({:person_roleterm => person_roleterm})
     h.merge! ({:person_roleterm_authority => person_roleterm_authority})
     h.merge! ({:byperson => byp})

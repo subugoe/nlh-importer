@@ -231,9 +231,12 @@ def getName(modsNameElements)
     n.type    = checkEmptyString name['type']
     authority = name['authority']
     if authority == 'gnd'
-      n.gndURI = checkEmptyString name['valueURI']
+      value = name['valueURI']
+      n.gndURI = checkEmptyString value
+      n.gndNumber = checkEmptyString value[(value.rindex('/')+1)..-1]
     else
       n.gndURI = ' '
+      n.gndNumber = ' '
     end
 
     roleterm             = name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3')

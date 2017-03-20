@@ -452,7 +452,9 @@
         <field name="person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <field name="creator_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_gndNumber" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="person_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_gndNumber" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <field name="creator_roleterm" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="creator_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
@@ -500,6 +502,8 @@
     <copyField source="place_publish" dest="metadata"/>
     <copyField source="creator" dest="metadata"/>
     <copyField source="person" dest="metadata"/>
+    <copyField source="person_gndNumber" dest="metadata"/>
+    <copyField source="creator_gndNumber" dest="metadata"/>
     <copyField source="genre" dest="metadata"/>
     <copyField source="dc" dest="metadata"/>
     <copyField source="work" dest="metadata"/>
@@ -516,6 +520,8 @@
     <copyField source="place_publish" dest="default"/>
     <copyField source="creator" dest="default"/>
     <copyField source="person" dest="default"/>
+    <copyField source="person_gndNumber" dest="default"/>
+    <copyField source="creator_gndNumber" dest="default"/>
     <copyField source="genre" dest="default"/>
     <copyField source="dc" dest="default"/>
     <copyField source="work" dest="default"/>
