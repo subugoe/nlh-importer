@@ -68,7 +68,7 @@ class MetsModsMetadata
 
 
   def initialize
-    @identifiers        = Hash.new
+    @identifiers        = Array.new
     @record_identifiers = Hash.new
     @title_infos        = Array.new
     #@personalNames      = Array.new
@@ -107,8 +107,8 @@ class MetsModsMetadata
     #@image_format = ENV['IMAGE_OUT_FORMAT']
   end
 
-  def addIdentifiers=(identifiersHash)
-    @identifiers.merge!(identifiersHash)
+  def addIdentifiers=(identifier)
+    @identifiers += identifier
   end
 
   def addRecordIdentifiers=(record_identifier_hash)
@@ -254,8 +254,16 @@ class MetsModsMetadata
     h.merge! ({:doctype => @doctype})
 
 
-    # todo should we put v in single quotes?, e.g.  "<key-type> <value>" -> "vd18 VD18 10268960" -> "vd18 'VD18 10268960'"
-    h.merge! ({:identifier => @identifiers.collect { |k, v| "#{k} #{v}" }})
+    h.merge! ({:identifier => @identifiers})
+
+    # todo remove this when recordId has changed for fid.mathematica
+    #if !@record_identifiers.first[1].start_with?('PPN') && !@record_identifiers.first[1].start_with?('DE_')
+    #  recordId = "HANS_DE_7_" + @record_identifiers.first[1]
+    #else
+    #  recordId = @record_identifiers.first[1]
+    #end
+
+    #h.merge! ({:id => recordId})
     h.merge! ({:id => @record_identifiers.first[1]})
 
     h.merge! ({:access_pattern => @access_pattern})
@@ -286,7 +294,7 @@ class MetsModsMetadata
     h.merge! ({:bytitle => sorttitle.join('; ')})
 
 
-    h.merge! ({:id => @record_identifiers.first[1]})
+    #    h.merge! ({:id => @record_identifiers.first[1]})
 
     # --- :displayform, :type, :role, :namepart, :date
 

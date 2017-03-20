@@ -106,15 +106,29 @@ end
 
 def getIdentifiers(mods, source)
 
-  ids = Hash.new
+  ids = Array.new
 
   begin
     identifiers = mods.xpath('mods:identifier', 'mods' => 'http://www.loc.gov/mods/v3')
     identifiers.each do |id_element|
-      type      = id_element.attributes['type'].value
-      id        = id_element.text
-      ids[type] = id
+      type = id_element.attributes['type'].value
+      id   = id_element.text
+      ids << "#{type} #{id.gsub(/\s+/, "")}"
     end
+
+    identifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
+    identifiers.each do |id_element|
+      if id_element.attributes['source'] != nil
+        type = id_element.attributes['source'].value
+      elsif id_element.attributes['type'] != nil
+        type = id_element.attributes['type'].value if type == nil
+      end
+
+      id = id_element.text
+      ids << "#{type} #{id.gsub(/\s+/, "")}"
+    end
+
+
   rescue Exception => e
     @logger.error("Could not retrieve an identifier for #{source} \t#{e.message}")
     @file_logger.error("Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -128,18 +142,40 @@ def getRecordIdentifiers(mods, source)
 
   ids = Hash.new
 
+  # todo there could be more than one recordIdentifier in the future
   begin
-    recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="gbv-ppn"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3')
 
-    if recordIdentifiers.empty?
-      # check wrong written tag
-      recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifer', 'mods' => 'http://www.loc.gov/mods/v3')
-    end
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="ppn"
+        or @type="PPN"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="urn"
+or @type="URN"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="Kalliope"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="local"][not(@invalid="yes")]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
     recordIdentifiers.each do |id_element|
       id_source = id_element.attributes['source']
+      id_type   = id_element.attributes['type']
       if id_source != nil
-        type = id_element.attributes['source'].value
+        type = id_source.value
+      elsif id_type != nil
+        type = id_type.value
       else
         type = 'recordIdentifier'
       end
