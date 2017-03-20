@@ -237,7 +237,7 @@ def getName(modsNameElements)
 
     roleterm             = name.xpath('mods:role/mods:roleTerm[@type="code"]', 'mods' => 'http://www.loc.gov/mods/v3')
     n.roleterm_authority = checkEmptyString roleterm.xpath('@authority', 'mods' => 'http://www.loc.gov/mods/v3').text
-    n.roleterm_type      = checkEmptyString roleterm.text
+    n.roleterm           = checkEmptyString roleterm.text
 
     n.family = checkEmptyString name.xpath('mods:namePart[@type="family"]', 'mods' => 'http://www.loc.gov/mods/v3').text
     n.given  = checkEmptyString name.xpath('mods:namePart[@type="given"]', 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -1214,6 +1214,7 @@ def parseDoc(doc, source)
     @logger.error("Problems to resolve mods:location for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
+
 
 # Genre
   begin

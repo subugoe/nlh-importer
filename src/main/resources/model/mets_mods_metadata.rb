@@ -322,44 +322,45 @@ class MetsModsMetadata
 
     @names.each { |name|
 
-      if (name.role == 'aut') || (name.role == 'cre')
-        creator_displayform << name.displayform
+      n = ''
+      if name.family != ' '
+        n = name.family
+        n += ", " + name.given if name.given != ' '
+      else
+        n = name.displayform if name.displayform != ' '
+      end
+
+      if (name.roleterm == 'aut') || (name.roleterm == 'cre')
+        creator_displayform << n
         creator_type << name.type
 
-        if name.type == 'personal'
-          facet_creator_personal << name.displayform
-        elsif name.type == 'corporate'
-          facet_creator_corporate << name.displayform
+        if n != ''
+          if name.type == 'personal'
+            facet_creator_personal << n
+          elsif name.type == 'corporate'
+            facet_creator_corporate << n
+          end
+
+          creator_bycreator << n
         end
 
-        if name.family != ' '
-          creator_bycreator << name.family
-        elsif name.displayform != ' '
-          creator_bycreator << name.displayform
-        elsif name.namepart != ' '
-          creator_bycreator << name.namepart
-        end
 
         creator_gndURI << name.gndURI
         creator_roleterm << name.roleterm
         creator_roleterm_authority << name.roleterm_authority
 
       else
-        person_displayform << name.displayform
+        person_displayform << n
         person_type << name.type
 
-        if name.type == 'personal'
-          facet_person_personal << name.namepart
-        elsif name.type == 'corporate'
-          facet_person_corporate << name.namepart
-        end
+        if n != ''
+          if name.type == 'personal'
+            facet_person_personal << n
+          elsif name.type == 'corporate'
+            facet_person_corporate << n
+          end
 
-        if name.family != ' '
-          person_byperson << name.family
-        elsif name.displayform != ' '
-          person_byperson << name.displayform
-        elsif name.namepart != ' '
-          person_byperson << name.namepart
+          person_byperson << n
         end
 
         person_gndURI << name.gndURI
