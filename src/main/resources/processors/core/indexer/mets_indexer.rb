@@ -22,6 +22,7 @@ require 'model/right'
 require 'model/logical_element'
 require 'model/physical_element'
 require 'model/classification'
+require 'model/location'
 
 
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
@@ -292,6 +293,7 @@ end
 
 def getClassification(modsClassificationElements)
 
+  classificationArr = Array.new
   modsClassificationElements.each { |dc|
     classification = Classification.new
 
@@ -1205,7 +1207,7 @@ def parseDoc(doc, source)
 
 # Location (shelfmark)
   begin
-    modsLocationElements = mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3')[0] # [0].text
+    modsLocationElements = mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
     unless modsLocationElements.empty?
       meta.addLocation = getLocation(modsLocationElements)
@@ -1236,7 +1238,7 @@ def parseDoc(doc, source)
       meta.addClassification = getClassification(modsClassificationElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:classificationfor #{source} (#{e.message})")
+    @logger.error("Problems to resolve mods:classification for #{source} (#{e.message})")
     @file_logger.error("Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
