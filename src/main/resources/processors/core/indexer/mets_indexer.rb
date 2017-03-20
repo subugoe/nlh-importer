@@ -144,29 +144,29 @@ def getRecordIdentifiers(mods, source)
 
   # todo there could be more than one recordIdentifier in the future
   begin
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="gbv-ppn"]',
+    recordIdentifiers = mods.xpath('mods:identifier[@type="gbv-ppn"]',
                                    'mods' => 'http://www.loc.gov/mods/v3')
 
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]',
+    recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier[@source="gbv-ppn"]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="ppn"
+    recordIdentifiers = mods.xpath('mods:identifier[@type="ppn"
         or @type="PPN"]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="urn"
+    recordIdentifiers = mods.xpath('mods:identifier[@type="urn"
 or @type="URN"]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier[@source="Kalliope"]',
+    recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier[@source="Kalliope"]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:identifier[@type="local"][not(@invalid="yes")]',
+    recordIdentifiers = mods.xpath('mods:identifier[@type="local"][not(@invalid="yes")]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
-    recordIdentifiers = mods.xpath('/mets:mets/mets:dmdSec/mets:mdWrap[@MDTYPE="MODS"]/mets:xmlData/mods:mods[1]/mods:recordInfo/mods:recordIdentifier',
+    recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
     recordIdentifiers.each do |id_element|
