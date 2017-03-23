@@ -24,6 +24,8 @@ require 'model/physical_element'
 require 'model/classification'
 require 'model/location'
 require 'model/fulltext'
+require 'model/summary'
+
 
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
 # process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
@@ -36,6 +38,11 @@ require 'model/fulltext'
     "VD18 digital"   => "vd18.digital",
     "vd18 göttingen" => "vd18.göttingen",
     "VD18 göttingen" => "vd18.göttingen"
+}
+
+@summary_hsh = {
+    "HANS_DE_7_w042080" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz_storage/misc/summary/HANS_DE_7_w042080/Cantor_Geometrie.html", 'name' => "Cantor_Geometrie"},
+    "HANS_DE_7_w042081" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz_storage/misc/summary/HANS_DE_7_w042081/Cantor_Algebra.html", 'name' => "Cantor_Algebra"}
 }
 
 context      = ENV['CONTEXT']
@@ -646,19 +653,29 @@ def processPresentationImages(meta)
 
 end
 
+
 def getFulltext(path)
 
   attempts = 0
   fulltext = ""
 
   begin
-    fulltext = File.open(path) { |f|
-      Nokogiri::XML(f) { |config|
-        #config.noblanks
-      }
-    }
 
-    return fulltext
+    if path.start_with? 'http'
+
+      fulltext = Nokogiri::HTML(open(path))
+      return fulltext
+
+    else
+
+      fulltext = File.open(path) { |f|
+        Nokogiri::XML(f) { |config|
+          #config.noblanks
+        }
+      }
+      return fulltext
+
+    end
 
   rescue Exception => e
     attempts = attempts + 1
@@ -671,13 +688,26 @@ def getFulltext(path)
 
 end
 
+def processSummary(summary)
+
+  s = Summary.new
+
+  s.summary_name    = summary['name']
+  summary_ref       = summary['uri']
+  s.summary_ref     = summary_ref
+  s.summary_content = getFulltext(summary_ref)
+
+  return summary
+
+end
+
+
 def processFulltexts(meta)
 
   if @fulltextexist == 'true'
 
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
-    fulltextRefArr = Array.new
 
     fulltext_uris = meta.fulltext_uris
     firstUri      = fulltext_uris[0]
@@ -757,25 +787,25 @@ def processFulltexts(meta)
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
         if @fulltextexist == 'true'
-          ftext = getFulltext(from)
+          ftext                       = getFulltext(from)
 
-          fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
+          #fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
           fulltext.fulltext_with_tags = ftext
           fulltext.fulltext_ref       = from
 
           fulltextArr << fulltext
         end
 
-        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+        # todo is it required to copy the fulltexts?
+        #fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
 
       }
 
     end
 
+    meta.addFulltext = fulltextArr
 
-    meta.addFulltext    = fulltextArr
-
-    push_many("processFulltextURI", fulltextUriArr)
+    #push_many("processFulltextURI", fulltextUriArr)
 
   end
 
@@ -791,8 +821,8 @@ end
 
 def getLogicalPageRange(smLinks, meta)
 
-  logPhyHsh = Hash.new
-  min, max, to       = 1,1,1
+  logPhyHsh    = Hash.new
+  min, max, to = 1, 1, 1
 
   smLinks.each { |link|
     #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
@@ -1467,6 +1497,21 @@ def parseDoc(doc, source)
     getPhysicalElements(physicalElementArr, maindiv, meta.doctype, 0)
 
     meta.addPhysicalElement = physicalElementArr
+
+  end
+
+# add summary
+
+  if summary = summary_hsh[work]
+
+    begin
+
+      meta.addSummary = processSummary(summary)
+
+    rescue Exception => e
+      @logger.error("Problems to resolve summary texts for #{source} (#{e.message})")
+      @file_logger.error("Problems to resolve summary texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    end
 
   end
 

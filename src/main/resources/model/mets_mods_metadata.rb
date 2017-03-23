@@ -62,6 +62,7 @@ class MetsModsMetadata
 
 
                 :fulltexts,
+                :summary,
 
                 :dateindexed,
                 :datemodified
@@ -103,6 +104,7 @@ class MetsModsMetadata
     @physicalElements        = Array.new
 
     @fulltexts = Array.new
+    @summary   = Array.new
 
     #@image_format = ENV['IMAGE_OUT_FORMAT']
   end
@@ -232,6 +234,9 @@ class MetsModsMetadata
     @fulltexts += fulltext
   end
 
+  def addSummary=(summary)
+    @summary += summary
+  end
 
   def to_s
     @identifier
@@ -699,6 +704,10 @@ class MetsModsMetadata
       fulltext_ref       = Array.new
       fulltext_with_tags = Array.new
 
+      summary_name    = Array.new
+      summary_content = Array.new
+      summary_ref     = Array.new
+
       @fulltexts.each { |ft|
 
         fulltext << ft.fulltext
@@ -707,9 +716,21 @@ class MetsModsMetadata
 
       }
 
-      #h.merge! ({:fulltext => fulltext})
+      @summary.each { |summary|
+
+        summary_name << summary.summary_name
+        summary_content << summary.summary_content
+        summary_ref << summary.summary_ref
+
+      }
+
+      h.merge! ({:fulltext => fulltext})
       h.merge! ({:fulltext_ref => fulltext_ref})
       h.merge! ({:fulltext_with_tags => fulltext_with_tags})
+
+      h.merge! ({:summary_name => summary_name})
+      h.merge! ({:summary_content => summary_content})
+      h.merge! ({:summary_ref => summary_ref})
 
     end
 
