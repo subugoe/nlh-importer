@@ -23,7 +23,7 @@ require 'model/logical_element'
 require 'model/physical_element'
 require 'model/classification'
 require 'model/location'
-
+require 'model/fulltext'
 
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
 # process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
@@ -658,7 +658,7 @@ def getFulltext(path)
       }
     }
 
-    return fulltext.root.text.gsub(/\s+/, " ").strip
+    return fulltext
 
   rescue Exception => e
     attempts = attempts + 1
@@ -677,6 +677,7 @@ def processFulltexts(meta)
 
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
+    fulltextRefArr = Array.new
 
     fulltext_uris = meta.fulltext_uris
     firstUri      = fulltext_uris[0]
@@ -740,6 +741,8 @@ def processFulltexts(meta)
 
       fulltext_uris.each { |fulltexturi|
 
+        fulltext = Fulltext.new
+
         begin
           match  = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
           page   = match[4]
@@ -754,16 +757,23 @@ def processFulltexts(meta)
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
         if @fulltextexist == 'true'
-          fulltextArr << getFulltext(from)
+          ftext = getFulltext(from)
+
+          fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
+          fulltext.fulltext_with_tags = ftext
+          fulltext.fulltext_ref       = from
+
+          fulltextArr << fulltext
         end
 
         fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+
       }
 
     end
 
 
-    meta.addFulltext = fulltextArr
+    meta.addFulltext    = fulltextArr
 
     push_many("processFulltextURI", fulltextUriArr)
 

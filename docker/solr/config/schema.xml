@@ -310,8 +310,6 @@
         <field name="ismets" type="boolean" indexed="true"/>
 
 
-
-
         <!-- {'fulltext' | 'work' | 'collection' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
 
@@ -412,7 +410,6 @@
         <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
 
 
-
         <field name="facet_creator_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_person_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_creator_corporate" type="string_mv" indexed="true" stored="true" multiValued="true"/>
@@ -462,13 +459,19 @@
         <field name="person_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
 
-
         <!-- only indexed  text fields -->
         <field name="metadata" type="text_ci" indexed="true" stored="false"/>
         <field name="default" type="text_ci" indexed="true" stored="false"/>
 
 
         <field name="fulltext" type="text_ci" indexed="true" stored="true"/>
+        <field name="fulltext_with_tags" type="text_ci" indexed="true" stored="true"/>
+        <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
+
+
+        <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_ref" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <!-- only stored fields -->
         <field name="location" type="string" indexed="false" stored="true" multiValued="true"/>
@@ -478,7 +481,6 @@
         <dynamicField name="*_url" type="string_mv" stored="true" multiValued="true"/>
 
         <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
 
 
         <!-- ###### OLD INDEX ####################################################-->
@@ -493,7 +495,6 @@
 
     <!-- <uniqueKey>uid</uniqueKey> -->
     <uniqueKey>id</uniqueKey>
-
 
 
     <copyField source="title" dest="metadata"/>
@@ -511,9 +512,11 @@
     <copyField source="id" dest="metadata"/>
     <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
+    <copyField source="summary_name" dest="metadata"/>
 
     <!-- copy fields into default for search -->
     <copyField source="fulltext" dest="default"/>
+    <copyField source="summary_content" dest="default"/>
     <copyField source="title" dest="default"/>
     <copyField source="subtitle" dest="default"/>
     <copyField source="publisher" dest="default"/>

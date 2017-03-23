@@ -694,7 +694,23 @@ class MetsModsMetadata
 
 
     if @iswork == true
-      h.merge! ({:fulltext => @fulltexts})
+
+      fulltext           = Array.new
+      fulltext_ref       = Array.new
+      fulltext_with_tags = Array.new
+
+      @fulltexts.each { |ft|
+
+        fulltext << ft.fulltext
+        fulltext_ref << ft.fulltext_ref
+        fulltext_with_tags << ft.fulltext_with_tags
+
+      }
+
+      #h.merge! ({:fulltext => fulltext})
+      h.merge! ({:fulltext_ref => fulltext_ref})
+      h.merge! ({:fulltext_with_tags => fulltext_with_tags})
+
     end
 
 
