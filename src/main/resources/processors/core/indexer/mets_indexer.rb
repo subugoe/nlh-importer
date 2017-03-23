@@ -1393,7 +1393,7 @@ def parseDoc(doc, source)
 
     # full texts
     begin
-      metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+      metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
       unless metsFullTextUriElements.empty?
         meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
