@@ -707,6 +707,7 @@ class MetsModsMetadata
       summary_name    = Array.new
       summary_content = Array.new
       summary_ref     = Array.new
+      summary_content_with_tags = Array.new
 
       @fulltexts.each { |ft|
 
@@ -720,6 +721,7 @@ class MetsModsMetadata
 
         summary_name << summary.summary_name
         summary_content << summary.summary_content
+        summary_content_with_tags << summary.summary_content_with_tags
         summary_ref << summary.summary_ref
 
       }
@@ -730,6 +732,7 @@ class MetsModsMetadata
 
       h.merge! ({:summary_name => summary_name})
       h.merge! ({:summary_content => summary_content})
+      h.merge! ({:summary_content_with_tags => summary_content_with_tags})
       h.merge! ({:summary_ref => summary_ref})
 
     end
