@@ -696,8 +696,8 @@ def processSummary(summary_hsh)
   summary_ref       = summary_hsh['uri']
   s.summary_ref     = summary_ref
   content = getFulltext(summary_ref)
-  s.summary_content = content.root.text # .gsub(/\s+/, " ").strip
-  #s.summary_content_with_tags = content
+  #s.summary_content = content.root.text # .gsub(/\s+/, " ").strip
+  s.summary_content_with_tags = content
 
   return s
 
