@@ -471,6 +471,7 @@
 
         <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_content_with_tags" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="summary_ref" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <!-- only stored fields -->

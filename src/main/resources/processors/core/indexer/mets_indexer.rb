@@ -688,16 +688,18 @@ def getFulltext(path)
 
 end
 
-def processSummary(summary)
+def processSummary(summary_hsh)
 
   s = Summary.new
 
-  s.summary_name    = summary['name']
-  summary_ref       = summary['uri']
+  s.summary_name    = summary_hsh['name']
+  summary_ref       = summary_hsh['uri']
   s.summary_ref     = summary_ref
-  s.summary_content = getFulltext(summary_ref)
+  content = getFulltext(summary_ref)
+  s.summary_content = content.root.text.gsub(/\s+/, " ").strip
+  #s.summary_content_with_tags = content
 
-  return summary
+  return s
 
 end
 
@@ -789,8 +791,8 @@ def processFulltexts(meta)
         if @fulltextexist == 'true'
           ftext                       = getFulltext(from)
 
-          #fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
-          fulltext.fulltext_with_tags = ftext
+          fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
+          #fulltext.fulltext_with_tags = ftext
           fulltext.fulltext_ref       = from
 
           fulltextArr << fulltext
@@ -1502,11 +1504,11 @@ def parseDoc(doc, source)
 
 # add summary
 
-  if summary = summary_hsh[work]
+  if @summary_hsh[meta.work]
 
     begin
 
-      meta.addSummary = processSummary(summary)
+      meta.addSummary = [processSummary(@summary_hsh[meta.work])]
 
     rescue Exception => e
       @logger.error("Problems to resolve summary texts for #{source} (#{e.message})")
