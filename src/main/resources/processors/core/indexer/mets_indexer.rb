@@ -653,22 +653,55 @@ def processPresentationImages(meta)
 
 end
 
-
-def getFulltext(path)
+def getSummary(html_path)
 
   attempts = 0
   fulltext = ""
 
   begin
 
-    if path.start_with? 'http'
+    if html_path.start_with? 'http'
 
-      fulltext = Nokogiri::HTML(open(path))
+      fulltext = Nokogiri::HTML(open(html_path))
       return fulltext
 
     else
 
-      fulltext = File.open(path) { |f|
+      fulltext = File.open(html_path) { |f|
+        Nokogiri::HTML(f) { |config|
+          #config.noblanks
+        }
+      }
+      return fulltext
+
+    end
+
+  rescue Exception => e
+    attempts = attempts + 1
+    retry if (attempts < MAX_ATTEMPTS)
+    @logger.error("Could not open summary file #{html_path} \t#{e.message}")
+    @file_logger.error("Could not open summary file #{html_path} \t#{e.message}\n\t#{e.backtrace}")
+    return
+  end
+
+
+end
+
+def getFulltext(xml_path)
+
+  attempts = 0
+  fulltext = ""
+
+  begin
+
+    if xml_path.start_with? 'http'
+
+      fulltext = Nokogiri::XML(open(xml_path))
+      return fulltext
+
+    else
+
+      fulltext = File.open(xml_path) { |f|
         Nokogiri::XML(f) { |config|
           #config.noblanks
         }
@@ -680,8 +713,8 @@ def getFulltext(path)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} \t#{e.message}")
-    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not open xml file #{xml_path} \t#{e.message}")
+    @file_logger.error("Could not open xml file #{xml_path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -695,9 +728,9 @@ def processSummary(summary_hsh)
   s.summary_name    = summary_hsh['name']
   summary_ref       = summary_hsh['uri']
   s.summary_ref     = summary_ref
-  content = getFulltext(summary_ref)
-  #s.summary_content = content.root.text # .gsub(/\s+/, " ").strip
-  s.summary_content_with_tags = content
+  content           = getSummary(summary_ref)
+  s.summary_content = content.xpath('//text()').to_a.join(" ")
+  #s.summary_content_with_tags = content
 
   return s
 
@@ -789,11 +822,11 @@ def processFulltexts(meta)
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
         if @fulltextexist == 'true'
-          ftext                       = getFulltext(from)
+          ftext = getFulltext(from)
 
-          fulltext.fulltext           = ftext.root.text.gsub(/\s+/, " ").strip
+          fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
           #fulltext.fulltext_with_tags = ftext
-          fulltext.fulltext_ref       = from
+          fulltext.fulltext_ref = from
 
           fulltextArr << fulltext
         end
