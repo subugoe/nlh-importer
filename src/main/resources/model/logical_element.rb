@@ -177,7 +177,7 @@ class LogicalElement
 
   }
 
-  def type(type)
+  def type=(type)
     t = STRCTYPE_HASH[type]
     t = type if t == nil
 
@@ -187,6 +187,7 @@ class LogicalElement
   def type
     @type
   end
+
 
 
 end
