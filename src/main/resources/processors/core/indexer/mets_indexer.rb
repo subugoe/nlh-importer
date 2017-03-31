@@ -1040,7 +1040,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
   if label != nil
     logicalElement.label = checkEmptyString(label.value)
   else
-    logicalElement.label = ' '
+    logicalElement.label = type.value if type != nil
   end
 
 
