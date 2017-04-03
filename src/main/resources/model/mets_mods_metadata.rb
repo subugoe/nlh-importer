@@ -499,16 +499,25 @@ class MetsModsMetadata
       h.merge! ({:work => @work})
       h.merge! ({:page => @pages})
 
-      mets_path = "mets/#{@product}/#{@work}.mets.xml"
+      unless ENV['METS_VIA_OAI'] == 'true'
+        mets_path = "mets/#{@product}/#{@work}.mets.xml"
+      else
+        mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@work}"
+      end
+
       h.merge! ({:mets_path => mets_path})
 
     elsif @doctype == "collection"
       h.merge! ({:collection => @collection})
 
-      mets_path = "mets/#{@product}/#{@collection}.mets.xml"
+      unless ENV['METS_VIA_OAI'] == 'true'
+        mets_path = "mets/#{@product}/#{@collection}.mets.xml"
+      else
+        mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@collection}"
+      end
       h.merge! ({:mets_path => mets_path})
-
     end
+
 
     # add logical info (e.g. volume info)
 
@@ -704,9 +713,9 @@ class MetsModsMetadata
       fulltext_ref       = Array.new
       fulltext_with_tags = Array.new
 
-      summary_name    = Array.new
-      summary_content = Array.new
-      summary_ref     = Array.new
+      summary_name              = Array.new
+      summary_content           = Array.new
+      summary_ref               = Array.new
       summary_content_with_tags = Array.new
 
       @fulltexts.each { |ft|
