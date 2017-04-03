@@ -518,9 +518,9 @@ class LanguageTerm
 
   def languageterm=(languageterm)
     lang = CODE_HASH[languageterm]
-    lang = languageterm if lang == nil
+    lang = [languageterm] if lang == nil
 
-    @languageterm = lang
+    @languageterm = lang.first
   end
 
   def languageterm
