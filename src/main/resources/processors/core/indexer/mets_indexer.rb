@@ -626,7 +626,7 @@ def processPresentationImages(meta)
     meta.access_pattern = @access_pattern
     meta.product        = product
     meta.work           = work
-    meta.image_format   = image_format
+    meta.image_format   = ENV['IMAGE_OUT_FORMAT']
 
     presentation_image_uris.each { |image_uri|
 
