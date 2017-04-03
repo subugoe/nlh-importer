@@ -1152,7 +1152,7 @@ def metsRigthsMDElements(metsRightsMDElements)
 end
 
 def metsUri(ppn)
-  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}.xml"
+  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}" # ".xml"
 end
 
 def push_many(queue, arr)
@@ -1208,8 +1208,8 @@ def parsePPN(ppn)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open uri #{uri} \t#{e.message}")
-    @file_logger.error("Could not open uri #{uri} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("Could not open uri '#{uri}' \t#{e.message}")
+    @file_logger.error("Could not open uri '#{uri}' \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
