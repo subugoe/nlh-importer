@@ -5,3 +5,5 @@ docker-compose rm -f importer
 #cp src/main/resources/start.rb docker/
 docker-compose build --force-rm importer
 docker-compose up -d importer
+
+
