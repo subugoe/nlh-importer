@@ -238,11 +238,11 @@ def getName(modsNameElements)
     n.type    = checkEmptyString name['type']
     authority = name['authority']
     if authority == 'gnd'
-      value = name['valueURI']
-      n.gndURI = checkEmptyString value
+      value       = name['valueURI']
+      n.gndURI    = checkEmptyString value
       n.gndNumber = checkEmptyString value[(value.rindex('/')+1)..-1]
     else
-      n.gndURI = ' '
+      n.gndURI    = ' '
       n.gndNumber = ' '
     end
 
@@ -762,6 +762,8 @@ def processFulltexts(meta)
 
       fulltext_uris.each { |fulltexturi|
 
+        fulltext = Fulltext.new
+
         begin
           match    = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
           file     = match[4]
@@ -781,7 +783,13 @@ def processFulltexts(meta)
 
 
         if @fulltextexist == 'true'
-          fulltextArr << getFulltext(from)
+          ftext = getFulltext(from)
+
+          fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
+          #fulltext.fulltext_with_tags = ftext
+          fulltext.fulltext_ref = from
+
+          fulltextArr << fulltext
         end
 
         fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
@@ -854,15 +862,32 @@ def addToHash(hsh, pos, val)
   end
 end
 
-def getLogicalPageRange(smLinks, meta)
+def getLogicalPageRange(doc, meta)
 
-  logPhyHsh    = Hash.new
+  logPhyHsh = Hash.new
+
   min, max, to = 1, 1, 1
 
-  smLinks.each { |link|
-    #logIdSet << link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+  files        = Hash.new
+  defaultfiles = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file", 'mets' => 'http://www.loc.gov/METS/')
+  defaultfiles.each { |defaultfile|
+    id  = defaultfile.xpath('@ID', 'mets' => 'http://www.loc.gov/METS/').text
+    uri = defaultfile.xpath("mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').xpath("@xlink:href", 'xlink' => "http://www.w3.org/1999/xlink").text
+    files.merge!({id => uri})
+  }
+
+  links = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
+
+  links.each { |link|
+
     from_ = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     to_   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+
+    physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
+    order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
+    type   = physEl.xpath('@TYPE', 'mets' => 'http://www.loc.gov/METS/').text
+    fileid = physEl.xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/').first.xpath("@FILEID", 'mets' => 'http://www.loc.gov/METS/').text
+
     begin
       if to_.downcase.include? "phys_"
         to = to_.match(/(\S*_)(\S*)/)[2].to_i
@@ -1041,6 +1066,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
     logicalElement.label = checkEmptyString(label.value)
   else
     logicalElement.label = type.value if type != nil
+
   end
 
 
@@ -1511,9 +1537,11 @@ def parseDoc(doc, source)
 
   logicalElementArr = Array.new
 
-  maindiv                        = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
-  links                          = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
-  logicalElementStartStopMapping = getLogicalPageRange(links, meta)
+  logicalElementStartStopMapping = getLogicalPageRange(doc, meta)
+
+
+  maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+
 
   getLogicalElements(logicalElementArr, maindiv, links, logicalElementStartStopMapping, meta.doctype, 0)
 
@@ -1549,7 +1577,6 @@ def parseDoc(doc, source)
     end
 
   end
-
 
   return meta
 
@@ -1669,4 +1696,27 @@ while i <= 50
 
   i += 1
 end
+=end
+
+=begin
+
+# pages
+numbers = Array.new
+set = Set.new
+files = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+arr = files.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text}
+arr.each {|uri|
+  match = uri.match(/(\S*)\/(\S*)\.(\S*)$/)
+  set << match[3]
+  numbers << match[2]
+}
+
+#phy-IDs
+numbers = Array.new
+divs = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
+ids = divs.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').collect { |el| el.text}
+ids.each {|id|
+  match = id.match(/(PHYS_)(\S*)$/)
+  numbers << match[2].to_i
+}
 =end
