@@ -28,10 +28,13 @@ services:
       - SOLR_ADR=${SOLR_ADR}
       - SOLR_HOST=${SOLR_HOST}
       - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
-      - JAVA_OPTS=-Xms512M -Xmx1G
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx1G
-      - JVM_ARGS=-Xms512M -Xmx1G
+      - JAVA_OPTS=-Xms512M -Xmx2G
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx2G
+      - JVM_ARGS=-Xms512M -Xmx2G
+      - MAGICK_MEMORY_LIMIT=32
+      - MAGICK_MAP_LIMIT=32
 
+ 
   # https://hub.docker.com/_/elasticsearch/
 #  elasticsearch:
 #    image: elasticsearch:2.4.1
@@ -80,8 +83,10 @@ services:
       - ./storage/redis/:/data/
       #- $STORAGE/redis/:/data/
 #    user: $USER_UID
-    mem_limit: 1GB
+    mem_limit: 3GB
     env_file:
       - .env
     environment:
-      - JAVA_OPTS=-Xms256M -Xmx1G
+      - JAVA_OPTS=-Xms256M -Xmx3G
+
+#
