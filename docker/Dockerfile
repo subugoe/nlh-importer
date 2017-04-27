@@ -1,33 +1,45 @@
 FROM vertx/vertx3
-
-
+#FROM vertx/vertx3-exec
 
 ENV VERTICLE_NAME start.rb
 ENV VERTICLE_HOME /usr/verticles
-ENV JRUBY_HOME /usr/share/jruby
-ENV GEM_PATH=/usr/share/jruby/lib/ruby/gems/shared/gems
-ENV PATH=$PATH:$JRUBY_HOME/bin
+ENV JRUBY_HOME /opt/jruby
+ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
+
+
+ENV PATH $PATH:$JRUBY_HOME/bin
 
 RUN echo "ipv6" >> /etc/modules
 
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.3/main" >> /etc/apk/repositories
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+
+RUN apt-get update && apt-get install -y curl vim libc6-dev --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+ENV JRUBY_VERSION 9.1.8.0
+ENV JRUBY_SHA256 20ac501c99a7cb3cf53ded64ac1b8bb6e0b0f6ba34a41b8bacc9715cd4bb2601
+
+RUN mkdir /opt/jruby \
+  && curl -fSL https://s3.amazonaws.com/jruby.org/downloads/${JRUBY_VERSION}/jruby-bin-${JRUBY_VERSION}.tar.gz -o /tmp/jruby.tar.gz \
+  && echo "$JRUBY_SHA256 /tmp/jruby.tar.gz" | sha256sum -c - \
+  && tar -zx --strip-components=1 -f /tmp/jruby.tar.gz -C /opt/jruby \
+  && rm /tmp/jruby.tar.gz \
+  && update-alternatives --install /usr/local/bin/ruby ruby /opt/jruby/bin/jruby 1
+ENV PATH /opt/jruby/bin:$PATH
 
 
-RUN apk update && \
-    apk add jruby jruby-irb jruby-minitest jruby-rdoc jruby-rake
+# skip installing gem documentation
+RUN mkdir -p /opt/jruby/etc \
+	&& { \
+		echo 'install: --no-document'; \
+		echo 'update: --no-document'; \
+	} >> /opt/jruby/etc/gemrc
 
 
-RUN apk update && \
-    apk add curl vim \
-    jruby jruby-irb jruby-minitest jruby-rdoc jruby-rake && \
-    rm -rf /var/cache/apk/*
+RUN gem install bundler
 
-
-RUN jruby -S gem install --no-rdoc --no-ri bundler
 
 WORKDIR /
 
+RUN mkdir -p $VERTICLE_HOME
 COPY Gemfile $VERTICLE_HOME/Gemfile
 COPY Gemfile.lock $VERTICLE_HOME/Gemfile.lock
 
@@ -39,6 +51,8 @@ RUN jruby -S bundle install
 WORKDIR $VERTICLE_HOME
 ENTRYPOINT ["sh", "-c"]
 CMD ["vertx run $VERTICLE_HOME/$VERTICLE_NAME"]
+#CMD ["tail -f /bin/true"]
+#CMD [ "irb" ]
 
 
 
