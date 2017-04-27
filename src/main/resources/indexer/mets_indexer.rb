@@ -1572,6 +1572,8 @@ def parseDoc(doc, source)
 end
 
 
+=begin
+
 $vertx.execute_blocking(lambda { |future|
 
   unless @oai_endpoint == 'true'
@@ -1664,48 +1666,82 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
 #
 }
+=end
 
-=begin
-require 'open-uri'
-i = 1
-while i <= 50
-  file_ = "/Users/jpanzer/Documents/projects/test/nlh-importer/tmp/convert_variants/PPN792390792/tiff/%08d.tif" % i
-  path_ = "http://wwwuser.gwdg.de/~subtypo3/gdz/tiff/PPN792390792/%08d.tif" % i
+
+def send_error(statusCode, response)
+  response.set_status_code(statusCode).end()
+end
+
+
+def add_job(routingContext)
+
+
+  response = routingContext.response()
 
   begin
-    open(path_) do |uri|
-      open(file_, "wb") do |file|
-        file.write(uri.read)
-        file.flush
+    msg = routingContext.get_body_as_json()
+    if (msg == nil)
+      send_error(400, response)
+    else
+
+      json = JSON.parse msg.to_json
+
+      context = json['context']
+      ppn     = json['ppn']
+
+
+      if context.downcase == "gdz"
+
+        @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+
+        metsModsMetadata = parsePPN(ppn)
+
+        if metsModsMetadata != nil
+          addDocsToSolr(metsModsMetadata.to_solr_string)
+
+
+          @logger.info "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        else
+          @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @file_logger.error "\tCould not process #{path} metadata, object is nil"
+        end
+
+
+      elsif context.downcase == "nlh"
+
+        @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+
+        metsModsMetadata = parsePath(path)
+
+        if metsModsMetadata != nil
+          addDocsToSolr(metsModsMetadata.to_solr_string)
+
+          @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        else
+          @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @file_logger.error "\tCould not process #{path} metadata, object is nil"
+        end
+
+
       end
+
+      response.end()
     end
+
   rescue Exception => e
-    puts e.message
+    send_error(400, response)
+    @logger.error("Problem with request body \t#{e.message}\n\t#{e.backtrace}")
   end
 
-  i += 1
 end
-=end
 
-=begin
 
-# pages
-numbers = Array.new
-set = Set.new
-files = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
-arr = files.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text}
-arr.each {|uri|
-  match = uri.match(/(\S*)\/(\S*)\.(\S*)$/)
-  set << match[3]
-  numbers << match[2]
-}
+router = VertxWeb::Router.router($vertx)
+router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
-#phy-IDs
-numbers = Array.new
-divs = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div/mets:div", 'mets' => 'http://www.loc.gov/METS/')
-ids = divs.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').collect { |el| el.text}
-ids.each {|id|
-  match = id.match(/(PHYS_)(\S*)$/)
-  numbers << match[2].to_i
-}
-=end
+router.post("/api/conversion/jobs").blocking_handler(&method(:add_job)) # addOne
+
+$vertx.create_http_server().request_handler(&router.method(:accept)).listen(8080)
