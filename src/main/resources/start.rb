@@ -28,10 +28,10 @@ mapper_options = {
 }
 
 indexer_options = {
-    'instances'                  => 10,
+    'instances'                  => 1,
     'worker'                     => true,
-    #'workerPoolName'             => 'index_worker_pool',
-    #'workerPoolSize'             => 1,
+    'workerPoolName'             => 'index_worker_pool',
+    'workerPoolSize'             => 20,
     'blockedThreadCheckInterval' => 15000,
     'warningExceptionTime'       => 45000,
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
