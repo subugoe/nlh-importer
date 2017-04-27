@@ -25,5 +25,3 @@ gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 
 # gem 'rmagick', '~> 2.16'
 gem "mini_magick"
-
-

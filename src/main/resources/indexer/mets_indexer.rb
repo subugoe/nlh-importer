@@ -1107,7 +1107,7 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
 end
 
-def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMapping, doctype, level)
+def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level)
 
   logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
 
@@ -1116,7 +1116,7 @@ def getLogicalElements(logicalElementArr, div, links, logicalElementStartStopMap
 
   unless divs.empty?
     divs.each { |innerdiv|
-      getLogicalElements(logicalElementArr, innerdiv, links, logicalElementStartStopMapping, doctype, level+1)
+      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1)
     }
   end
 
@@ -1532,7 +1532,7 @@ def parseDoc(doc, source)
   maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
 
 
-  getLogicalElements(logicalElementArr, maindiv, links, logicalElementStartStopMapping, meta.doctype, 0)
+  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0)
 
 
   meta.addLogicalElement = logicalElementArr
