@@ -1,7 +1,6 @@
 version: '2.0'
 services:
 
-
   importer:
     build:                         # on mac osx based host
       context: ./docker/
@@ -15,16 +14,12 @@ services:
       - ./src/main/resources:/usr/verticles
     #depends_on:
     #  - solr
-    #  - redis
+    ports:
+      - "8080:8080"
     mem_limit: 13GB
     env_file:
       - .env
     environment:
-      - DOMAIN=${DOMAIN}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_EXTERNAL_PORT=${REDIS_EXTERNAL_PORT}
-      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
-      - ELASTICSEARCH_EXTERNAL_PORT=${ELASTICSEARCH_EXTERNAL_PORT}
       - SOLR_ADR=${SOLR_ADR}
       - SOLR_HOST=${SOLR_HOST}
       - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
@@ -35,24 +30,6 @@ services:
       - MAGICK_MAP_LIMIT=32
 
  
-  # https://hub.docker.com/_/elasticsearch/
-#  elasticsearch:
-#    image: elasticsearch:2.4.1
-#    container_name: nlh-elasticsearch
-#    restart: always
-#    ports:
-#      - "$ELASTICSEARCH_EXTERNAL_PORT:$ELASTICSEARCH_PORT"
-#      - "9300:9300"
-#    volumes:
-#    #  - $STORAGE/solr/:/opt/solr/gdz/data/
-#      #- /opt/solr/gdz/data/
-#      #- /usr/share/elasticsearch/data/elasticsearch
-#      - ./data:/usr/share/elasticsearch/data
-#    mem_limit: 1GB
-#    #user: $USER_UID
-#    env_file:
-#      - .env
-
   # https://hub.docker.com/_/solr/
   solr:
     build: docker/solr/
@@ -71,22 +48,3 @@ services:
       - JAVA_OPTS=-Xms512M -Xmx2G
       - SOLR_JAVA_MEM=-Xms512M -Xmx2G
 
-  redis:
-    #build: docker/redis/
-    image: redis:alpine
-    command: redis-server --appendonly yes
-    container_name: nlh-redis
-    restart: always
-    ports:
-      - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
-    volumes:
-      - ./storage/redis/:/data/
-      #- $STORAGE/redis/:/data/
-#    user: $USER_UID
-    mem_limit: 3GB
-    env_file:
-      - .env
-    environment:
-      - JAVA_OPTS=-Xms256M -Xmx3G
-
-#

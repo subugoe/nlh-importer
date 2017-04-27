@@ -1,21 +1,10 @@
 require 'vertx/vertx'
-require 'vertx-redis/redis_client'
-
 require 'rubygems'
-
 require 'logger'
-require 'redis'
-require 'rsolr'
 
 logger       = Logger.new(STDOUT)
 logger.level = Logger::DEBUG
-
-
 logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-
-@solr = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 retriever_options = {
@@ -140,45 +129,8 @@ checker_options = {
     'GEM_PATH'                   => '/usr/share/jruby/lib/ruby/gems/shared/gems'
 }
 
-# def cleanupSolr
-#   @solr.update :data => '<delete><query>*:*</query></delete>'
-#   @solr.update :data => '<commit/>'
-# end
-
-
-# cleanupSolr
 
 if ENV['PREPARE'] == 'true'
-  @rredis.del 'fixitieschecked'
-  @rredis.del 'fulltextscopied'
-  @rredis.del 'fulltextsindexed'
-  @rredis.del 'imagescopied'
-  @rredis.del 'metscopied'
-  @rredis.del 'indexed'
-  @rredis.del 'retrieved'
-  @rredis.del 'pdfsconverted'
-  @rredis.del 'pdfscopied'
-
-
-  @rredis.del 'pdfpath'
-  @rredis.del 'copypdf'
-  @rredis.del 'convertpdf'
-  @rredis.del 'fixitychecker'
-  @rredis.del 'metspath'
-  @rredis.del 'processImageURI'
-  @rredis.del 'processFulltextURI'
-  @rredis.del 'processPdfFromImageURI'
-  @rredis.del 'metsindexer'
-  @rredis.del 'metscopier'
-  @rredis.del 'teicopier'
-
-  @rredis.del 'convertpdftopdf'
-  @rredis.del 'convertpdftoimage'
-  @rredis.del 'worksToProcess'
-
-  @rredis.del 'checkmets'
-  @rredis.del 'check_path_with_fulltext'
-  @rredis.del 'check_path_without_fulltext'
 
 
 # info_retriever
@@ -203,7 +155,7 @@ else
 #  $vertx.deploy_verticle("copier/tei_copier.rb", tei_copier_options)
 
 # indexer
-#  $vertx.deploy_verticle("indexer/mets_indexer.rb", indexer_options)
+  $vertx.deploy_verticle("indexer/mets_indexer.rb", indexer_options)
 #  $vertx.deploy_verticle("indexer/fulltext_processor.rb", fulltext_processor_options)
 #  $vertx.deploy_verticle("indexer/image_processor.rb", image_processor_options)
 
@@ -224,6 +176,6 @@ else
 end
 
 
-#$vertx.deploy_verticle("services/service_verticle.rb", retriever_options)
+# $vertx.deploy_verticle("services/service_verticle.rb", retriever_options)
 
 

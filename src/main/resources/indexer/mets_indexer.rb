@@ -1,11 +1,14 @@
 require 'vertx/vertx'
+require 'vertx-web/router'
+require 'vertx-web/body_handler'
+
 require 'rsolr'
 require 'logger'
 require 'nokogiri'
 require 'open-uri'
-require 'redis'
 require 'json'
 require 'set'
+
 require 'model/mets_mods_metadata'
 require 'model/title_info'
 require 'model/origin_info'
@@ -27,11 +30,11 @@ require 'model/fulltext'
 require 'model/summary'
 
 
-# prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
+# prepare config (gdz): 1 instance, 8GB importer, 5GB solr
+# process config (gdz): 20 instances, 8GB importer, 5GB solr
 
-# prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
+# prepare config (nlh): 1 instance, 8GB importer, 5GB solr
+# process config (nlh): 8 instances, 8GB importer, 5GB solr
 
 @dc_hsh = {
     "vd18 digital"   => "vd18.digital",
@@ -68,8 +71,7 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+@solr = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 def modifyUrisInArray(images, object_uri)
@@ -92,8 +94,6 @@ def addDocsToSolr(document)
   begin
     @solr.add [document] # , :add_attributes => {:commitWithin => 10}
     @solr.commit
-
-#    @rredis.incr 'indexed'
 
   rescue Exception => e
     attempts = attempts + 1
@@ -649,8 +649,6 @@ def processPresentationImages(meta)
   meta.addPage_key = id_arr
   meta.addPage     = page_arr
 
-  push_many("processImageURI", path_arr)
-
 end
 
 def getSummary(html_path)
@@ -848,7 +846,6 @@ def processFulltexts(meta)
 
     meta.addFulltext = fulltextArr
 
-    #push_many("processFulltextURI", fulltextUriArr)
 
   end
 
@@ -1181,14 +1178,6 @@ def metsUri(ppn)
   return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}" # ".xml"
 end
 
-def push_many(queue, arr)
-  @rredis.lpush(queue, arr)
-
-end
-
-def pushToQueue(queue, hsh)
-  @rredis.lpush(queue, hsh.to_json)
-end
 
 def checkwork(doc)
   doc.xpath("//mets:fileSec", 'mets' => 'http://www.loc.gov/METS/').first
