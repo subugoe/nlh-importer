@@ -5,6 +5,10 @@ RUN apt-get update && \
   apt-get -y install  lsof  vim && \
     rm -rf /var/lib/apt/lists/*
 
+
+ENV USER_UID=10003
+ENV USER_GID=10000
+
 RUN groupadd -r -g $USER_GID solr && \
   useradd -r -u $USER_UID -g $USER_GID solr
 
