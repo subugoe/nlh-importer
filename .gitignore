@@ -15,3 +15,4 @@ out/
 **/*.jar
 #src/main/resources/start.rb
 docker/start.rb
+.env

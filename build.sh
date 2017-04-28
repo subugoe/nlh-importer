@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+if ! [[ -f ./.env ]]; then cp .env.dist .env; fi
 docker-compose stop importer
 docker-compose rm -f importer
 #mvn clean package
