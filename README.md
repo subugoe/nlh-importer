@@ -12,7 +12,7 @@ To build and run the application you need to install [docker-engine](https://doc
 
 ```
 git clone https://github.com/subugoe/nlh-importer.git
-cd ample
+cd nlh-importer
 ```
 
 The nlh-importer directory is the project root, and the base directory for docker commands. 
