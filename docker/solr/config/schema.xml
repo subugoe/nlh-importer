@@ -341,7 +341,7 @@
         <field name="log_label" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_dmdid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_admid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_level" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_level" type="tint" indexed="true" stored="true" multiValued="true"/>
         <field name="log_start_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_part_product" type="string_mv" indexed="true" stored="true" multiValued="true"/>
