@@ -205,4 +205,16 @@ router.post("/api/reindex").blocking_handler(lambda { |routingContext|
 }, false)
 
 
+# GET http://127.0.0.1:8080   /api/indexer/reindex/status
+router.get("/api/reindex/status").blocking_handler(lambda { |routingContext|
+
+
+  size = @rredis.llen @queue
+
+
+  routingContext.response.put_header("content-type", "application/json").end(JSON.generate({'size' => size}))
+
+}, false)
+
+
 $vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080
