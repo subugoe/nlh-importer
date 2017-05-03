@@ -12,8 +12,8 @@ services:
       - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    #depends_on:
-    #  - solr
+    depends_on:
+      - solr
     ports:
       - "8080:8080"
     mem_limit: 13GB
@@ -29,7 +29,7 @@ services:
       - MAGICK_MEMORY_LIMIT=32
       - MAGICK_MAP_LIMIT=32
 
- 
+
   # https://hub.docker.com/_/solr/
   solr:
     build: docker/solr/
