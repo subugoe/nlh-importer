@@ -23,9 +23,11 @@ oai_endpoint = ENV['METS_VIA_OAI']
 @file_logger       = Logger.new(ENV['LOG'] + "/#{context}_path_retrieval_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-@logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@client   = OAI::Client.new ENV['GDZ_OAI_ENDPOINT']
+
+
+@logger.debug "[path_retrieve worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def pushToQueue(arr, queue)
@@ -68,10 +70,9 @@ $vertx.execute_blocking(lambda { |future|
     else
 
       sum      = 0
-      client   = OAI::Client.new ENV['GDZ_OAI_ENDPOINT']
 
       # Get the first page of identifiers
-      response = client.list_identifiers(:metadataPrefix => "mets")
+      response = @client.list_identifiers(:metadataPrefix => "mets")
 
       sum += response.count
 
@@ -95,7 +96,7 @@ $vertx.execute_blocking(lambda { |future|
 
           arr = Array.new
 
-          response = client.list_identifiers(:resumption_token => response.resumption_token)
+          response = @client.list_identifiers(:resumption_token => response.resumption_token)
 
           sum += response.count
 
