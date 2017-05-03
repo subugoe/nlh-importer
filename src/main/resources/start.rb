@@ -23,6 +23,14 @@ indexer_service_options = {
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
+reindex_service_options = {
+    'instances'                  => 1,
+    'worker'                     => true,
+    'workerPoolName'             => 'reindex_service_worker_pool',
+    'workerPoolSize'             => 16,
+    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
+}
+
 indexer_options = {
     'instances'                  => 30,
     'worker'                     => true,
@@ -35,11 +43,12 @@ indexer_options = {
 # indexing service endpoint
 $vertx.deploy_verticle("services/indexer_service_verticle.rb", indexer_service_options)
 
+# reindex service endpoint
+$vertx.deploy_verticle("services/reindex_service_verticle.rb", reindex_service_options)
+
 # converter service endpoint
 $vertx.deploy_verticle("services/converter_service_verticle.rb", converter_service_options)
 
 # indexer
 $vertx.deploy_verticle("indexer/mets_indexer.rb", indexer_options)
-
-
 
