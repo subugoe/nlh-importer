@@ -10,24 +10,18 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 converter_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'workerPoolName'             => 'converter_service_worker_pool',
-    'workerPoolSize'             => 16,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 indexer_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'workerPoolName'             => 'indexer_service_worker_pool',
-    'workerPoolSize'             => 16,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 reindex_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'workerPoolName'             => 'reindex_service_worker_pool',
-    'workerPoolSize'             => 16,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
