@@ -880,10 +880,10 @@ def getLogicalPageRange(doc, meta)
     from_ = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     to_   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
 
-    physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
-    order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
-    type   = physEl.xpath('@TYPE', 'mets' => 'http://www.loc.gov/METS/').text
-    fileid = physEl.xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/').first.xpath("@FILEID", 'mets' => 'http://www.loc.gov/METS/').text
+    # physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
+    # order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
+    # type   = physEl.xpath('@TYPE', 'mets' => 'http://www.loc.gov/METS/').text
+    # fileid = physEl.xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/').first.xpath("@FILEID", 'mets' => 'http://www.loc.gov/METS/').text
 
     begin
       if to_.downcase.include? "phys_"
