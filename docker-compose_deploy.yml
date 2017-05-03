@@ -1,0 +1,72 @@
+version: '2.0'
+services:
+
+  importer:
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    container_name: nlh_importer
+#    restart: always
+    volumes:
+      - $INPATH/:$IN:ro
+      - $OUTPATH/:$OUT
+      - ./log:$LOG
+      - ./src/main/resources:/usr/verticles
+    depends_on:
+      - solr
+      - redis
+    ports:
+      - "8080:8080"
+    mem_limit: 26GB
+    user: "${myUID}:${myGID}"
+    env_file:
+      - .env
+    environment:
+      - SOLR_ADR=${SOLR_ADR}
+      - SOLR_HOST=${SOLR_HOST}
+      - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_EXTERNAL_PORT=${REDIS_EXTERNAL_PORT}
+      - JAVA_OPTS=-Xms512M -Xmx26G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JVM_ARGS=-Xms512M -Xmx26G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx26G
+      - VERTX_OPTS=$JAVA_OPTS
+      - MAGICK_MEMORY_LIMIT=32
+      - MAGICK_MAP_LIMIT=32
+
+
+  # https://hub.docker.com/_/solr/
+  solr:
+    build: docker/solr/
+    #image: solr:6.2.0
+    container_name: nlh-solr
+    restart: always
+    ports:
+      - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
+    volumes:
+      - ./storage/solr/:/opt/solr/nlh/data/
+      - ./storage/solr/logs:/opt/solr/server/logs
+    mem_limit: 3GB
+    user: "${myUID}:${myGID}"
+    env_file:
+      - .env
+    environment:
+      - JAVA_OPTS=-Xms512M -Xmx2G
+      - SOLR_JAVA_MEM=-Xms512M -Xmx2G
+
+  redis:
+    #build: docker/redis/
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    container_name: nlh-redis
+    restart: always
+    ports:
+      - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
+    volumes:
+      - ./storage/redis/:/data/
+    mem_limit: 3GB
+    user: "${myUID}:${myGID}"
+    env_file:
+      - .env
+    environment:
+      - JAVA_OPTS=-Xms256M -Xmx3G

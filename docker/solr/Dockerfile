@@ -6,12 +6,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-ENV USER_UID=10003
-ENV USER_GID=10000
-
-RUN groupadd -r -g $USER_GID solr && \
-  useradd -r -u $USER_UID -g $USER_GID solr
-
 ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 
@@ -20,9 +14,6 @@ ENV SOLR_SHA256 ebce206dd4a66600384ccdd9a604536135594ce4c24814bbd5a3e8a8ec1efbb9
 
 ENV SOLR_HOME /opt/solr/
 
-#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M"
-#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx3072M -XX:MaxPermSize=1024M"
-#ENV JAVA_OPTS -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M
 
 COPY KEYS /opt/KEYS
 RUN gpg --import /opt/KEYS
@@ -38,12 +29,7 @@ RUN mkdir -p /opt/solr/server/solr/lib
 RUN sed -i -e 's/#SOLR_PORT=8983/SOLR_PORT=8983/' /opt/solr/bin/solr.in.sh
 RUN sed -i -e '/-Dsolr.clustering.enabled=true/ a SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=60"' /opt/solr/bin/solr.in.sh
 
-#ENV JAVA_OPTS "${JAVA_OPTS} -server -Xms512M -Xmx2048M -XX:MaxPermSize=768M"
-#ENV JAVA_OPTS "-Xms512m -Xmx3g -XX:MaxPermSize=1g"
 
-#RUN cp /opt/solr/bin/solr.in.sh /opt/solr/bin/solr.in.sh.orig
-#RUN sed -e 's/SOLR_HEAP=".*"/SOLR_HEAP="2048m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh
-#RUN sed -e 's/#SOLR_JAVA_MEM=".*"/SOLR_JAVA_MEM="-Xms512m -Xmx2048m"/' </opt/solr/bin/solr.in.sh.orig >/opt/solr/bin/solr.in.sh
 COPY config/solr.in.sh /opt/solr/bin/solr.in.sh
 
 
@@ -72,8 +58,6 @@ COPY  config/admin-extra.html /opt/solr/nlh/conf/admin-extra.html
 
 RUN rm -rf  /opt/solr/example/
 
-RUN chown -R solr:solr /opt/solr
-
 WORKDIR /opt/solr
-USER solr
+
 CMD ["/opt/solr/bin/solr", "-f"]

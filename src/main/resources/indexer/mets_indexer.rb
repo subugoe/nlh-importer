@@ -1,11 +1,10 @@
 require 'vertx/vertx'
-require 'vertx-web/router'
-require 'vertx-web/body_handler'
 
 require 'rsolr'
 require 'logger'
 require 'nokogiri'
 require 'open-uri'
+require 'redis'
 require 'json'
 require 'set'
 
@@ -30,11 +29,11 @@ require 'model/fulltext'
 require 'model/summary'
 
 
-# prepare config (gdz): 1 instance, 8GB importer, 5GB solr
-# process config (gdz): 20 instances, 8GB importer, 5GB solr
+# prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
+# process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
 
-# prepare config (nlh): 1 instance, 8GB importer, 5GB solr
-# process config (nlh): 8 instances, 8GB importer, 5GB solr
+# prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
+# process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
 @dc_hsh = {
     "vd18 digital"   => "vd18.digital",
@@ -48,10 +47,9 @@ require 'model/summary'
     "HANS_DE_7_w042081" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz_storage/misc/summary/HANS_DE_7_w042081/Cantor_Algebra.html", 'name' => "Cantor_Algebra"}
 }
 
-context      = ENV['CONTEXT']
-MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
 
-@oai_endpoint   = ENV['METS_VIA_OAI']
+#@oai_endpoint   = ENV['METS_VIA_OAI']
 @short_product  = ENV['SHORT_PRODUCT']
 @access_pattern = ENV['ACCESS_PATTERN']
 
@@ -61,17 +59,18 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 
 @fulltextexist = ENV['FULLTEXTS_EXIST']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
-@context       = ENV['CONTEXT']
+#@context       = ENV['CONTEXT']
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
+@logger        = Logger.new(STDOUT)
+@logger.level  = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_mets_indexer_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/mets_indexer_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
 @logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@solr = RSolr.connect :url => ENV['SOLR_ADR']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 def modifyUrisInArray(images, object_uri)
@@ -568,7 +567,7 @@ def processPresentationImages(meta)
 
   firstUri = presentation_image_uris[0]
 
-  unless @oai_endpoint == 'true'
+  if (@context != nil) && (@context.downcase == "nlh")
 
     begin
       # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
@@ -605,7 +604,7 @@ def processPresentationImages(meta)
 
     }
 
-  else
+  elsif (@context != nil) && (@context.downcase == "gdz")
 
     begin
       # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
@@ -745,7 +744,7 @@ def processFulltexts(meta)
     fulltext_uris = meta.fulltext_uris
     firstUri      = fulltext_uris[0]
 
-    unless @oai_endpoint == 'true'
+    if (@context != nil) && (@context.downcase == "nlh")
 
       begin
         # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
@@ -793,9 +792,8 @@ def processFulltexts(meta)
         fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
       }
 
-    else
+    elsif (@context != nil) && (@context.downcase == "gdz")
 
-      # todo modify for gdz
 
       begin
         # gdzocr_url": [
@@ -970,7 +968,8 @@ def getInfoFromMetsMptrs(mptrs)
 
     part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
 
-    unless @oai_endpoint == 'true'
+
+    if (@context != nil) && (@context.downcase == "nlh")
 
       begin
         # https://nl.sub.uni-goettingen.de/mets/ecj:busybody.mets.xml
@@ -985,7 +984,8 @@ def getInfoFromMetsMptrs(mptrs)
         raise
       end
 
-    else
+    elsif (@context != nil) && (@context.downcase == "gdz")
+
 
       count = 0
 
@@ -1002,15 +1002,15 @@ def getInfoFromMetsMptrs(mptrs)
         if (match == nil) && (count < 1)
           count += 1
 
-          @logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
-          @file_logger.error("Problem with part URI #{part_uri} in parent #{@ppn}. Remove spaces and processed again!")
+          @logger.error("Problem with part URI '#{part_uri}' in parent #{@ppn}. Remove spaces and processed again!")
+          @file_logger.error("Problem with part URI '#{part_uri}' in parent #{@ppn}. Remove spaces and processed again!")
 
           part_uri.gsub!(' ', '')
 
           retry
         end
-        @logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}")
-        @file_logger.error("No regex match for #{part_uri} in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}")
+        @file_logger.error("No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -1502,7 +1502,9 @@ def parseDoc(doc, source)
     meta.doctype  = "collection"
     meta.isanchor = true
 
-    unless @oai_endpoint == 'true'
+
+    if (@context != nil) && (@context.downcase == "nlh")
+
       # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
 
       begin
@@ -1515,7 +1517,8 @@ def parseDoc(doc, source)
         raise
       end
 
-    else
+    elsif (@context != nil) && (@context.downcase == "gdz")
+
       meta.collection = @ppn
     end
 
@@ -1572,66 +1575,33 @@ def parseDoc(doc, source)
 end
 
 
-=begin
-
 $vertx.execute_blocking(lambda { |future|
 
-  unless @oai_endpoint == 'true'
 
-    while true do
+  while true do
 
-      res = @rredis.brpop("metsindexer")
+    res = @rredis.brpop("indexer")
 
-      attempts = 0
-      begin
-        if (res != '' && res != nil)
+    attempts = 0
 
-          json = JSON.parse res[1]
-          path = json['path']
+    begin
+      if (res != '' && res != nil)
 
 
-          @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        msg  = res[1]
 
-          metsModsMetadata = parsePath(path)
-
-          if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.to_solr_string)
-
-            @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          else
-            @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-            @file_logger.error "\tCould not process #{path} metadata, object is nil"
-          end
-        else
-          @logger.error "Get empty string or nil from redis (#{res[1]})"
-          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
-        end
+        json = JSON.parse msg
 
 
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
-        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
-      end
+        @context = json['context']
 
-    end
 
-  else
+        if (@context != nil) && (@context.downcase == "gdz")
 
-    while true do
-
-      res = @rredis.brpop("metsindexer")
-
-      attempts = 0
-      begin
-        if (res != '' && res != nil)
-
-          json = JSON.parse res[1]
-          ppn  = json['ppn']
-
+          ppn = json['ppn']
 
           @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
 
           metsModsMetadata = parsePPN(ppn)
 
@@ -1643,20 +1613,40 @@ $vertx.execute_blocking(lambda { |future|
           else
             @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
             @file_logger.error "\tCould not process #{path} metadata, object is nil"
+            next
           end
+
+
+        elsif (@context != nil) && (@context.downcase == "nlh")
+
+          path = json['path']
+
+          @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+
+
+          metsModsMetadata = parsePath(path)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.to_solr_string)
+
+            @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "\tCould not process #{path} metadata, object is nil"
+            next
+          end
+
         else
-          @logger.error "Get empty string or nil from redis (#{res[1]})"
-          @file_logger.error "Get empty string or nil from redis (#{res[1]})"
+          @logger.error "\tCould not process context '#{@context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          next
         end
-
-
-      rescue Exception => e
-        attempts = attempts + 1
-        retry if (attempts < MAX_ATTEMPTS)
-        @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
-        @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
       end
 
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
+      @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
     end
 
   end
@@ -1666,82 +1656,5 @@ $vertx.execute_blocking(lambda { |future|
 }) { |res_err, res|
 #
 }
-=end
 
 
-def send_error(statusCode, response)
-  response.set_status_code(statusCode).end()
-end
-
-
-def add_job(routingContext)
-
-
-  response = routingContext.response()
-
-  begin
-    msg = routingContext.get_body_as_json()
-    if (msg == nil)
-      send_error(400, response)
-    else
-
-      json = JSON.parse msg.to_json
-
-      context = json['context']
-      ppn     = json['ppn']
-
-
-      if context.downcase == "gdz"
-
-        @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-
-        metsModsMetadata = parsePPN(ppn)
-
-        if metsModsMetadata != nil
-          addDocsToSolr(metsModsMetadata.to_solr_string)
-
-
-          @logger.info "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-        else
-          @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          @file_logger.error "\tCould not process #{path} metadata, object is nil"
-        end
-
-
-      elsif context.downcase == "nlh"
-
-        @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-
-        metsModsMetadata = parsePath(path)
-
-        if metsModsMetadata != nil
-          addDocsToSolr(metsModsMetadata.to_solr_string)
-
-          @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-        else
-          @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          @file_logger.error "\tCould not process #{path} metadata, object is nil"
-        end
-
-
-      end
-
-      response.end()
-    end
-
-  rescue Exception => e
-    send_error(400, response)
-    @logger.error("Problem with request body \t#{e.message}\n\t#{e.backtrace}")
-  end
-
-end
-
-
-router = VertxWeb::Router.router($vertx)
-router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
-
-router.post("/api/conversion/jobs").blocking_handler(&method(:add_job)) # addOne
-
-$vertx.create_http_server().request_handler(&router.method(:accept)).listen(8080)

@@ -17,19 +17,8 @@ cd nlh-importer
 
 The nlh-importer directory is the project root, and the base directory for docker commands. 
 
-##### Preparation: set the IP-Address environment variable for solr (edit .env)
 
-* Replace the used IP Address with your solr address
-
-##### Preparation: Start solr container (only once, or after schema changes) 
-
-```
-docker-compose up -d solr
-
-```
-
-
-##### (Re-)Build and start the importer docker image (after changes)
+##### (Re-)Build and start the docker images (also after changes)
 
 ```
 ./build.sh
@@ -47,18 +36,33 @@ docker-compose logs -f <service>
 Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you leave the service-info, the merged log of all services is shown. 
 
 
-##### Index a document via REST
+##### Index a single document
 
 ```
-127.0.0.1:8080/api/conversion/jobs
+POST 127.0.0.1:8080     /api/conversion/jobs
 {
 	"ppn": "PPN591416441",
 	"context": "gdz"
 }
 ```
 
+##### Re-Index all document 
+
+```
+POST 127.0.0.1:8080     /api/indexer/reindex
+{
+	"context": "gdz"
+}
+```
+
+##### Get the number of Documents to Re-Index 
+
+```
+GET 127.0.0.1:8080     /api/indexer/reindex/status
+```
+
 ##### Connect to solr admin view (for local deployment)
  
-* [solr-admin](http://0.0.0.0:8443/solr/nlh)
+* [solr-admin](http://0.0.0.0:8443/)
 
 

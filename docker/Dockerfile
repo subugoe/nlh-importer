@@ -9,7 +9,7 @@ ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
 ENV PATH $PATH:$JRUBY_HOME/bin
 
-RUN echo "ipv6" >> /etc/modules
+#RUN echo "ipv6" >> /etc/modules
 
 
 RUN apt-get update && apt-get install -y curl vim libc6-dev --no-install-recommends && rm -rf /var/lib/apt/lists/*
@@ -50,9 +50,9 @@ RUN jruby -S bundle install
 
 WORKDIR $VERTICLE_HOME
 ENTRYPOINT ["sh", "-c"]
-CMD ["vertx run $VERTICLE_HOME/$VERTICLE_NAME"]
-#CMD ["tail -f /bin/true"]
-#CMD [ "irb" ]
 
+#CMD ["vertx run $VERTICLE_HOME/$VERTICLE_NAME"]
+#CMD ["vertx run -cp $VERTICLE_HOME/lib/*  $VERTICLE_HOME/$VERTICLE_NAME"]
+CMD ["exec vertx  run $VERTICLE_HOME/$VERTICLE_NAME"]
 
 
