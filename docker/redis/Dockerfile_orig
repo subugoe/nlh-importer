@@ -1,0 +1,12 @@
+FROM redis:3.0
+
+
+ENV USER_UID=<UID>
+ENV USER_GID=<GID>
+
+RUN deluser redis
+
+RUN useradd -r -u $USER_UID -g $USER_GID redis
+
+
+USER redis

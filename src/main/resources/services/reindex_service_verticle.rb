@@ -205,7 +205,7 @@ router.post("/api/reindex").blocking_handler(lambda { |routingContext|
 }, false)
 
 
-# GET http://127.0.0.1:8080   /api/indexer/reindex/status
+# GET http://127.0.0.1:8080   /api/reindex/status
 router.get("/api/reindex/status").blocking_handler(lambda { |routingContext|
 
 

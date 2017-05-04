@@ -6,6 +6,12 @@ ENV VERTICLE_HOME /usr/verticles
 ENV JRUBY_HOME /opt/jruby
 ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
+ENV USER_UID=<UID>
+ENV USER_GID=<GID>
+
+
+RUN  useradd -r -u $USER_UID -g $USER_GID importer
+
 
 ENV PATH $PATH:$JRUBY_HOME/bin
 
@@ -48,8 +54,16 @@ WORKDIR $VERTICLE_HOME
 
 RUN jruby -S bundle install
 
+
+RUN chown -R importer $VERTICLE_HOME
+
+
+USER importer
+
+
 WORKDIR $VERTICLE_HOME
 ENTRYPOINT ["sh", "-c"]
+
 
 #CMD ["vertx run $VERTICLE_HOME/$VERTICLE_NAME"]
 #CMD ["vertx run -cp $VERTICLE_HOME/lib/*  $VERTICLE_HOME/$VERTICLE_NAME"]

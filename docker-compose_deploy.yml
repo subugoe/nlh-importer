@@ -17,8 +17,8 @@ services:
       - redis
     ports:
       - "8080:8080"
+    user: "${myUID}"
     mem_limit: 26GB
-    user: "${myUID}:${myGID}"
     env_file:
       - .env
     environment:
@@ -46,7 +46,7 @@ services:
       - ./storage/solr/:/opt/solr/nlh/data/
       - ./storage/solr/logs:/opt/solr/server/logs
     mem_limit: 3GB
-    user: "${myUID}:${myGID}"
+    user: "${myUID}"
     env_file:
       - .env
     environment:
@@ -54,8 +54,7 @@ services:
       - SOLR_JAVA_MEM=-Xms512M -Xmx2G
 
   redis:
-    #build: docker/redis/
-    image: redis:alpine
+    build: docker/redis/
     command: redis-server --appendonly yes
     container_name: nlh-redis
     restart: always
@@ -64,7 +63,7 @@ services:
     volumes:
       - ./storage/redis/:/data/
     mem_limit: 3GB
-    user: "${myUID}:${myGID}"
+    user: "${myUID}"
     env_file:
       - .env
     environment:

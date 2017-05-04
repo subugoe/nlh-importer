@@ -6,6 +6,13 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
+
+ENV USER_UID=<UID>
+ENV USER_GID=<GID>
+
+#RUN groupadd -r -g $USER_GID solr
+RUN  useradd -r -u $USER_UID -g $USER_GID solr
+
 ENV SOLR_KEY 2C72EB1397733A551DDB60CCF119941F6E68DA61
 RUN gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$SOLR_KEY"
 
@@ -58,6 +65,10 @@ COPY  config/admin-extra.html /opt/solr/nlh/conf/admin-extra.html
 
 RUN rm -rf  /opt/solr/example/
 
+RUN chown -R solr /opt/solr/
+
 WORKDIR /opt/solr
+
+USER solr
 
 CMD ["/opt/solr/bin/solr", "-f"]
