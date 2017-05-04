@@ -30,6 +30,8 @@ In web image will be constructed in the build process, this will take a few minu
 ##### See log output
 
 ```
+export myUID=`id -u ${whoami}`
+export myGID=`id -g ${whoami}`
 docker-compose logs -f <service>
 ```
 
