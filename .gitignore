@@ -4,6 +4,7 @@
 
 env.sh
 env.yml
+.env
 tmp/*
 target/
 vertx/
@@ -16,4 +17,4 @@ out/
 **/*.jar
 #src/main/resources/start.rb
 docker/start.rb
-.env
+
