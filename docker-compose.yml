@@ -17,8 +17,8 @@ services:
       - redis
     ports:
       - "8080:8080"
-    mem_limit: 4GB
     user: "${myUID}"
+    mem_limit: 4GB
     env_file:
       - .env
     environment:
@@ -37,34 +37,43 @@ services:
   # https://hub.docker.com/_/solr/
   solr:
     build: docker/solr/
-    #image: solr:6.2.0
+    #image: solr:6.5.1
     container_name: mets_solr
     restart: always
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - ./storage/solr/:/opt/solr/nlh/data/
-      - ./storage/solr/logs:/opt/solr/server/logs
+      - solrdata/:/opt/solr/server/solr/mycores
     mem_limit: 2GB
-    user: "${myUID}"
     env_file:
       - .env
     environment:
       - JAVA_OPTS=-Xms512M -Xmx2G
       - SOLR_JAVA_MEM=-Xms512M -Xmx2G
+      - myUID=$myUID
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr-precreate
+      - nlh
+
+
 
   redis:
-    build: docker/redis/
+    image: redis:3.0
     command: redis-server --appendonly yes
     container_name: mets_redis
     restart: always
     ports:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
-      - ./storage/redis/:/data/
+      - redisdata/:/data/
     mem_limit: 2GB
-    user: "${myUID}"
     env_file:
       - .env
     environment:
       - JAVA_OPTS=-Xms256M -Xmx2G
+
+
+volumes:
+  solrdata:
+  redisdata:

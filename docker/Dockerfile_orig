@@ -7,10 +7,8 @@ ENV JRUBY_HOME /opt/jruby
 ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
 ENV USER_UID=<UID>
-ENV USER_GID=<GID>
 
-
-RUN  useradd -r -u $USER_UID -g $USER_GID importer
+RUN  useradd -r -u $USER_UID importer
 
 
 ENV PATH $PATH:$JRUBY_HOME/bin

@@ -22,10 +22,10 @@ fi
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 cp src/main/resources/start.rb docker/
 
-#docker-compose build --force-rm --no-cache
-docker-compose build --force-rm
+docker-compose -f docker-compose_deploy.yml build --force-rm --no-cache
+#docker-compose -f docker-compose_deploy.yml build --force-rm
 
-docker-compose stop
-docker-compose rm -f
-docker-compose up -d
+docker-compose -f docker-compose_deploy.yml stop
+docker-compose -f docker-compose_deploy.yml rm -f
+docker-compose -f docker-compose_deploy.yml up -d
 
