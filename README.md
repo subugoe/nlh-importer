@@ -17,6 +17,9 @@ cd nlh-importer
 
 The nlh-importer directory is the project root, and the base directory for docker commands. 
 
+##### Preparation: Change the config file rootdir/.env.dist
+
+TODO
 
 ##### (Re-)Build and start the docker images (also after changes)
 
