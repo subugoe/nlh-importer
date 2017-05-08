@@ -897,24 +897,33 @@ def getLogicalPageRange(doc, meta)
     from_ = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
     to_   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
 
-    # physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
-    # order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
+    physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
+    order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
+
+    unless order.empty?
+      to = order.to_i
+    else
+      next
+    end
+
+
     # type   = physEl.xpath('@TYPE', 'mets' => 'http://www.loc.gov/METS/').text
     # fileid = physEl.xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/').first.xpath("@FILEID", 'mets' => 'http://www.loc.gov/METS/').text
 
-    begin
-      if to_.downcase.include? "phys_"
-        to = to_.match(/(\S*_)(\S*)/)[2].to_i
-      elsif to_.downcase.include? "phys"
-        to = to_.downcase.gsub('phys', '').to_i
-      else
-        raise "Link target (#{to_}) doesn't match the expected pattern"
-      end
-    rescue Exception => e
-      @logger.error("No regex match for link target #{to_} \t#{e.message}")
-      @file_logger.error("No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
-      raise
-    end
+    # begin
+    #   to = order.to_i
+    #   # if to_.downcase.include? "phys_"
+    #   #   to = to_.match(/(\S*_)(\S*)/)[2].to_i
+    #   # elsif to_.downcase.include? "phys"
+    #   #   to = to_.downcase.gsub('phys', '').to_i
+    #   # else
+    #   #   raise "Link target (#{to_}) doesn't match the expected pattern"
+    #   # end
+    # rescue Exception => e
+    #   @logger.error("No regex match for link target #{to_} \t#{e.message}")
+    #   @file_logger.error("No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
+    #   raise
+    # end
 
     if meta.doctype == "work"
       max = to if to > max
@@ -1021,8 +1030,8 @@ def getInfoFromMetsMptrs(mptrs)
         if (match == nil) && (count < 1)
           count += 1
 
-          @logger.error("Problem with part URI '#{part_uri}' in parent #{@ppn}. Remove spaces and processed again!")
-          @file_logger.error("Problem with part URI '#{part_uri}' in parent #{@ppn}. Remove spaces and processed again!")
+          @logger.error("[GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
+          @file_logger.error("[GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
 
           part_uri.gsub!(' ', '')
 

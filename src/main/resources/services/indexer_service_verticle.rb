@@ -64,7 +64,7 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 # POST http://127.0.0.1:8080   /api/indexer/jobs
-# {"ppn": "PPN248412353" , "context": "gdz"}
+# {"ppn": "PPN826737668" , "context": "gdz"}
 router.post("/api/indexer/jobs").blocking_handler(lambda { |routingContext|
 
   arr = Array.new
