@@ -226,6 +226,25 @@ def getTitleInfos(modsTitleInfoElements)
 end
 
 
+def getMissingTitleInfos(modsPartElements, structMapDiv)
+
+  detail = modsPartElements.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
+  unless detail.empty?
+    currentno = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
+    label = structMapDiv.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
+
+    titleInfoArr = Array.new
+    titleInfo = TitleInfo.new
+    titleInfo.title = label.value + " - Band " + currentno
+    titleInfo.subtitle = ""
+    titleInfo.nonsort = ""
+    titleInfoArr << titleInfo
+  end
+
+  return titleInfoArr
+end
+
+
 def getName(modsNameElements)
 
   nameArr = Array.new
@@ -1261,6 +1280,10 @@ def parseDoc(doc, source)
 
     unless modsTitleInfoElements.empty?
       meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
+    else
+      modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+      structMapDiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
+      meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
     end
   rescue Exception => e
     @logger.error("Problems to resolve mods:titleInfo for #{source} (#{e.message})")
