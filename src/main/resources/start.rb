@@ -8,29 +8,33 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 
 
 converter_service_options = {
-    'instances'                  => 1,
-    'worker'                     => true,
-    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
+    'instances' => 1,
+    'worker'    => true,
+    'GEM_PATH'  => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 indexer_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
+    'blockedThreadCheckInterval' => 60000,
+    'warningExceptionTime'       => 45000,
+    'maxWorkerExecuteTime'       => 3600000000000,
+    'maxEventLoopExecuteTime'    => 60000000000,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 reindex_service_options = {
-    'instances'                  => 1,
-    'worker'                     => true,
-    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
+    'instances' => 1,
+    'worker'    => true,
+    'GEM_PATH'  => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 indexer_options = {
-    'instances'                  => 30,
-    'worker'                     => true,
-    'workerPoolName'             => 'indexer_worker_pool',
-    'workerPoolSize'             => 35,
-    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
+    'instances'      => 30,
+    'worker'         => true,
+    'workerPoolName' => 'indexer_worker_pool',
+    'workerPoolSize' => 35,
+    'GEM_PATH'       => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 
