@@ -1602,6 +1602,13 @@ def parseDoc(doc, source)
 
   end
 
+# do some data checks
+
+  if meta.pages.size != meta.phys_last_page_index
+    @logger.error("[GDZ-497] - #{source} - number of pages is not equal physical page size")
+    @file_logger.error("[GDZ-497] - #{source} - number of pages is not equal physical page size")
+  end
+
   return meta
 
 end
