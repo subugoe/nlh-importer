@@ -12,9 +12,13 @@ cp .env.dist .env
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<UID>|${myUID}|" ./docker/Dockerfile
     sed -i '' "s|<myIP>|${myIP}|" .env
+    sed -i '' "s|<solr_user>|${solr_user}|" .env
+    sed -i '' "s|<solr_password>|${solr_password}|" .env
 else
     sed -i "s|<UID>|${myUID}|" ./docker/Dockerfile
     sed -i "s|<myIP>|${myIP}|" .env
+    sed -i "s|<solr_user>|${solr_user}|" .env
+    sed -i "s|<solr_password>|${solr_password}|" .env
 fi
 
 
@@ -22,8 +26,8 @@ fi
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 cp src/main/resources/start.rb docker/
 
-#docker-compose build --force-rm --no-cache
-docker-compose build --force-rm
+docker-compose build --force-rm --no-cache
+#docker-compose build --force-rm
 
 docker-compose stop
 docker-compose rm -f

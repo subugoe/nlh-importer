@@ -17,6 +17,13 @@ cd nlh-importer
 
 The nlh-importer directory is the project root, and the base directory for docker commands. 
 
+##### Preparation: For GDZ Reindex set the user/password to access the GDZ Solr 
+
+```
+export solr_user=changeme
+export solr_password=changeme
+```
+
 ##### Preparation: Change the config file rootdir/.env.dist
 
 TODO
@@ -44,17 +51,17 @@ Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you
 ##### Index a single document
 
 ```
-POST 127.0.0.1:8080     /api/conversion/jobs
-{
-	"ppn": "PPN591416441",
-	"context": "gdz"
+POST 127.0.0.1:8080     /api/indexer/jobs
+{ 
+    "ppn ": "PPN591416441_1 ", 
+    "context": "gdz" 
 }
 ```
 
 ##### Re-Index all document 
 
 ```
-POST 127.0.0.1:8080     /api/indexer/reindex
+POST 127.0.0.1:8080     /api/reindex
 {
 	"context": "gdz"
 }
@@ -63,8 +70,19 @@ POST 127.0.0.1:8080     /api/indexer/reindex
 ##### Get the number of Documents to Re-Index 
 
 ```
-GET 127.0.0.1:8080     /api/indexer/reindex/status
+GET 127.0.0.1:8080     /api/reindex/status
 ```
+
+##### Convert a document
+
+```
+POST 127.0.0.1:8080     /api/conversion/work
+{
+	"ppn": "PPN591416441",
+	"context": "gdz"
+}
+```
+
 
 ##### Connect to solr admin view (for local deployment)
  

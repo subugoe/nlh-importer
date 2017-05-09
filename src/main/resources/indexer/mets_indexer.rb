@@ -67,8 +67,9 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @file_logger       = Logger.new(ENV['LOG'] + "/mets_indexer_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-@logger.debug "[mets_indexer worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.debug "[mets_indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
+@queue  = ENV['REDIS_INDEX_QUEUE']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
@@ -97,8 +98,8 @@ def addDocsToSolr(document)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not add doc to solr \t#{e.message}")
-    @file_logger.error("Could not add doc to solr \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not add doc to solr \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not add doc to solr \t#{e.message}\n\t#{e.backtrace}")
   end
 end
 
@@ -137,8 +138,8 @@ def getIdentifiers(mods, source)
 
 
   rescue Exception => e
-    @logger.error("Could not retrieve an identifier for #{source} \t#{e.message}")
-    @file_logger.error("Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -190,8 +191,8 @@ or @type="URN"]',
       ids[type] = id
     end
   rescue Exception => e
-    @logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}")
-    @file_logger.error("Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -595,8 +596,8 @@ def processPresentationImages(meta)
       product = match[3]
       work    = match[4]
     rescue Exception => e
-      @logger.error("No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}")
-      @file_logger.error("No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}")
+      @file_logger.error("[mets_indexer] No regex match for NLH/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
       raise
     end
 
@@ -612,8 +613,8 @@ def processPresentationImages(meta)
         match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
         page  = match[4]
       rescue Exception => e
-        @logger.error("No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}")
-        @file_logger.error("No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for NLH/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -633,8 +634,8 @@ def processPresentationImages(meta)
       work         = match[3]
       image_format = match[7]
     rescue Exception => e
-      @logger.error("No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}")
-      @file_logger.error("No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}")
+      @file_logger.error("[mets_indexer] No regex match for GDZ/IIIF image URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
       raise
     end
 
@@ -652,8 +653,8 @@ def processPresentationImages(meta)
         match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
         page  = match[6]
       rescue Exception => e
-        @logger.error("No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
-        @file_logger.error("No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -695,8 +696,8 @@ def getSummary(html_path)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open summary file #{html_path} \t#{e.message}")
-    @file_logger.error("Could not open summary file #{html_path} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not open summary file #{html_path} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open summary file #{html_path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -729,8 +730,8 @@ def getFulltext(xml_path)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open xml file #{xml_path} \t#{e.message}")
-    @file_logger.error("Could not open xml file #{xml_path} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -771,8 +772,8 @@ def processFulltexts(meta)
         product = match[2]
         work    = match[3]
       rescue Exception => e
-        @logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}")
-        @file_logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -785,8 +786,8 @@ def processFulltexts(meta)
           file     = match[4]
           filename = match[4] + '.tei.xml'
         rescue Exception => e
-          @logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
-          @file_logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
+          @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
+          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
           raise
         end
 
@@ -820,8 +821,8 @@ def processFulltexts(meta)
         match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
         work  = match[3]
       rescue Exception => e
-        @logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}")
-        @file_logger.error("No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -837,8 +838,8 @@ def processFulltexts(meta)
           format = match[5]
           from   = match[0]
         rescue Exception => e
-          @logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
-          @file_logger.error("No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
+          @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
+          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
           raise
         end
 
@@ -920,8 +921,8 @@ def getLogicalPageRange(doc, meta)
     #   #   raise "Link target (#{to_}) doesn't match the expected pattern"
     #   # end
     # rescue Exception => e
-    #   @logger.error("No regex match for link target #{to_} \t#{e.message}")
-    #   @file_logger.error("No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
+    #   @logger.error("[mets_indexer] No regex match for link target #{to_} \t#{e.message}")
+    #   @file_logger.error("[mets_indexer] No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
     #   raise
     # end
 
@@ -1007,8 +1008,8 @@ def getInfoFromMetsMptrs(mptrs)
         product = match[2]
         work    = match[3]
       rescue Exception => e
-        @logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
-        @file_logger.error("No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -1030,15 +1031,15 @@ def getInfoFromMetsMptrs(mptrs)
         if (match == nil) && (count < 1)
           count += 1
 
-          @logger.error("[GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
-          @file_logger.error("[GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
+          @logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
+          @file_logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
 
           part_uri.gsub!(' ', '')
 
           retry
         end
-        @logger.error("No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}")
-        @file_logger.error("No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -1228,8 +1229,8 @@ def parsePath(path)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open file #{path} \t#{e.message}")
-    @file_logger.error("Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not open file #{path} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -1251,8 +1252,8 @@ def parsePPN(ppn)
   rescue Exception => e
     attempts = attempts + 1
     retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("Could not open uri '#{uri}' \t#{e.message}")
-    @file_logger.error("Could not open uri '#{uri}' \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not open uri '#{uri}' \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open uri '#{uri}' \t#{e.message}\n\t#{e.backtrace}")
     return
   end
 
@@ -1273,8 +1274,8 @@ def parseDoc(doc, source)
   begin
     meta.mods = mods.to_xml
   rescue Exception => e
-    @logger.error "Could not get MODS XML for #{source} \t#{e.message}"
-    @file_logger.error("Could not get MODS XML for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error "[mets_indexer] Could not get MODS XML for #{source} \t#{e.message}"
+    @file_logger.error("[mets_indexer] Could not get MODS XML for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   meta.addIdentifiers      = getIdentifiers(mods, source)
@@ -1295,8 +1296,8 @@ def parseDoc(doc, source)
       meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:titleInfo for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1310,8 +1311,8 @@ def parseDoc(doc, source)
       meta.addEditionInfo  = originInfoHash[:edition]
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:originInfo for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1323,8 +1324,8 @@ def parseDoc(doc, source)
       meta.addName = getName(modsNameElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:name for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:name for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # TypeOfResource:
@@ -1335,8 +1336,8 @@ def parseDoc(doc, source)
       meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1348,8 +1349,8 @@ def parseDoc(doc, source)
       meta.addLocation = getLocation(modsLocationElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:location for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:location for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1361,8 +1362,8 @@ def parseDoc(doc, source)
       meta.addGenre = getGenre(modsGenreElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:genre for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Classification
@@ -1373,8 +1374,8 @@ def parseDoc(doc, source)
       meta.addClassification = getClassification(modsClassificationElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:classification for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1386,8 +1387,8 @@ def parseDoc(doc, source)
       meta.addLanguage = getLanguage(modsLanguageElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:language for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:language for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # PhysicalDescription:
@@ -1398,8 +1399,8 @@ def parseDoc(doc, source)
       meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1411,8 +1412,8 @@ def parseDoc(doc, source)
       meta.addNote = getNote(modsNoteElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:note for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:note for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Sponsor:
@@ -1424,8 +1425,8 @@ def parseDoc(doc, source)
     end
 
   rescue Exception => e
-    @logger.error("Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1437,8 +1438,8 @@ def parseDoc(doc, source)
       meta.addSubject = getSubject(modsSubjectElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:subject for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # RelatedItem
@@ -1449,8 +1450,8 @@ def parseDoc(doc, source)
       meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:relatedItem for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 # Part (of multipart Documents)
@@ -1461,8 +1462,8 @@ def parseDoc(doc, source)
       meta.addPart = getPart(modsPartElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
-    @file_logger.error("Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1474,8 +1475,8 @@ def parseDoc(doc, source)
       meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve mods:recordInfo for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1487,8 +1488,8 @@ def parseDoc(doc, source)
       meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
     end
   rescue Exception => e
-    @logger.error("Problems to resolve rights info for #{source} (#{e.message})")
-    @file_logger.error("Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve rights info for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 #=end
@@ -1507,8 +1508,8 @@ def parseDoc(doc, source)
         processPresentationImages(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve presentation images for #{source} (#{e.message})")
-      @file_logger.error("Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] Problems to resolve presentation images for #{source} (#{e.message})")
+      @file_logger.error("[mets_indexer] Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
     # =begin
@@ -1522,8 +1523,8 @@ def parseDoc(doc, source)
         processFulltexts(meta)
       end
     rescue Exception => e
-      @logger.error("Problems to resolve full texts for #{source} (#{e.message})")
-      @file_logger.error("Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] Problems to resolve full texts for #{source} (#{e.message})")
+      @file_logger.error("[mets_indexer] Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
 # =end
@@ -1544,8 +1545,8 @@ def parseDoc(doc, source)
         meta.collection = match[4]
         meta.product    = match[3]
       rescue Exception => e
-        @logger.error("No regex match for collection #{@path} \t#{e.message}")
-        @file_logger.error("No regex match for collection #{@path} \t#{e.message}\n\t#{e.backtrace}")
+        @logger.error("[mets_indexer] No regex match for collection #{@path} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for collection #{@path} \t#{e.message}\n\t#{e.backtrace}")
         raise
       end
 
@@ -1596,8 +1597,8 @@ def parseDoc(doc, source)
       meta.addSummary = [processSummary(@summary_hsh[meta.work])]
 
     rescue Exception => e
-      @logger.error("Problems to resolve summary texts for #{source} (#{e.message})")
-      @file_logger.error("Problems to resolve summary texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] Problems to resolve summary texts for #{source} (#{e.message})")
+      @file_logger.error("[mets_indexer] Problems to resolve summary texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
   end
@@ -1605,8 +1606,8 @@ def parseDoc(doc, source)
 # do some data checks
 
   if (meta.doctype != 'collection') && (meta.pages.size != meta.phys_last_page_index)
-    @logger.error("[GDZ-497] - #{source} - number of pages is not equal physical page size")
-    @file_logger.error("[GDZ-497] - #{source} - number of pages is not equal physical page size")
+    @logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
+    @file_logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
   end
 
   return meta
@@ -1619,18 +1620,20 @@ $vertx.execute_blocking(lambda { |future|
 
   while true do
 
-    res = @rredis.brpop("indexer")
+    res = @rredis.brpop(@queue)
 
     attempts = 0
 
     begin
+
       if (res != '' && res != nil)
 
+        # { "ppn": "PPN248412353", "context": "gdz" }
+        # or
+        # {"path": "/<inpath>/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
 
         msg  = res[1]
-
         json = JSON.parse msg
-
 
         @context = json['context']
 
@@ -1639,7 +1642,7 @@ $vertx.execute_blocking(lambda { |future|
 
           ppn = json['ppn']
 
-          @logger.info "Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.info "[mets_indexer] Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
 
           metsModsMetadata = parsePPN(ppn)
@@ -1648,10 +1651,10 @@ $vertx.execute_blocking(lambda { |future|
             addDocsToSolr(metsModsMetadata.to_solr_string)
 
 
-            @logger.info "\tFinish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Finish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.error "\tCould not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-            @file_logger.error "\tCould not process #{path} metadata, object is nil"
+            @logger.error "[mets_indexer] Could not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
             next
           end
 
@@ -1660,7 +1663,7 @@ $vertx.execute_blocking(lambda { |future|
 
           path = json['path']
 
-          @logger.info "Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.info "[mets_indexer] Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
 
           metsModsMetadata = parsePath(path)
@@ -1668,15 +1671,15 @@ $vertx.execute_blocking(lambda { |future|
           if metsModsMetadata != nil
             addDocsToSolr(metsModsMetadata.to_solr_string)
 
-            @logger.info "\tFinish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Finish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.error "\tCould not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-            @file_logger.error "\tCould not process #{path} metadata, object is nil"
+            @logger.error "[mets_indexer] Could not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
             next
           end
 
         else
-          @logger.error "\tCould not process context '#{@context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.error "[mets_indexer] Could not process context '#{@context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           next
         end
       end
@@ -1684,8 +1687,8 @@ $vertx.execute_blocking(lambda { |future|
     rescue Exception => e
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{e.message})"
-      @file_logger.error "Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[mets_indexer] Could not process redis data '#{res[1]}' (#{e.message})"
+      @file_logger.error "[mets_indexer] Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
     end
 
   end
