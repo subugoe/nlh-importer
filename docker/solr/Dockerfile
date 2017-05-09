@@ -1,0 +1,52 @@
+FROM    solr:6.5.1
+MAINTAINER  Jörg Panzer, SUB (based on https://github.com/docker-solr/docker-solr/blob/2e1ccd64970c65e7dacfe33203963b315f665cc3/5.5/Dockerfile)
+
+
+#/opt/solr/server/solr/mycores
+#/opt/solr/server/solr/cores/nlh
+
+ENV SOLR_BASE /opt/solr/server/solr
+ENV SOLR_CORE /opt/solr/server/solr/mycores/nlh
+
+RUN echo $SOLR_BASE
+RUN echo $SOLR_CORE
+
+COPY config/solr.in.sh /opt/solr/bin/solr.in.sh
+
+USER root
+
+
+#RUN mkdir -p $SOLR_CORE
+
+
+COPY  config/sub/solr.xml  $SOLR_BASE/solr.xml
+COPY  config/sub/zoo.cfg   $SOLR_BASE/zoo.cfg
+
+COPY  config/sub/core.properties         $SOLR_CORE/core.properties
+COPY  config/sub/currency.xml            $SOLR_CORE/conf/currency.xml
+COPY  config/sub/mapping-FoldToASCII.txt $SOLR_CORE/conf/mapping-FoldToASCII.txt
+COPY  config/sub/mapping-ISOLatin1Accent.txt $SOLR_CORE/conf/mapping-ISOLatin1Accent.txt
+COPY  config/schema.xml         $SOLR_CORE/conf/schema.xml
+COPY  config/solrconfig.xml     $SOLR_CORE/conf/solrconfig.xml
+COPY  config/stopwords.txt      $SOLR_CORE/conf/stopwords.txt
+COPY  config/stopwords_en.txt   $SOLR_CORE/conf/stopwords_en.txt
+COPY  config/synonyms.txt       $SOLR_CORE/conf/synonyms.txt
+COPY  config/protwords.txt      $SOLR_CORE/conf/protwords.txt
+COPY  config/elevate.xml        $SOLR_CORE/conf/elevate.xml
+COPY  config/_rest_managed.json $SOLR_CORE/conf/_rest_managed.json
+
+COPY  config/_schema_analysis_stopwords_english.json    $SOLR_CORE/conf/_schema_analysis_stopwords_english.json
+COPY  config/_schema_analysis_synonyms_english.json     $SOLR_CORE/conf/_schema_analysis_synonyms_english.json
+COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE/conf/admin-extra.menu-bottom.html
+COPY  config/admin-extra.menu-top.html                  $SOLR_CORE/conf/admin-extra.menu-top.html
+COPY  config/admin-extra.html                           $SOLR_CORE/conf/admin-extra.html
+
+RUN chown -R $SOLR_USER:$SOLR_USER $SOLR_BASE
+
+
+WORKDIR /opt/solr
+USER $SOLR_USER
+
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["solr-foreground"]

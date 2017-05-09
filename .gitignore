@@ -17,5 +17,6 @@ out/
 **/*.jar
 #src/main/resources/start.rb
 docker/start.rb
-**/Dockerfile
+docker/Dockerfile
+
 
