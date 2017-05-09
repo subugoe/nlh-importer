@@ -5,7 +5,7 @@ services:
     build:                         # on mac osx based host
       context: ./docker/
       dockerfile: Dockerfile
-    container_name: nlh_importer
+    #container_name: mets_importer
 #    restart: always
     volumes:
       - $INPATH/:$IN:ro
@@ -38,7 +38,7 @@ services:
   solr:
     build: docker/solr/
     #image: solr:6.5.1
-    container_name: nlh-solr
+    container_name: mets_solr
     restart: always
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"

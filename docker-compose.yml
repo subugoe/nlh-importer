@@ -5,7 +5,7 @@ services:
     build:                         # on mac osx based host
       context: ./docker/
       dockerfile: Dockerfile
-    container_name: mets_importer
+    #container_name: mets_importer
     restart: always
     volumes:
       - $INPATH/:$IN:ro
