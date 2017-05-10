@@ -6,6 +6,7 @@ export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | aw
 
 cp src/main/resources/start_services.rb docker/
 cp src/main/resources/start_indexer.rb docker/
+cp src/main/resources/start_converter.rb docker/
 
 cp docker/Dockerfile_orig  docker/Dockerfile
 cp .env.dist .env
@@ -13,6 +14,7 @@ cp .env.dist .env
 
 SERVICE_VERTICLE=start_services.rb
 INDEXER_VERTICLE=start_indexer.rb
+CONVERTER_VERTICLE=start_converter.rb
 VERTICLE_HOME=/usr/verticles
 
 
