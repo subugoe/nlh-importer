@@ -1,12 +1,25 @@
 version: '2.0'
 services:
 
-  importer:
+  importer_base:
     build:                         # on mac osx based host
       context: ./docker/
       dockerfile: Dockerfile
-    #container_name: mets_importer
     restart: always
+    user: "${myUID}"
+    env_file:
+      - .env
+    environment:
+      - JAVA_OPTS=-Xms512M -Xmx4G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JVM_ARGS=-Xms512M -Xmx4G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx4G
+      - MAGICK_MEMORY_LIMIT=32
+      - MAGICK_MAP_LIMIT=32
+
+
+  importer_indexer:
+    extends: importer_base
+    command: ["exec vertx  run $VERTICLE_HOME/$INDEXER_VERTICLE"]
     volumes:
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
@@ -15,30 +28,32 @@ services:
     depends_on:
       - solr
       - redis
+    mem_limit: 3GB
+    working_dir: /usr/verticles
+
+
+  importer_services:
+    extends: importer_base
+    command: ["exec vertx run $VERTICLE_HOME/$SERVICE_VERTICLE"]
+    volumes:
+      - ./log:$LOG
+      - ./src/main/resources:/usr/verticles
+    depends_on:
+      - solr
+      - redis
     ports:
       - "8080:8080"
-    user: "${myUID}"
-    mem_limit: 4GB
-    env_file:
-      - .env
-    environment:
-      - SOLR_ADR=${SOLR_ADR}
-      - SOLR_HOST=${SOLR_HOST}
-      - SOLR_EXTERNAL_PORT=${SOLR_EXTERNAL_PORT}
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_EXTERNAL_PORT=${REDIS_EXTERNAL_PORT}
-      - JAVA_OPTS=-Xms512M -Xmx4G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JVM_ARGS=-Xms512M -Xmx4G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx4G
-      - MAGICK_MEMORY_LIMIT=32
-      - MAGICK_MAP_LIMIT=32
+    mem_limit: 1GB
+    working_dir: /usr/verticles
+
+
 
 
   # https://hub.docker.com/_/solr/
   solr:
     build: docker/solr/
     #image: solr:6.5.1
-    container_name: mets_solr
+    container_name: mets_importer_solr
     restart: always
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
@@ -61,7 +76,7 @@ services:
   redis:
     image: redis:3.0
     command: redis-server --appendonly yes
-    container_name: mets_redis
+    container_name: mets_importer_redis
     restart: always
     ports:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"

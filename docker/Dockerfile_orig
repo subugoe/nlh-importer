@@ -1,8 +1,6 @@
 FROM vertx/vertx3
 #FROM vertx/vertx3-exec
 
-ENV VERTICLE_NAME start.rb
-ENV VERTICLE_HOME /usr/verticles
 ENV JRUBY_HOME /opt/jruby
 ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
@@ -43,28 +41,23 @@ RUN gem install bundler
 
 WORKDIR /
 
-RUN mkdir -p $VERTICLE_HOME
-COPY Gemfile $VERTICLE_HOME/Gemfile
-COPY Gemfile.lock $VERTICLE_HOME/Gemfile.lock
+RUN mkdir -p <VERTICLE_HOME>
+COPY Gemfile <VERTICLE_HOME>/Gemfile
+COPY Gemfile.lock <VERTICLE_HOME>/Gemfile.lock
 
-WORKDIR $VERTICLE_HOME
+WORKDIR <VERTICLE_HOME>
 
 
 RUN jruby -S bundle install
 
 
-RUN chown -R importer $VERTICLE_HOME
+RUN chown -R importer <VERTICLE_HOME>
 
 
 USER importer
 
 
-WORKDIR $VERTICLE_HOME
+WORKDIR <VERTICLE_HOME>
 ENTRYPOINT ["sh", "-c"]
-
-
-#CMD ["vertx run $VERTICLE_HOME/$VERTICLE_NAME"]
-#CMD ["vertx run -cp $VERTICLE_HOME/lib/*  $VERTICLE_HOME/$VERTICLE_NAME"]
-CMD ["exec vertx  run $VERTICLE_HOME/$VERTICLE_NAME"]
 
 
