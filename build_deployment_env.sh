@@ -26,6 +26,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_password>|${solr_password}|" .env
     sed -i '' "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
     sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
+    sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
     sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
 else
     sed -i "s|<UID>|${myUID}|" ./docker/Dockerfile
@@ -35,6 +36,7 @@ else
     sed -i "s|<solr_password>|${solr_password}|" .env
     sed -i "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
     sed -i "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
+    sed -i "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
     sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
 fi
 
@@ -47,5 +49,5 @@ docker-compose -f docker-compose_deploy.yml build --force-rm --no-cache
 
 docker-compose -f docker-compose_deploy.yml stop
 docker-compose -f docker-compose_deploy.yml rm -f
-docker-compose -f docker-compose_deploy.yml up -d
+docker-compose -f docker-compose_deploy.yml up -d  importer_indexer importer_services importer_converter solr redis
 

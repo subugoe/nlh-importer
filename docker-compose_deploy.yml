@@ -22,11 +22,11 @@ services:
     depends_on:
       - solr
       - redis
-    mem_limit: 6GB
+    mem_limit: 3GB
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx6G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JVM_ARGS=-Xms512M -Xmx6G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx6G
+      - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JVM_ARGS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx3G
 
   importer_services:
     extends: importer_base
@@ -46,21 +46,21 @@ services:
       - JRUBY_OPTS=-J-Xms512M -J-Xmx1G
 
   importer_converter:
-      extends: importer_base
-      command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
-      volumes:
-        - ./log:$LOG
-        - ./src/main/resources:/usr/verticles
-      depends_on:
-        - solr
-        - redis
-      mem_limit: 6GB
-      environment:
-        - JAVA_OPTS=-Xms512M -Xmx6G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-        - JVM_ARGS=-Xms512M -Xmx6G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-        - JRUBY_OPTS=-J-Xms512M -J-Xmx6G
-        - MAGICK_MEMORY_LIMIT=32
-        - MAGICK_MAP_LIMIT=32
+    extends: importer_base
+    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
+    volumes:
+      - ./log:$LOG
+      - ./src/main/resources:/usr/verticles
+    depends_on:
+      - solr
+      - redis
+    mem_limit: 3GB
+    environment:
+      - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JVM_ARGS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
+      - JRUBY_OPTS=-J-Xms512M -J-Xmx3G
+      - MAGICK_MEMORY_LIMIT=32
+      - MAGICK_MAP_LIMIT=32
 
 
   # https://hub.docker.com/_/solr/

@@ -9,7 +9,7 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 
 
 indexer_options = {
-    'instances'      => 30,
+    'instances'      => 20,
     'worker'         => true,
     'workerPoolName' => 'indexer_worker_pool',
     'workerPoolSize' => 35,

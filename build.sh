@@ -26,6 +26,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_password>|${solr_password}|" .env
     sed -i '' "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
     sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
+    sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
     sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
 else
     sed -i "s|<UID>|${myUID}|" ./docker/Dockerfile
@@ -35,6 +36,7 @@ else
     sed -i "s|<solr_password>|${solr_password}|" .env
     sed -i "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
     sed -i "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
+    sed -i "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
     sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
 fi
 
@@ -42,10 +44,10 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
-docker-compose build --force-rm --no-cache
-#docker-compose build --force-rm
+#docker-compose build --force-rm --no-cache
+docker-compose build --force-rm
 
 docker-compose stop
 docker-compose rm -f
-docker-compose up -d
+docker-compose up -d importer_indexer importer_services solr redis
 

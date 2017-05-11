@@ -9,7 +9,7 @@ logger.debug "[start_converter] Running in #{Java::JavaLang::Thread.current_thre
 
 
 converter_options = {
-    'instances'                  => 10,
+    'instances'                  => 1,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 60000,
     'warningExceptionTime'       => 45000,
@@ -19,5 +19,7 @@ converter_options = {
 }
 
 
-# converter service endpoint
-# $vertx.deploy_verticle("converter/image_to_pdf_converter.rb", converter_options)
+# indexing service endpoint
+# $vertx.deploy_verticle("services/indexer_service_verticle.rb", indexer_service_options)
+
+puts "test"
