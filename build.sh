@@ -49,5 +49,5 @@ docker-compose build --force-rm
 
 docker-compose stop
 docker-compose rm -f
-docker-compose up -d importer_indexer importer_services solr redis
+docker-compose up -d importer_converter importer_indexer importer_services solr redis
 

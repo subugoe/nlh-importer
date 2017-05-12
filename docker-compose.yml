@@ -75,7 +75,7 @@ services:
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - solrdata/:/opt/solr/server/solr/mycores
+      - solrdata/:/opt/solr/server/solr/mycores/nlh/data/
     mem_limit: 2GB
     env_file:
       - .env
