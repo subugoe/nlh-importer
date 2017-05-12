@@ -29,8 +29,8 @@ indexer_service_options = {
 }
 
 reindex_service_options = {
-    'instances' => 1,
-    'worker'    => true,
+    'instances'                  => 1,
+    'worker'                     => true,
     'blockedThreadCheckInterval' => 60000,
     'warningExceptionTime'       => 45000,
     'maxWorkerExecuteTime'       => 3600000000000,

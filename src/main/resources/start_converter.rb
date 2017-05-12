@@ -7,7 +7,6 @@ logger.level = Logger::DEBUG
 logger.debug "[start_converter] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-
 converter_options = {
     'instances'                  => 10,
     'worker'                     => true,
@@ -20,4 +19,4 @@ converter_options = {
 
 
 # converter service endpoint
-# $vertx.deploy_verticle("converter/image_to_pdf_converter.rb", converter_options)
+$vertx.deploy_verticle("converter/image_to_pdf_converter.rb", converter_options)
