@@ -61,7 +61,7 @@ POST 127.0.0.1:8080     /api/indexer/jobs
 ##### Re-Index all document 
 
 ```
-POST 127.0.0.1:8080     /api/reindex
+POST 127.0.0.1:8080     /api/reindexer/jobs
 {
 	"context": "gdz"
 }
@@ -70,13 +70,13 @@ POST 127.0.0.1:8080     /api/reindex
 ##### Get the number of Documents to Re-Index 
 
 ```
-GET 127.0.0.1:8080     /api/reindex/status
+GET 127.0.0.1:8080     /api/reindexer/status
 ```
 
 ##### Convert a document
 
 ```
-POST 127.0.0.1:8080     /api/conversion/work
+POST 127.0.0.1:8080     /api/converter/works
 {
 	"ppn": "PPN591416441",
 	"context": "gdz"
