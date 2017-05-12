@@ -31,7 +31,11 @@ indexer_service_options = {
 reindex_service_options = {
     'instances' => 1,
     'worker'    => true,
-    'GEM_PATH'  => '/opt/jruby/lib/ruby/gems/shared/gems'
+    'blockedThreadCheckInterval' => 60000,
+    'warningExceptionTime'       => 45000,
+    'maxWorkerExecuteTime'       => 3600000000000,
+    'maxEventLoopExecuteTime'    => 60000000000,
+    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 

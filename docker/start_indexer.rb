@@ -9,10 +9,9 @@ logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().ge
 
 
 indexer_options = {
-    'instances'      => 20,
+    'instances'      => 10,
     'worker'         => true,
     'workerPoolName' => 'indexer_worker_pool',
-    'workerPoolSize' => 35,
     'GEM_PATH'       => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 

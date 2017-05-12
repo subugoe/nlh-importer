@@ -9,7 +9,7 @@ logger.debug "[start_converter] Running in #{Java::JavaLang::Thread.current_thre
 
 
 converter_options = {
-    'instances'                  => 1,
+    'instances'                  => 10,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 60000,
     'warningExceptionTime'       => 45000,

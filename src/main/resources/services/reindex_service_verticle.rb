@@ -106,9 +106,9 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 
-# POST http://127.0.0.1:8080   /api/reindex
+# POST http://127.0.0.1:8080   /api/reindexer/jobs
 # {"context": "gdz"}
-router.post("/api/reindex").blocking_handler(lambda { |routingContext|
+router.post("/api/reindexer/jobs").blocking_handler(lambda { |routingContext|
 
   begin
     hsh = routingContext.get_body_as_json
@@ -146,8 +146,8 @@ router.post("/api/reindex").blocking_handler(lambda { |routingContext|
 }, false)
 
 
-# GET http://127.0.0.1:8080   /api/reindex/status
-router.get("/api/reindex/status").blocking_handler(lambda { |routingContext|
+# GET http://127.0.0.1:8080   /api/reindexer/status
+router.get("/api/reindexer/status").blocking_handler(lambda { |routingContext|
 
   size = @rredis.llen(@queue)
   routingContext.response.put_header("content-type", "application/json").end(JSON.generate({'size' => size}))
