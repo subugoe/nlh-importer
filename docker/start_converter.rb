@@ -19,7 +19,5 @@ converter_options = {
 }
 
 
-# indexing service endpoint
-# $vertx.deploy_verticle("services/indexer_service_verticle.rb", indexer_service_options)
-
-puts "test"
+# converter service endpoint
+# $vertx.deploy_verticle("converter/image_to_pdf_converter.rb", converter_options)

@@ -17,7 +17,7 @@ USER root
 
 
 #RUN mkdir -p $SOLR_CORE
-
+RUN mkdir -p $SOLR_CORE/data/
 
 COPY  config/sub/solr.xml  $SOLR_BASE/solr.xml
 COPY  config/sub/zoo.cfg   $SOLR_BASE/zoo.cfg
