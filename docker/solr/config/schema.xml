@@ -394,7 +394,7 @@
 
         <!-- facet fields -->
         <field name="docstrct" type="text_lc" indexed="true" stored="true"/>
-        <field name="lang" type="string" indexed="true" stored="true"/>
+        <field name="lang" type="text_lc_multi" indexed="true" stored="true"/>
         <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
 
         <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
