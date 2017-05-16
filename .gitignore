@@ -15,6 +15,10 @@ in/
 out/
 **/*.log
 **/*.jar
+log/*
+data/*
+!log/.gitkeep
+!data/.gitkeep
 #src/main/resources/start.rb
 docker/start.rb
 docker/Dockerfile
