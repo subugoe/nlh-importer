@@ -1,7 +1,6 @@
 .idea/
 .DS_Store
 *.iml
-
 env.sh
 env.yml
 .env
@@ -16,11 +15,11 @@ out/
 **/*.log
 **/*.jar
 log/*
-data/*
 !log/.gitkeep
+data/*
 !data/.gitkeep
-#src/main/resources/start.rb
-docker/start.rb
+**/.vertx
+!**/.vertx/.gitkeep
 docker/Dockerfile
 
 
