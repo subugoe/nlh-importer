@@ -119,8 +119,14 @@ def getIdentifiers(mods, source)
   begin
     identifiers = mods.xpath('mods:identifier', 'mods' => 'http://www.loc.gov/mods/v3')
     identifiers.each do |id_element|
-      type = id_element.attributes['type'].value
-      id   = id_element.text
+
+      if id_element.attributes['type'] != nil
+        type = id_element.attributes['type'].value
+      else
+        type = "unknown"
+      end
+
+      id = id_element.text
       ids << "#{type} #{id}"
     end
 
@@ -130,12 +136,13 @@ def getIdentifiers(mods, source)
         type = id_element.attributes['source'].value
       elsif id_element.attributes['type'] != nil
         type = id_element.attributes['type'].value if type == nil
+      else
+        type = "unknown"
       end
 
       id = id_element.text
       ids << "#{type} #{id}"
     end
-
 
   rescue Exception => e
     @logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}")
@@ -232,13 +239,13 @@ def getMissingTitleInfos(modsPartElements, structMapDiv)
   detail = modsPartElements.xpath('mods:detail', 'mods' => 'http://www.loc.gov/mods/v3')
   unless detail.empty?
     currentno = checkEmptyString detail.first.xpath('mods:number', 'mods' => 'http://www.loc.gov/mods/v3').text
-    label = structMapDiv.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
+    label     = structMapDiv.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
 
-    titleInfoArr = Array.new
-    titleInfo = TitleInfo.new
-    titleInfo.title = label.value + " - Band " + currentno
+    titleInfoArr       = Array.new
+    titleInfo          = TitleInfo.new
+    titleInfo.title    = label.value + " - Band " + currentno
     titleInfo.subtitle = ""
-    titleInfo.nonsort = ""
+    titleInfo.nonsort  = ""
     titleInfoArr << titleInfo
   end
 
@@ -1291,8 +1298,8 @@ def parseDoc(doc, source)
     unless modsTitleInfoElements.empty?
       meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
     else
-      modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
-      structMapDiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
+      modsPartElements  = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+      structMapDiv      = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
       meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
     end
   rescue Exception => e
