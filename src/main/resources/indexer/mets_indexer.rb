@@ -739,7 +739,7 @@ def getFulltext(xml_path)
     retry if (attempts < MAX_ATTEMPTS)
     @logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}")
     @file_logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}\n\t#{e.backtrace}")
-    return
+    return nil
   end
 
 
@@ -795,23 +795,31 @@ def processFulltexts(meta)
         rescue Exception => e
           @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
           @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
-          raise
+          fulltext.fulltext     = "ERROR"
+          fulltext.fulltext_ref = "ERROR"
+          fulltextArr << fulltext
+          next
         end
-
 
         from = "#{@teiinpath}/#{work}/#{filename}"
         to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
-
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
 
         if @fulltextexist == 'true'
           ftext = getFulltext(from)
+          if ftext == nil
 
-          fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
-          #fulltext.fulltext_with_tags = ftext
-          fulltext.fulltext_ref = from
+            fulltext.fulltext     = "ERROR"
+            fulltext.fulltext_ref = from
+
+            @logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+            @file_logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+          else
+            fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
+            fulltext.fulltext_ref = from
+          end
 
           fulltextArr << fulltext
         end
@@ -847,17 +855,27 @@ def processFulltexts(meta)
         rescue Exception => e
           @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
           @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
-          raise
+          fulltext.fulltext     = "ERROR"
+          fulltext.fulltext_ref = "ERROR"
+          fulltextArr << fulltext
+          next
         end
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
 
         if @fulltextexist == 'true'
           ftext = getFulltext(from)
+          if ftext == nil
 
-          fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
-          #fulltext.fulltext_with_tags = ftext
-          fulltext.fulltext_ref = from
+            fulltext.fulltext     = "ERROR"
+            fulltext.fulltext_ref = from
+
+            @logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+            @file_logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+          else
+            fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
+            fulltext.fulltext_ref = from
+          end
 
           fulltextArr << fulltext
         end
