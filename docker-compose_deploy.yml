@@ -49,6 +49,8 @@ services:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
     volumes:
+      - $INPATH/:$IN:ro
+      - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     depends_on:
