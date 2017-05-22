@@ -7,7 +7,6 @@ logger.level = Logger::DEBUG
 logger.debug "[start_converter] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-
 converter_options = {
     'instances'                  => 10,
     'worker'                     => true,

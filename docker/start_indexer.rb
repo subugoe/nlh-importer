@@ -4,15 +4,17 @@ require 'logger'
 
 logger       = Logger.new(STDOUT)
 logger.level = Logger::DEBUG
-logger.debug "[start.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
+logger.debug "[start_indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 indexer_options = {
-    'instances'      => 10,
-    'worker'         => true,
-    'workerPoolName' => 'indexer_worker_pool',
-    'GEM_PATH'       => '/opt/jruby/lib/ruby/gems/shared/gems'
+    'instances'                  => 10,
+    'worker'                     => true,
+    'blockedThreadCheckInterval' => 60000,
+    'warningExceptionTime'       => 45000,
+    'maxWorkerExecuteTime'       => 3600000000000,
+    'maxEventLoopExecuteTime'    => 60000000000,
+    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 
