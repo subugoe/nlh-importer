@@ -6,19 +6,17 @@ require 'redis'
 require 'logger'
 
 
-context      = ENV['CONTEXT']
-
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
-@logger.debug "[converter_service_verticle.rb] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+# ---
 
-
-
+@queue             = ENV['REDIS_CONVERT_QUEUE']
+@rredis            = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 
 def pushToQueue(queue, arr)
@@ -33,32 +31,32 @@ end
 router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
-# addOne
-router.post("/api/conversion/jobs").blocking_handler(lambda { |routingContext|
-
+# POST http://127.0.0.1:8080   /api/converter/jobs
+# {"ppn": "PPN826737668" , "context": "gdz"}
+# or
+# {"id": "mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
+router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
 
   begin
     hsh = routingContext.get_body_as_json
-    #puts  routingContext.get_body_as_json
-    #puts  routingContext.get_body_as_json['ppn']
-    #puts  routingContext.get_body_as_json['context']
-
-    #routingContext.response.end
 
     if hsh == nil
-      @logger.error("Expected JSON body missing \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[converter_service] Expected JSON body missing \t#{e.message}")
+      @file_logger.error("[converter_service]  Expected JSON body missing \t#{e.message}\n\t#{e.backtrace}")
       send_error(400, response)
     else
-      pushToQueue('indexer', [hsh].to_json)
+      pushToQueue(@queue, [hsh.to_json])
     end
 
+
   rescue Exception => e
-    @logger.error("Problem with request body \t#{e.message}\n\t#{e.backtrace}")
-    @file_logger.error("Problem with request body \t#{e.message}")
+    @logger.error("[converter_service] Problem with request body \t#{e.message}")
+    @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
   end
 
   routingContext.response.end
 
 }, false)
+
 
 $vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080

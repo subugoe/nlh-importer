@@ -41,7 +41,7 @@ router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 # POST http://141.5.103.92:8080   /api/indexer/jobs
 # { "ppn": "PPN248412353", "context": "gdz" }
 # or
-# {"path": "/<inpath>/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
+# {"path": "/inpath/ZDB-1-AHN/METS_Daten/mets_ahn_11B3080EDF6EAD38.xml" , "context": "nlh"}
 router.post("/api/indexer/jobs").blocking_handler(lambda { |routingContext|
 
   begin
