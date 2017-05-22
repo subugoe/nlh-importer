@@ -14,7 +14,12 @@ ENV PATH $PATH:$JRUBY_HOME/bin
 #RUN echo "ipv6" >> /etc/modules
 
 
-RUN apt-get update && apt-get install -y curl vim libc6-dev --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+    && apt-get install -y curl vim libc6-dev --no-install-recommends \
+        imagemagick \
+        ghostscript \
+    && rm -rf /var/lib/apt/lists/*
+
 
 ENV JRUBY_VERSION 9.1.8.0
 ENV JRUBY_SHA256 20ac501c99a7cb3cf53ded64ac1b8bb6e0b0f6ba34a41b8bacc9715cd4bb2601
