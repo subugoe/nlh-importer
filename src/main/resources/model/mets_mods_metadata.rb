@@ -295,8 +295,11 @@ class MetsModsMetadata
 
     h.merge! ({:title => title})
     h.merge! ({:sorttitle => sorttitle})
+    h.merge! ({:sorttitle_first_value => sorttitle.first})
+
     h.merge! ({:subtitle => subtitle})
     h.merge! ({:bytitle => sorttitle.join('; ')})
+
 
 
     #    h.merge! ({:id => @record_identifiers.first[1]})
@@ -802,3 +805,4 @@ class MetsModsMetadata
 
 
 end
+
