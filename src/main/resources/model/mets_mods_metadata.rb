@@ -246,7 +246,35 @@ class MetsModsMetadata
 
   end
 
-  def to_solr_string
+  def fulltext_to_solr_string
+
+    docs = Array.new
+
+
+    if @iswork == true
+
+      @fulltexts.each { |ft|
+
+        h = Hash.new
+
+        h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
+        h.merge! ({:fulltext => ft.fulltext})
+        h.merge! ({:fulltext_ref => ft.fulltext_ref})
+        h.merge! ({:fulltext_with_tags => ft.fulltext_with_tags})
+        h.merge! ({:fulltext_of_work => ft.fulltext_of_work})
+        h.merge! ({:fulltext_page_number => ft.fulltext_page_number})
+        h.merge! ({:doctype => 'fulltext'})
+
+        docs << h
+      }
+
+    end
+
+    return docs
+
+  end
+
+  def doc_to_solr_string
 
     h = Hash.new
 

@@ -92,7 +92,11 @@ def addDocsToSolr(document)
 
   attempts = 0
   begin
-    @solr.add [document] # , :add_attributes => {:commitWithin => 10}
+    if document.class == Array
+      @solr.add document # , :add_attributes => {:commitWithin => 10}
+    else
+      @solr.add [document] # , :add_attributes => {:commitWithin => 10}
+    end
     @solr.commit
 
   rescue Exception => e
@@ -761,15 +765,22 @@ def processSummary(summary_hsh)
 end
 
 
-def processFulltexts(meta)
+def processFulltexts(meta, doc)
+
+
+  fulltext_FLocat = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+  #fulltext_uris   = fulltext_FLocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+
+  phy_struct_map  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']", 'mets' => 'http://www.loc.gov/METS/')
 
   if @fulltextexist == 'true'
 
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
 
-    fulltext_uris = meta.fulltext_uris
-    firstUri      = fulltext_uris[0]
+    #fulltext_uris = meta.fulltext_uris
+    firstUri       = fulltext_FLocat.first.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
 
     if (@context != nil) && (@context.downcase == "nlh")
 
@@ -784,19 +795,24 @@ def processFulltexts(meta)
         raise
       end
 
-      fulltext_uris.each { |fulltexturi|
+      fulltext_FLocat.each { |flocat|
 
         fulltext = Fulltext.new
 
+        uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
         begin
-          match    = fulltexturi.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+          match    = uri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
           file     = match[4]
           filename = match[4] + '.tei.xml'
         rescue Exception => e
-          @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
-          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
-          fulltext.fulltext     = "ERROR"
-          fulltext.fulltext_ref = "ERROR"
+          @logger.error("[mets_indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
+          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{uri} \t#{e.message}\n\t#{e.backtrace}")
+          fulltext.fulltext             = "ERROR"
+          fulltext.fulltext_ref         = "ERROR"
+          fulltext.fulltext_of_work     = "ERROR"
+          fulltext.fulltext_page_number = "ERROR"
+
           fulltextArr << fulltext
           next
         end
@@ -805,6 +821,14 @@ def processFulltexts(meta)
         to   = "#{@teioutpath}/#{product}/#{work}/#{filename}"
 
         to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+        fulltext.fulltext_of_work = work
+
+        id                            = flocat.xpath("parent::*/@ID").text
+        #      phy_struct_map.xpath("mets:fptr[@FILEID=#{id}]").xpath("parent::*/@ORDER").text
+
+        page_number                   = phy_struct_map.xpath("//mets:fptr[@FILEID='#{id}']", 'mets' => 'http://www.loc.gov/METS/').xpath("parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
+        fulltext.fulltext_page_number = page_number
 
 
         if @fulltextexist == 'true'
@@ -843,25 +867,38 @@ def processFulltexts(meta)
 
       product = @short_product
 
-      fulltext_uris.each { |fulltexturi|
+      fulltext_FLocat.each { |flocat|
 
         fulltext = Fulltext.new
 
+        uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
         begin
-          match  = fulltexturi.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+          match  = uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
           page   = match[4]
           format = match[5]
           from   = match[0]
         rescue Exception => e
-          @logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}")
-          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{fulltexturi} \t#{e.message}\n\t#{e.backtrace}")
-          fulltext.fulltext     = "ERROR"
-          fulltext.fulltext_ref = "ERROR"
+          @logger.error("[mets_indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
+          @file_logger.error("[mets_indexer] No regex match for fulltext URI #{uri} \t#{e.message}\n\t#{e.backtrace}")
+          fulltext.fulltext             = "ERROR"
+          fulltext.fulltext_ref         = "ERROR"
+          fulltext.fulltext_of_work     = "ERROR"
+          fulltext.fulltext_page_number = "ERROR"
+
           fulltextArr << fulltext
           next
         end
 
-        to_dir = "#{@teioutpath}/#{product}/#{work}"
+        #to_dir = "#{@teioutpath}/#{product}/#{work}"
+
+        fulltext.fulltext_of_work = work
+
+        id                            = flocat.xpath("parent::*/@ID").text
+        #        phy_struct_map.xpath("mets:fptr[@FILEID=#{id}]").xpath("parent::*/@ORDER").text
+
+        page_number                   = phy_struct_map.xpath("//mets:fptr[@FILEID='#{id}']", 'mets' => 'http://www.loc.gov/METS/').xpath("parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
+        fulltext.fulltext_page_number = page_number
 
         if @fulltextexist == 'true'
           ftext = getFulltext(from)
@@ -880,7 +917,7 @@ def processFulltexts(meta)
           fulltextArr << fulltext
         end
 
-        # todo is it required to copy the fulltexts?
+        # todo not required to copy the fulltexts, retrieved via HTTP
         #fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
 
       }
@@ -1544,8 +1581,7 @@ def parseDoc(doc, source)
       metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
       unless metsFullTextUriElements.empty?
-        meta.addFulltextUri = metsFullTextUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processFulltexts(meta)
+        processFulltexts(meta, doc)
       end
     rescue Exception => e
       @logger.error("[mets_indexer] Problems to resolve full texts for #{source} (#{e.message})")
@@ -1673,8 +1709,8 @@ $vertx.execute_blocking(lambda { |future|
           metsModsMetadata = parsePPN(ppn)
 
           if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.to_solr_string)
-
+            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
+            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
 
             @logger.info "[mets_indexer] Finish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
@@ -1694,7 +1730,8 @@ $vertx.execute_blocking(lambda { |future|
           metsModsMetadata = parsePath(path)
 
           if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.to_solr_string)
+            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
+            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
 
             @logger.info "[mets_indexer] Finish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else

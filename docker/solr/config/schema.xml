@@ -468,7 +468,8 @@
         <field name="fulltext" type="text_ci" indexed="true" stored="true"/>
         <field name="fulltext_with_tags" type="text_ci" indexed="true" stored="true"/>
         <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
-
+        <field name="fulltext_of_work" type="text_ci" indexed="true" stored="true"/>
+        <field name="fulltext_page_number" type="tint" indexed="true" stored="true"/>
 
         <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
