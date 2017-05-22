@@ -76,7 +76,7 @@ GET 127.0.0.1:8080     /api/reindexer/status
 ##### Convert a document
 
 ```
-POST 127.0.0.1:8080     /api/converter/works
+POST 127.0.0.1:8080     /api/converter/jobs
 {
 	"ppn": "PPN591416441",
 	"context": "gdz"
