@@ -337,6 +337,16 @@
    <!-- <checkIntegrityAtMerge>false</checkIntegrityAtMerge> -->
   </indexConfig>
 
+  <!-- Common parameters for the custom search handlers -->
+  <initParams path="/search,/facets,/fulltext,/query">
+    <lst name="defaults">
+      <str name="omitHeader">false</str>
+      <str name="echoParams">all</str>
+      <str name="wt">json</str>
+      <int name="timeAllowed">15000</int>
+    </lst>
+  </initParams>
+
 
   <!-- JMX
 
