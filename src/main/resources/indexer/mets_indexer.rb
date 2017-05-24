@@ -1116,7 +1116,7 @@ def getInfoFromMetsMptrs(mptrs)
 
 end
 
-def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
+def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, source)
 
   logicalElement = LogicalElement.new
 
@@ -1168,6 +1168,9 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       logicalElement.part_work    = hsh['work']
       #logicalElement.volume_uri = volume_uri
       logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
+    else
+      @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
+      @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
     end
 
   elsif level == 0
@@ -1198,16 +1201,16 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
 end
 
-def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level)
+def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level, source)
 
-  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level)
+  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, source)
 
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
 
   unless divs.empty?
     divs.each { |innerdiv|
-      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1)
+      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1, source)
     }
   end
 
@@ -1629,7 +1632,7 @@ def parseDoc(doc, source)
   maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
 
 
-  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0)
+  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0, source)
 
 
   meta.addLogicalElement = logicalElementArr
