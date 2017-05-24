@@ -343,7 +343,7 @@
       <str name="omitHeader">false</str>
       <str name="echoParams">all</str>
       <str name="wt">json</str>
-      <int name="timeAllowed">15000</int>
+      <int name="timeAllowed">25000</int>
     </lst>
   </initParams>
 
