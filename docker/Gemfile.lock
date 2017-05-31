@@ -2,6 +2,8 @@ GEM
   remote: https://rubygems.org/
   specs:
     builder (3.2.2)
+    domain_name (0.5.24)
+      unf (>= 0.0.5, < 1.0.0)
     elasticsearch (2.0.0)
       elasticsearch-api (= 2.0.0)
       elasticsearch-transport (= 2.0.0)
@@ -14,12 +16,18 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday_middleware (0.10.0)
       faraday (>= 0.7.4, < 0.10)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
     json_pure (2.0.2)
     logger (1.2.8)
+    mime-types (3.1)
+      mime-types-data (~> 3.2015)
+    mime-types-data (3.2016.0521)
     mini_magick (4.5.1)
     mini_portile2 (2.1.0)
     multi_json (1.12.1)
     multipart-post (2.0.0)
+    netrc (0.11.0)
     nokogiri (1.6.8)
       mini_portile2 (~> 2.1.0)
       pkg-config (~> 1.1.7)
@@ -30,8 +38,16 @@ GEM
     orchard (0.2)
     pkg-config (1.1.7)
     redis (3.3.1)
-    rsolr (1.1.2)
+    rest-client (2.0.2)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
+    rsolr (2.0.2)
       builder (>= 2.1.2)
+      faraday
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.6)
 
 PLATFORMS
   ruby
@@ -45,7 +61,5 @@ DEPENDENCIES
   oai (~> 0.4.0)
   orchard (~> 0.2)
   redis (~> 3.3, >= 3.3.1)
-  rsolr (~> 1.1, >= 1.1.2)
-
-BUNDLED WITH
-   1.12.5
+  rest-client (~> 2.0, >= 2.0.2)
+  rsolr (~> 2.0, >= 2.0.2)

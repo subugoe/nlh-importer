@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 
 
-gem 'rsolr', '~> 1.1', '>= 1.1.2'
+gem 'rsolr', '~> 2.0', '>= 2.0.2'
 gem 'elasticsearch', '~> 2.0'
 
 
@@ -25,3 +25,6 @@ gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 
 # gem 'rmagick', '~> 2.16'
 gem "mini_magick"
+
+
+gem 'rest-client', '~> 2.0', '>= 2.0.2'
