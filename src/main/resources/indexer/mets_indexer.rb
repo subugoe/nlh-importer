@@ -361,7 +361,7 @@ def getClassification(modsClassificationElements)
   return classificationArr
 end
 
-def getOriginInfo(modsOriginInfoElements)
+def getOriginInfo(modsOriginInfoElements, source)
 
   originalInfoArr = Array.new
   editionInfoArr  = Array.new
@@ -385,6 +385,9 @@ def getOriginInfo(modsOriginInfoElements)
       captured_start_date = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
       captured_end_date   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
+      captured_start_date = oi.xpath("mods:dateCaptured", 'mods' => 'http://www.loc.gov/mods/v3').text if captured_start_date == ''
+
+
       unless captured_start_date == ''
         originInfo.date_captured_string = captured_start_date
         originInfo.date_captured_start  = captured_start_date.to_i
@@ -395,6 +398,11 @@ def getOriginInfo(modsOriginInfoElements)
         originInfo.date_captured_end = captured_end_date.to_i
       end
 
+
+      if originInfo.date_captured_start == 0
+        @logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{source} (check conversion problem)")
+        @file_logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{source} (check conversion problem)")
+      end
 
     else
       # The date that the resource was published, released or issued.
@@ -409,6 +417,11 @@ def getOriginInfo(modsOriginInfoElements)
 
       unless issued_end_date == ''
         originInfo.date_issued_end = issued_end_date.to_i
+      end
+
+      if originInfo.date_issued_start == 0
+        @logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{source} (check conversion problem)")
+        @file_logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{source} (check conversion problem)")
       end
 
     end
