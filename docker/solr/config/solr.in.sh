@@ -23,7 +23,7 @@
 
 # Expert: If you want finer control over memory options, specify them directly
 # Comment out SOLR_HEAP if you are using this though, that takes precedence
-SOLR_JAVA_MEM="-Xms512m -Xmx6G"
+SOLR_JAVA_MEM="-Xms512m -Xmx3G"
 
 # Enable verbose GC logging
 GC_LOG_OPTS="-verbose:gc -XX:+PrintHeapAtGC -XX:+PrintGCDetails \
@@ -119,3 +119,4 @@ SOLR_PORT=8983
 # Settings for authentication
 #SOLR_AUTHENTICATION_CLIENT_CONFIGURER=
 #SOLR_AUTHENTICATION_OPTS=
+
