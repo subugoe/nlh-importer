@@ -1380,7 +1380,7 @@ def parseDoc(doc, source)
     modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
     unless modsOriginInfoElements.empty?
-      originInfoHash       = getOriginInfo(modsOriginInfoElements)
+      originInfoHash       = getOriginInfo(modsOriginInfoElements, source)
       meta.addOriginalInfo = originInfoHash[:original]
       meta.addEditionInfo  = originInfoHash[:edition]
     end
