@@ -23,6 +23,7 @@ services:
     depends_on:
       - solr
       - redis
+      - importer_services
     mem_limit: 3GB
     environment:
       - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
@@ -35,9 +36,6 @@ services:
     volumes:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    depends_on:
-      - solr
-      - redis
     ports:
       - "8080:8080"
     mem_limit: 1GB
@@ -58,6 +56,7 @@ services:
     depends_on:
       - solr
       - redis
+      - importer_services
     mem_limit: 3GB
     environment:
       - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
@@ -84,6 +83,7 @@ services:
     environment:
       - JAVA_OPTS=-Xms512M -Xmx2G
       - SOLR_JAVA_MEM=-Xms512M -Xmx2G
+      - JVM_ARGS=-Xms512M -Xmx2G
       - myUID=$myUID
     entrypoint:
       - docker-entrypoint.sh
