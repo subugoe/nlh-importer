@@ -73,7 +73,6 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
-
 def modifyUrisInArray(images, object_uri)
   arr = images.collect { |uri|
     switchToFedoraUri uri, object_uri
@@ -851,8 +850,8 @@ def processFulltexts(meta, doc)
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
 
-            @logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
-            @file_logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+            @logger.error("[mets_indexer] Could not load fulltext #{from}")
+            @file_logger.error("[mets_indexer] Could not load fulltext #{from}")
           else
             fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
             fulltext.fulltext_ref = from
@@ -920,8 +919,8 @@ def processFulltexts(meta, doc)
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
 
-            @logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
-            @file_logger.error("[mets_indexer] Could not load fulltext #{fulltexturi}")
+            @logger.error("[mets_indexer] Could not load fulltext #{from}")
+            @file_logger.error("[mets_indexer] Could not load fulltext #{from}")
           else
             fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
             fulltext.fulltext_ref = from
@@ -1181,9 +1180,6 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       logicalElement.part_work    = hsh['work']
       #logicalElement.volume_uri = volume_uri
       logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
-    else
-      @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
-      @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
     end
 
   elsif level == 0
@@ -1570,7 +1566,6 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-#=end
 
   if checkwork(doc) != nil
 
@@ -1590,8 +1585,6 @@ def parseDoc(doc, source)
       @file_logger.error("[mets_indexer] Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
-    # =begin
-
     # full texts
     begin
       metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
@@ -1604,7 +1597,6 @@ def parseDoc(doc, source)
       @file_logger.error("[mets_indexer] Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
-# =end
 
   else
 
@@ -1728,9 +1720,9 @@ $vertx.execute_blocking(lambda { |future|
             addDocsToSolr(metsModsMetadata.doc_to_solr_string)
             addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
 
-            @logger.info "[mets_indexer] Finish indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Finish indexing METS: #{ppn} "
           else
-            @logger.error "[mets_indexer] Could not process #{ppn} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "[mets_indexer] Could not process #{ppn} metadata, object is nil "
             @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
             next
           end
@@ -1749,15 +1741,15 @@ $vertx.execute_blocking(lambda { |future|
             addDocsToSolr(metsModsMetadata.doc_to_solr_string)
             addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
 
-            @logger.info "[mets_indexer] Finish indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Finish indexing METS: #{path} "
           else
-            @logger.error "[mets_indexer] Could not process #{path} metadata, object is nil \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "[mets_indexer] Could not process #{path} metadata, object is nil "
             @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
             next
           end
 
         else
-          @logger.error "[mets_indexer] Could not process context '#{@context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.error "[mets_indexer] Could not process context '#{@context}'"
           next
         end
       end
