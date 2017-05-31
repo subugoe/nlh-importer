@@ -84,7 +84,7 @@ def reindex(context)
 
       arr = Array.new
 
-      gdz_works = @gdzsolr.get 'select', :params => {:q => "isanchor:true", :sort => "pid asc", :fl => "pid", :wt => "csv", :rows => 100000, :indent => "true"}
+      gdz_works = @gdzsolr.get 'select', :params => {:q => "isanchor:true OR iswork:true", :sort => "pid asc", :fl => "pid", :wt => "csv", :rows => 100000, :indent => "true"}
       ppn_arr   = gdz_works.split("\n")
       ppn_arr.each { |ppn|
         arr << {"ppn" => ppn, "context" => "gdz"}.to_json
