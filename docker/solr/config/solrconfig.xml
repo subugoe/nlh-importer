@@ -338,7 +338,7 @@
   </indexConfig>
 
   <!-- Common parameters for the custom search handlers -->
-  <initParams path="/search,/facets,/fulltext,/query">
+  <initParams path="/search,/facets,/fulltext,/query,/select">
     <lst name="defaults">
       <str name="omitHeader">false</str>
       <str name="echoParams">all</str>
@@ -503,8 +503,8 @@
          be based on the last SolrCore to be initialized.
 
       -->
-    <maxBooleanClauses>1024</maxBooleanClauses>
-
+    <!--<maxBooleanClauses>1024</maxBooleanClauses>-->
+    <maxBooleanClauses>20000</maxBooleanClauses>
 
     <!-- Solr Internal Query Caches
 
@@ -905,7 +905,8 @@
          will be overridden by parameters in the request
       -->
     <lst name="defaults">
-      <str name="echoParams">explicit</str>
+      <!--<str name="echoParams">explicit</str>-->
+      <str name="echoParams">all</str>
       <int name="rows">10</int>
       <str name="df">default</str>
       <str name="q.op">AND</str>
