@@ -10,10 +10,10 @@ logger.debug "[start_services] Running in #{Java::JavaLang::Thread.current_threa
 converter_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'blockedThreadCheckInterval' => 60000,
-    'warningExceptionTime'       => 45000,
-    'maxWorkerExecuteTime'       => 3600000000000,
-    'maxEventLoopExecuteTime'    => 60000000000,
+    'blockedThreadCheckInterval' => 3600000,
+    'warningExceptionTime'       => 3600000,
+    'maxWorkerExecuteTime'       => 3400000000000,
+    'maxEventLoopExecuteTime'    => 600000000000,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
@@ -21,23 +21,22 @@ converter_service_options = {
 indexer_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'blockedThreadCheckInterval' => 60000,
-    'warningExceptionTime'       => 45000,
-    'maxWorkerExecuteTime'       => 3600000000000,
-    'maxEventLoopExecuteTime'    => 60000000000,
+    'blockedThreadCheckInterval' => 3600000,
+    'warningExceptionTime'       => 3600000,
+    'maxWorkerExecuteTime'       => 3400000000000,
+    'maxEventLoopExecuteTime'    => 600000000000,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
 
 reindex_service_options = {
     'instances'                  => 1,
     'worker'                     => true,
-    'blockedThreadCheckInterval' => 60000,
-    'warningExceptionTime'       => 45000,
-    'maxWorkerExecuteTime'       => 3600000000000,
-    'maxEventLoopExecuteTime'    => 60000000000,
+    'blockedThreadCheckInterval' => 3600000,
+    'warningExceptionTime'       => 3600000,
+    'maxWorkerExecuteTime'       => 3400000000000,
+    'maxEventLoopExecuteTime'    => 600000000000,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
-
 
 # indexing service endpoint
 $vertx.deploy_verticle("services/indexer_service_verticle.rb", indexer_service_options)
