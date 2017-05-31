@@ -358,6 +358,8 @@
         <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
         <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
 
+        <field name="title_page_index" type="tint" indexed="false" stored="true"/>
+
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_extent" type="string_mv" indexed="true" stored="true" multiValued="true"/>

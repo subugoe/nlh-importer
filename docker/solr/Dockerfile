@@ -35,6 +35,8 @@ COPY  config/protwords.txt      $SOLR_CORE/conf/protwords.txt
 COPY  config/elevate.xml        $SOLR_CORE/conf/elevate.xml
 COPY  config/_rest_managed.json $SOLR_CORE/conf/_rest_managed.json
 
+COPY  config/sub/jetty.xml      $SOLR_SERVER_BASE/etc/jetty.xml
+
 COPY  config/_schema_analysis_stopwords_english.json    $SOLR_CORE/conf/_schema_analysis_stopwords_english.json
 COPY  config/_schema_analysis_synonyms_english.json     $SOLR_CORE/conf/_schema_analysis_synonyms_english.json
 COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE/conf/admin-extra.menu-bottom.html
