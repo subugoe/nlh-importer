@@ -41,11 +41,12 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
     hsh = routingContext.get_body_as_json
 
     if hsh == nil
-      @logger.error("[converter_service] Expected JSON body missing \t#{e.message}")
-      @file_logger.error("[converter_service]  Expected JSON body missing \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[converter_service] Expected JSON body missing")
+      @file_logger.error("[converter_service]  Expected JSON body missing")
       send_error(400, response)
     else
-      pushToQueue(@queue, [hsh.to_json])
+      @logger.info("[converter_service] Got message: \t#{hsh}")p
+      ushToQueue(@queue, [hsh.to_json])
     end
 
 

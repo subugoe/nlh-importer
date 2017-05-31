@@ -48,9 +48,11 @@ router.post("/api/indexer/jobs").blocking_handler(lambda { |routingContext|
     hsh = routingContext.get_body_as_json
 
     if hsh == nil
-      @logger.error("[indexer_service] Expected JSON body missing \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[indexer_service] Expected JSON body missing")
+      @file_logger.error("[indexer_service]  Expected JSON body missing")
       send_error(400, response)
     else
+      @logger.info("[indexer_service] Got message: \t#{hsh}")
       pushToQueue(@queue, [hsh.to_json])
     end
 
