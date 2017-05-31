@@ -114,9 +114,12 @@ router.post("/api/reindexer/jobs").blocking_handler(lambda { |routingContext|
     hsh = routingContext.get_body_as_json
 
     if hsh == nil
-      @logger.error("[reindex_service] Expected JSON body missing \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[reindex_service] Expected JSON body missing")
+      @file_logger.error("[reindex_service]  Expected JSON body missing")
       send_error(400, response)
     else
+
+      @logger.info("[reindex_service] Got message: \t#{hsh}")
 
       json = JSON.parse hsh.to_json
 
