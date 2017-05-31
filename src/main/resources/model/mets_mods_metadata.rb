@@ -740,22 +740,25 @@ class MetsModsMetadata
 
     if @iswork == true
 
-      fulltext           = Array.new
-      fulltext_ref       = Array.new
-      fulltext_with_tags = Array.new
+      fulltext_arr = Array.new
+      fulltext_ref_arr = Array.new
 
       summary_name              = Array.new
       summary_content           = Array.new
       summary_ref               = Array.new
       summary_content_with_tags = Array.new
 
+
+
       @fulltexts.each { |ft|
-
-        fulltext << ft.fulltext
-        fulltext_ref << ft.fulltext_ref
-        fulltext_with_tags << ft.fulltext_with_tags
-
+        fulltext_arr << ft.fulltext
+        fulltext_ref_arr << ft.fulltext_ref
       }
+
+
+#      h.merge! ({:doc => docs})
+#      h.merge! ({:_childDocuments_ => docs})
+
 
       @summary.each { |summary|
 
@@ -766,9 +769,8 @@ class MetsModsMetadata
 
       }
 
-      h.merge! ({:fulltext => fulltext})
-      h.merge! ({:fulltext_ref => fulltext_ref})
-      h.merge! ({:fulltext_with_tags => fulltext_with_tags})
+      h.merge! ({:fulltexts => fulltext_arr})
+      h.merge! ({:fulltext_ref => fulltext_ref_arr})
 
       h.merge! ({:summary_name => summary_name})
       h.merge! ({:summary_content => summary_content})
@@ -782,55 +784,6 @@ class MetsModsMetadata
 
     return h
   end
-
-
-  def checkInSolr
-    inpath = '/Volumes/gdzs-1/nlh/mets/emo'
-    paths  = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-    paths.each { |path|
-
-      doc              = File.open(path) { |f| Nokogiri::XML(f) { |config| config.noblanks } }
-      mods             = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
-      recordIdentifier = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').first.text
-
-      solr = RSolr.connect :url => 'http://134.76.19.103:8443/solr/nlh'
-
-      q        = "id:#{recordIdentifier}"
-      response = solr.get 'select', :params => {:q => q}
-      if response['response']['docs'].empty?
-        puts path
-      end
-
-
-    }
-  end
-
-  def checkMupltipleUsedId
-
-    hsh      = Hash.new
-    err_keys = Set.new
-
-    inpath = '/Volumes/gdzs-1/nlh/mets/emo'
-    paths  = Dir.glob("#{inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-    paths.each { |path|
-
-      doc              = File.open(path) { |f| Nokogiri::XML(f) { |config| config.noblanks } }
-      mods             = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
-      recordIdentifier = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').first.text
-
-      unless hsh.include? recordIdentifier
-        hsh[recordIdentifier] = [path]
-      else
-        hsh[recordIdentifier] << [path]
-        err_keys << recordIdentifier
-      end
-
-      err_keys.each { |key|
-        puts hsh[key]
-      }
-    }
-  end
-
 
 end
 
