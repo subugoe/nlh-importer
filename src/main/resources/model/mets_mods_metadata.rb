@@ -35,7 +35,7 @@ class MetsModsMetadata
                 :page_keys,
                 :image_format,
 
-                #          :volumes,
+                :title_page_index,
 
                 :subjects,
                 :related_items,
@@ -250,7 +250,6 @@ class MetsModsMetadata
 
     docs = Array.new
 
-
     if @iswork == true
 
       @fulltexts.each { |ft|
@@ -260,7 +259,6 @@ class MetsModsMetadata
         h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
         h.merge! ({:fulltext => ft.fulltext})
         h.merge! ({:fulltext_ref => ft.fulltext_ref})
-        h.merge! ({:fulltext_with_tags => ft.fulltext_with_tags})
         h.merge! ({:fulltext_of_work => ft.fulltext_of_work})
         h.merge! ({:fulltext_page_number => ft.fulltext_page_number})
         h.merge! ({:doctype => 'fulltext'})
@@ -327,7 +325,6 @@ class MetsModsMetadata
 
     h.merge! ({:subtitle => subtitle})
     h.merge! ({:bytitle => sorttitle.join('; ')})
-
 
 
     #    h.merge! ({:id => @record_identifiers.first[1]})
@@ -603,6 +600,9 @@ class MetsModsMetadata
       level << el.level
 
     }
+
+    @title_page_index = 1 if @title_page_index == nil
+    h.merge! ({:title_page_index => @title_page_index})
 
     h.merge! ({:log_id => id})
     h.merge! ({:log_type => type})
