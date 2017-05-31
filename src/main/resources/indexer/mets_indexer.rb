@@ -1128,7 +1128,7 @@ def getInfoFromMetsMptrs(mptrs)
 
 end
 
-def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, source)
+def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, meta)
 
   logicalElement = LogicalElement.new
 
@@ -1196,6 +1196,17 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
   unless logicalElementStartStopMapping[logicalElement.id] == nil
     logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
     logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"]
+
+    if doctype != "collection"
+      if logicalElement.type != ' '
+        if (logicalElement.type == "titlepage") || (logicalElement.type  == "title_page") || (logicalElement.type  == "TitlePage") || (logicalElement.type  == "Title_Page")
+          meta.title_page_index = logicalElement.start_page_index if meta.title_page_index == nil
+        end
+      end
+
+
+
+    end
   else
     logicalElement.start_page_index = -1
     logicalElement.end_page_index   = -1
@@ -1210,16 +1221,16 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
 end
 
-def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level, source)
+def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level, meta)
 
-  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, source)
+  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, meta)
 
   divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
 
 
   unless divs.empty?
     divs.each { |innerdiv|
-      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1, source)
+      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1, meta)
     }
   end
 
@@ -1637,7 +1648,12 @@ def parseDoc(doc, source)
   maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
 
 
-  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0, source)
+  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0, meta)
+
+  if (meta.doctype == "collection") & (logicalElementArr.empty?)
+    @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
+    @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
+  end
 
 
   meta.addLogicalElement = logicalElementArr
