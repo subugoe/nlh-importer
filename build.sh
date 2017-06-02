@@ -27,7 +27,7 @@ cp docker-compose_deploy_orig.yml docker-compose_deploy.yml
 cp docker/Dockerfile_orig  docker/Dockerfile
 cp docker/solr/Dockerfile_orig  docker/solr/Dockerfile
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core.properties
-cp .env.dist .env
+cp .env_orig .env
 
 
 SERVICE_VERTICLE=start_services.rb
@@ -77,9 +77,6 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
-
-echo $environment
-echo "$environment"
 
 if [ "$environment" == "develop" ]
 
