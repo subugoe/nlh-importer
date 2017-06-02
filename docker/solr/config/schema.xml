@@ -468,13 +468,13 @@
 
 
         <!--<field name="fulltexts" type="text_ci" indexed="true" stored="false" />-->
-        <field name="fulltexts" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
-        <field name="fulltext_refs" type="string" indexed="true" stored="true"/>
+        <field name="fulltext" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
+        <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
 
-        <field name="fulltext" type="string" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
-        <field name="fulltext_ref" type="string" indexed="true" stored="true"/>
-        <field name="fulltext_of_work" type="string" indexed="true" stored="true"/>
-        <field name="fulltext_page_number" type="tint" indexed="true" stored="true"/>
+        <field name="ft" type="string" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
+        <field name="ft_ref" type="string" indexed="true" stored="true"/>
+        <field name="ft_of_work" type="string" indexed="true" stored="true"/>
+        <field name="ft_page_number" type="tint" indexed="true" stored="true"/>
 
         <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
@@ -523,8 +523,8 @@
     <copyField source="summary_name" dest="metadata"/>
 
     <!-- copy fields into default for search -->
-    <copyField source="fulltexts" dest="default"/>
     <copyField source="fulltext" dest="default"/>
+    <copyField source="ft" dest="default"/>
     <copyField source="summary_content" dest="default"/>
     <copyField source="title" dest="default"/>
     <copyField source="subtitle" dest="default"/>
