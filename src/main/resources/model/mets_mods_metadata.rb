@@ -257,10 +257,10 @@ class MetsModsMetadata
         h = Hash.new
 
         h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
-        h.merge! ({:fulltext => ft.fulltext})
-        h.merge! ({:fulltext_ref => ft.fulltext_ref})
-        h.merge! ({:fulltext_of_work => ft.fulltext_of_work})
-        h.merge! ({:fulltext_page_number => ft.fulltext_page_number})
+        h.merge! ({:ft => ft.fulltext})
+        h.merge! ({:ft_ref => ft.fulltext_ref})
+        h.merge! ({:ft_of_work => ft.fulltext_of_work})
+        h.merge! ({:ft_page_number => ft.fulltext_page_number})
         h.merge! ({:doctype => 'fulltext'})
 
         docs << h
@@ -749,15 +749,10 @@ class MetsModsMetadata
       summary_content_with_tags = Array.new
 
 
-
       @fulltexts.each { |ft|
         fulltext_arr << ft.fulltext
         fulltext_ref_arr << ft.fulltext_ref
       }
-
-
-#      h.merge! ({:doc => docs})
-#      h.merge! ({:_childDocuments_ => docs})
 
 
       @summary.each { |summary|
@@ -769,7 +764,7 @@ class MetsModsMetadata
 
       }
 
-      h.merge! ({:fulltexts => fulltext_arr})
+      h.merge! ({:fulltext => fulltext_arr})
       h.merge! ({:fulltext_ref => fulltext_ref_arr})
 
       h.merge! ({:summary_name => summary_name})
