@@ -468,11 +468,12 @@
 
 
         <!--<field name="fulltexts" type="text_ci" indexed="true" stored="false" />-->
-        <field name="fulltexts" type="text_ci" indexed="true" stored="true" />
-        <field name="fulltext" type="string" indexed="true" stored="true"/>
-        <field name="fulltext_with_tags" type="text_ci" indexed="true" stored="true"/>
-        <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
-        <field name="fulltext_of_work" type="text_ci" indexed="true" stored="true"/>
+        <field name="fulltexts" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
+        <field name="fulltext_refs" type="string" indexed="true" stored="true"/>
+
+        <field name="fulltext" type="string" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
+        <field name="fulltext_ref" type="string" indexed="true" stored="true"/>
+        <field name="fulltext_of_work" type="string" indexed="true" stored="true"/>
         <field name="fulltext_page_number" type="tint" indexed="true" stored="true"/>
 
         <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
