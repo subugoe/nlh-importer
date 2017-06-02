@@ -17,14 +17,22 @@ cd nlh-importer
 
 The nlh-importer directory is the project root, and the base directory for docker commands. 
 
-##### Preparation: For GDZ Reindex set the user/password to access the GDZ Solr 
+##### Preparation: Set environment variables 
+
+```
+export solr_core=gdz            # set the solr core for the local solr (gdz is default)            
+export environment=develop      # develop is default, rquired in build.sh to distinguish the docker-compose config file
+
+```
+
+##### Preparation: For GDZ Reindex set the user/password to access the (remote) GDZ Solr 
 
 ```
 export solr_user=changeme
 export solr_password=changeme
 ```
 
-##### Preparation: Change the config file rootdir/.env.dist
+##### Preparation: Change the config file rootdir/.env_orig
 
 TODO
 
