@@ -74,7 +74,7 @@ services:
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - solrdata/:/opt/solr/server/solr/mycores/nlh/data/
+      - solrdata/:/opt/solr/server/solr/mycores/<solr_core>/data/
     mem_limit: 3GB
     env_file:
       - .env
@@ -86,7 +86,7 @@ services:
     entrypoint:
       - docker-entrypoint.sh
       - solr-precreate
-      - nlh
+      - <solr_core>
 
   redis:
     image: redis:3.0

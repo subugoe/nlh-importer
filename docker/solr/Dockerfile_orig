@@ -3,10 +3,11 @@ MAINTAINER  Jörg Panzer, SUB (based on https://github.com/docker-solr/docker-so
 
 
 #/opt/solr/server/solr/mycores
-#/opt/solr/server/solr/cores/nlh
+#/opt/solr/server/solr/cores/gdz
 
+ENV SOLR_SERVER_BASE /opt/solr/server
 ENV SOLR_BASE /opt/solr/server/solr
-ENV SOLR_CORE /opt/solr/server/solr/mycores/nlh
+ENV SOLR_CORE /opt/solr/server/solr/mycores/<solr_core>
 
 RUN echo $SOLR_BASE
 RUN echo $SOLR_CORE
