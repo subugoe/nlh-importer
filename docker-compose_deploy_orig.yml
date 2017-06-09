@@ -74,7 +74,8 @@ services:
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - solrdata/:/opt/solr/server/solr/mycores/<solr_core>/data/
+      - ./data/solr/<solr_core>/data/:/opt/solr/server/solr/mycores/<solr_core>/data/
+      - ./data/solr/<solr_core2>/data/:/opt/solr/server/solr/mycores/<solr_core2>/data/
     mem_limit: 3GB
     env_file:
       - .env
@@ -83,10 +84,7 @@ services:
       - SOLR_JAVA_MEM=-Xms512M -Xmx2G
       - JVM_ARGS=-Xms512M -Xmx2G
       - myUID=$myUID
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - <solr_core>
+
 
   redis:
     image: redis:3.0

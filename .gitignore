@@ -22,6 +22,7 @@ data/*
 !**/.vertx/.gitkeep
 docker/Dockerfile
 docker/solr/config/sub/core.properties
+docker/solr/config/sub/core2.properties
 
 docker-compose.yml
 docker-compose_deploy.yml
@@ -33,4 +34,4 @@ docker/solr/consig/sub/core.properties
 build_l.sh
 
 
-
+test*.*

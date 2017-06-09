@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
+
 if [ -z "$solr_core" ]
 then
     export solr_core="gdz"
+fi
+
+
+if [ -z "$solr_core2" ]
+then
+    export solr_core2="gdz_tmp"
 fi
 
 
@@ -16,6 +23,10 @@ export solr_core=${solr_core}
 export myUID=`id -u ${whoami}`
 export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | awk '{print $NF}') | grep 'inet ' | awk '{print $2}' | grep -Eo '([0-9]*\.){3}[0-9]*'`
 
+mkdir -p data/solr/$solr_core/data/
+mkdir -p data/solr/$solr_core2/data/
+
+#chown -R $SOLR_USER:$SOLR_USER $SOLR_BASE
 
 cp src/main/resources/start_services.rb docker/
 cp src/main/resources/start_indexer.rb docker/
@@ -27,6 +38,7 @@ cp docker-compose_deploy_orig.yml docker-compose_deploy.yml
 cp docker/Dockerfile_orig  docker/Dockerfile
 cp docker/solr/Dockerfile_orig  docker/solr/Dockerfile
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core.properties
+cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.properties
 cp .env_orig .env
 
 
@@ -37,39 +49,61 @@ VERTICLE_HOME=/usr/verticles
 
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' "s|<UID>|${myUID}|" ./docker/Dockerfile
-    sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" ./docker/Dockerfile
-    sed -i '' "s|<solr_core>|${solr_core}|" ./docker/solr/Dockerfile
-    sed -i '' "s|<solr_core>|${solr_core}|" ./docker/solr/config/sub/core.properties
-    sed -i '' "s|<solr_core>|${solr_core}|" ./docker-compose.yml
-    sed -i '' "s|<solr_core>|${solr_core}|" ./docker-compose_deploy.yml
+    sed -i '' "s|<UID>|${myUID}|"                               ./docker/Dockerfile
+    sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             ./docker/Dockerfile
 
-    sed -i '' "s|<myIP>|${myIP}|" .env
-    sed -i '' "s|<solr_core>|${solr_core}|" .env
+    sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
+    sed -i '' "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
 
-    sed -i '' "s|<solr_user>|${solr_user}|" .env
-    sed -i '' "s|<solr_password>|${solr_password}|" .env
-    sed -i '' "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
-    sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
-    sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
-    sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
+    sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
+    sed -i '' "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+    sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
+    sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
+
+    sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose_deploy.yml
+    sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose_deploy.yml
+
+
+    sed -i '' "s|<myIP>|${myIP}|"                               .env
+
+    sed -i '' "s|<solr_core>|${solr_core}|"                     .env
+    sed -i '' "s|<solr_core2>|${solr_core2}|"                   .env
+
+    sed -i '' "s|<solr_password>|${solr_password}|"             .env
+
+    sed -i '' "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|"       .env
+    sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|"       .env
+    sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|"   .env
+    sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             .env
 else
-    sed -i "s|<UID>|${myUID}|" ./docker/Dockerfile
-    sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" ./docker/Dockerfile
-    sed -i "s|<solr_core>|${solr_core}|" ./docker/solr/Dockerfile
-    sed -i "s|<solr_core>|${solr_core}|" ./docker/solr/config/sub/core.properties
-    sed -i "s|<solr_core>|${solr_core}|" ./docker-compose.yml
-    sed -i "s|<solr_core>|${solr_core}|" ./docker-compose_deploy.yml
+    sed -i "s|<UID>|${myUID}|"                               ./docker/Dockerfile
+    sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             ./docker/Dockerfile
 
-    sed -i "s|<myIP>|${myIP}|" .env
-    sed -i "s|<solr_core>|${solr_core}|" .env
+    sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
+    sed -i "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
 
-    sed -i "s|<solr_user>|${solr_user}|" .env
-    sed -i "s|<solr_password>|${solr_password}|" .env
-    sed -i "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|" .env
-    sed -i "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|" .env
-    sed -i "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|" .env
-    sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|" .env
+    sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
+    sed -i "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+    sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
+    sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
+
+    sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose_deploy.yml
+    sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose_deploy.yml
+
+
+    sed -i "s|<myIP>|${myIP}|"                               .env
+
+    sed -i "s|<solr_core>|${solr_core}|"                     .env
+    sed -i "s|<solr_core2>|${solr_core2}|"                   .env
+
+    sed -i "s|<solr_password>|${solr_password}|"             .env
+
+    sed -i "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|"       .env
+    sed -i "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|"       .env
+    sed -i "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|"   .env
+    sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             .env
 fi
 
 
@@ -81,24 +115,25 @@ fi
 if [ "$environment" == "develop" ]
 
 then
-
-    #docker-compose build --force-rm --no-cache
+echo "in dev"
+    #docker-compose build --force-rm --no-cache solr
+    #docker-compose build --force-rm importer_converter importer_indexer importer_services redis
     docker-compose build --force-rm
 
     docker-compose stop
     docker-compose rm -f
-    docker-compose up -d importer_converter importer_indexer importer_services solr redis
-    #docker-compose up -d
+    #docker-compose up -d importer_converter importer_indexer importer_services solr redis
+    docker-compose up -d
 
 else
 
-    docker-compose -f docker-compose_deploy.yml build --force-rm --no-cache
-    #docker-compose -f docker-compose_deploy.yml build --force-rm
+    #docker-compose -f docker-compose_deploy.yml build --force-rm --no-cache
+    docker-compose -f docker-compose_deploy.yml build --force-rm
 
     docker-compose -f docker-compose_deploy.yml stop
     docker-compose -f docker-compose_deploy.yml rm -f
-    docker-compose -f docker-compose_deploy.yml up -d  importer_indexer importer_services importer_converter solr redis
-    #docker-compose up -d
+    #docker-compose -f docker-compose_deploy.yml up -d  importer_indexer importer_services importer_converter solr redis
+    docker-compose  -f docker-compose_deploy.yml up -d
 
 fi
 

@@ -79,6 +79,7 @@ SOLR_OPTS="$SOLR_OPTS -Xss1024k"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.autoCommit.maxTime=60000"
 #SOLR_OPTS="$SOLR_OPTS -Dsolr.clustering.enabled=true"
 SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=60"
+#SOLR_OPTS="$SOLR_OPTS  -Dsolr.allow.unsafe.resourceloading=true"
 
 # Location where the bin/solr script will save PID files for running instances
 # If not set, the script will create PID files in $SOLR_TIP/bin
