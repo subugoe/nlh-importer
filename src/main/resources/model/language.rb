@@ -1,7 +1,7 @@
 class LanguageTerm
 
   attr_accessor :authority # :languageterm, :authority, :type, :valueURI
-
+  attr_reader :languageterm
 
   CODE_HASH = {
 
@@ -522,10 +522,5 @@ class LanguageTerm
 
     @languageterm = lang.first
   end
-
-  def languageterm
-    @languageterm
-  end
-
 
 end
