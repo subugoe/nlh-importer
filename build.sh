@@ -26,8 +26,6 @@ export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | aw
 mkdir -p data/solr/$solr_core/data/
 mkdir -p data/solr/$solr_core2/data/
 
-#chown -R $SOLR_USER:$SOLR_USER $SOLR_BASE
-
 cp src/main/resources/start_services.rb docker/
 cp src/main/resources/start_indexer.rb docker/
 cp src/main/resources/start_converter.rb docker/
@@ -70,12 +68,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_core>|${solr_core}|"                     .env
     sed -i '' "s|<solr_core2>|${solr_core2}|"                   .env
 
+    sed -i '' "s|<solr_user>|${solr_user}|"                     .env
     sed -i '' "s|<solr_password>|${solr_password}|"             .env
 
     sed -i '' "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|"       .env
     sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|"       .env
     sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|"   .env
     sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             .env
+
 else
     sed -i "s|<UID>|${myUID}|"                               ./docker/Dockerfile
     sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             ./docker/Dockerfile
@@ -98,6 +98,7 @@ else
     sed -i "s|<solr_core>|${solr_core}|"                     .env
     sed -i "s|<solr_core2>|${solr_core2}|"                   .env
 
+    sed -i "s|<solr_user>|${solr_user}|"                     .env
     sed -i "s|<solr_password>|${solr_password}|"             .env
 
     sed -i "s|<SERVICE_VERTICLE>|${SERVICE_VERTICLE}|"       .env

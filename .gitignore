@@ -29,7 +29,6 @@ docker-compose_deploy.yml
 
 docker/Dockerfile
 docker/solr/Dockerfile
-docker/solr/consig/sub/core.properties
 
 build_l.sh
 
