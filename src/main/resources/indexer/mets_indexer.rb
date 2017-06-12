@@ -381,7 +381,7 @@ def getOriginInfo(modsOriginInfoElements, source)
       # multi_ dateCaptured[encoding, point, keyDate]/value
       # just the start
 
-      captured_start_date = oi.xpath("mods:dateCaptured[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      captured_start_date = oi.xpath("mods:dateCaptured[@keyDate='yes' or @point='start']", 'mods' => 'http://www.loc.gov/mods/v3').text
       captured_end_date   = oi.xpath("mods:dateCaptured[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       captured_start_date = oi.xpath("mods:dateCaptured", 'mods' => 'http://www.loc.gov/mods/v3').text if captured_start_date == ''
@@ -389,12 +389,12 @@ def getOriginInfo(modsOriginInfoElements, source)
 
       unless captured_start_date == ''
         originInfo.date_captured_string = captured_start_date
-        originInfo.date_captured_start  = captured_start_date.to_i
+        originInfo.date_captured_start  = captured_start_date
       end
 
 
       unless captured_end_date == ''
-        originInfo.date_captured_end = captured_end_date.to_i
+        originInfo.date_captured_end = captured_end_date
       end
 
 
@@ -406,16 +406,16 @@ def getOriginInfo(modsOriginInfoElements, source)
     else
       # The date that the resource was published, released or issued.
       # multi:  dateIssued[encoding, point, keyDate]/value
-      issued_start_date = oi.xpath("mods:dateIssued[@keyDate='yes']", 'mods' => 'http://www.loc.gov/mods/v3').text
+      issued_start_date = oi.xpath("mods:dateIssued[@keyDate='yes' or @point='start']", 'mods' => 'http://www.loc.gov/mods/v3').text
       issued_end_date   = oi.xpath("mods:dateIssued[@point='end']", 'mods' => 'http://www.loc.gov/mods/v3').text
 
       unless issued_start_date == ''
         originInfo.date_issued_string = issued_start_date
-        originInfo.date_issued_start  = issued_start_date.to_i
+        originInfo.date_issued_start  = issued_start_date
       end
 
       unless issued_end_date == ''
-        originInfo.date_issued_end = issued_end_date.to_i
+        originInfo.date_issued_end = issued_end_date
       end
 
       if originInfo.date_issued_start == 0

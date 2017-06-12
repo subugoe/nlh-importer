@@ -1,36 +1,82 @@
 class OriginInfo
 
-  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
+  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_captured_string #,  :issuance, :eventType
+  attr_reader :date_issued_start, :date_issued_end, :date_captured_start, :date_captured_end
 
-  # def initialize
-  #   @publisher  = Array.new
-  #   @placeTerm  = Array.new
-  #   @dateIssues = Array.new
-  #
-  # end
-  #
-  # def addPlaceTerm(placeTerm)
-  #   @place << placeTerm
-  # end
-  #
-  # def addPublisher=(publisher)
-  #   @publisher << publisher
-  # end
-  #
-  # def addDateIssued(date)
-  #   @dateIssued << date
-  # end
-  #
-  # def addDateCaptured(date)
-  #   @dateCaptured << date
-  # end
+  def check_date(date)
+
+    match = date.match(/(\d*)-(\d*)-(\d*)/)
+    return match[1].to_i if match
+
+    match = date.match(/\[(\d*)\]/)
+    return match[1].to_i if match
+
+
+    match = date.match(/(s.a.)/)
+    return nil if match
+
+    match = date.match(/(\[ca. )(\d*)\]/)
+    return match[2].to_i if match
+
+
+    match = date.match(/(\d*)(XX)/)
+    if match
+      value = match[1].to_i
+      return {:start => value * 100, :end => value * 100 + 99}
+    end
+
+    match = date.match(/(\d\d)(\d*)\/(\d*)/)
+    if match
+      value1 = (match[1]+match[2]).to_i
+      if match[3].size == 2
+        value2 = (match[1]+match[3]).to_i
+      else
+        value2 = (match[3]).to_i
+      end
+      return {:start => value1, :end => value2}
+    end
+
+
+    return date.to_i
+
+  end
+
+  def date_issued_start=(date_issued_start)
+    value = check_date(date_issued_start)
+    if value.class == Hash
+      @date_issued_start = value[:start]
+      @date_issued_end   = value[:end]
+    else
+      @date_issued_start = value
+    end
+  end
+
+  def date_issued_end=(date_issued_end)
+    @date_issued_end = check_date(date_issued_end)
+  end
+
+
+  def date_captured_start=(date_captured_start)
+    value = check_date(date_captured_start)
+    if value.class == Hash
+      @date_captured_start = value[:start]
+      @date_captured_end   = value[:end]
+    else
+      @date_captured_start = value
+    end
+  end
+
+
+  def date_captured_end=(date_captured_end)
+    @date_captured_end = check_date(date_captured_end)
+  end
 
 
   # todo not yet implemented
   PUBLISHER = Hash.new
 
   # todo not yet implemented
-  PLACES = {
+  PLACES    = {
 
       '[Albany]'                            => 'Albany',
 
