@@ -59,7 +59,7 @@ Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you
 ##### Index a single document
 
 ```
-POST 127.0.0.1:8080     /api/indexer/jobs
+POST 127.0.0.1:8083     /api/indexer/jobs
 { 
     "ppn ": "PPN591416441_1 ", 
     "context": "gdz" 
@@ -69,7 +69,7 @@ POST 127.0.0.1:8080     /api/indexer/jobs
 ##### Re-Index all document 
 
 ```
-POST 127.0.0.1:8080     /api/reindexer/jobs
+POST 127.0.0.1:8083     /api/reindexer/jobs
 {
 	"context": "gdz"
 }
@@ -78,13 +78,13 @@ POST 127.0.0.1:8080     /api/reindexer/jobs
 ##### Get the number of Documents to Re-Index 
 
 ```
-GET 127.0.0.1:8080     /api/reindexer/status
+GET 127.0.0.1:8083     /api/reindexer/status
 ```
 
 ##### Convert a document
 
 ```
-POST 127.0.0.1:8080     /api/converter/jobs
+POST 127.0.0.1:8083     /api/converter/jobs
 {
 	"ppn": "PPN591416441",
 	"context": "gdz"

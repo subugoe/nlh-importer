@@ -38,7 +38,7 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 
-# POST http://141.5.103.92:8080   /api/indexer/jobs
+# POST http://141.5.103.92:8083   /api/indexer/jobs
 # { "ppn": "PPN248412353", "context": "gdz" }
 # or
 # {"path": "/inpath/ZDB-1-AHN/METS_Daten/mets_ahn_11B3080EDF6EAD38.xml" , "context": "nlh"}
@@ -67,4 +67,4 @@ router.post("/api/indexer/jobs").blocking_handler(lambda { |routingContext|
 }, false)
 
 
-$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080
+$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8083

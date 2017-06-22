@@ -31,7 +31,7 @@ end
 router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
-# POST http://127.0.0.1:8080   /api/converter/jobs
+# POST http://127.0.0.1:8083   /api/converter/jobs
 # {"ppn": "PPN826737668" , "context": "gdz"}
 # or
 # {"id": "mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
@@ -60,4 +60,4 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
 }, false)
 
 
-$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080
+$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8083
