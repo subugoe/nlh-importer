@@ -76,13 +76,13 @@ services:
     volumes:
       - ./data/solr/<solr_core>/data/:/opt/solr/server/solr/mycores/<solr_core>/data/
       - ./data/solr/<solr_core2>/data/:/opt/solr/server/solr/mycores/<solr_core2>/data/
-    mem_limit: 3GB
+    mem_limit: 8GB
     env_file:
       - .env
     environment:
       - JAVA_OPTS=-Xms512M -Xmx2G
-      - SOLR_JAVA_MEM=-Xms512M -Xmx2G
-      - JVM_ARGS=-Xms512M -Xmx2G
+      - SOLR_JAVA_MEM=-Xms512M -Xmx7G
+      - JVM_ARGS=-Xms512M -Xmx7G
       - myUID=$myUID
 
 
