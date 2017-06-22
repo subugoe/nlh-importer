@@ -4,9 +4,10 @@ class OriginInfo
 
   attr_accessor :place, :edition, :publisher, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
 
-
-  @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
-  @file_logger.level = Logger::DEBUG
+  def initialize
+    @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger.level = Logger::DEBUG
+  end
 
 
   def check_date(date, source)
@@ -77,7 +78,7 @@ class OriginInfo
   end
 
 
-  def check_and_add_captured_start(date_captured_start, source)
+  def check_and_add_date_captured_start(date_captured_start, source)
     value = check_date(date_captured_start, source)
     if value.class == Hash
       @date_captured_start = value[:start]
@@ -88,7 +89,7 @@ class OriginInfo
   end
 
 
-  def check_and_add_captured_end(date_captured_end, source)
+  def check_and_add_date_captured_end(date_captured_end, source)
     @date_captured_end = check_date(date_captured_end, source)
   end
 
