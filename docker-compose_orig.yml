@@ -49,15 +49,16 @@ services:
   importer_converter:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
+    restart: always
     volumes:
       - $INPATH/:$IN:ro
       - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    depends_on:
-      - solr
-      - redis
-      - importer_services
+    #depends_on:
+    #  - solr
+    #  - redis
+    #  - importer_services
     mem_limit: 3GB
     environment:
       - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
