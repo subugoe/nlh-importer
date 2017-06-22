@@ -38,7 +38,7 @@ services:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     ports:
-      - "8080:8080"
+      - "8083:8083"
     mem_limit: 1GB
     environment:
       - JAVA_OPTS=-Xms512M -Xmx1G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
