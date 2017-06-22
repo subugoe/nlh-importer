@@ -23,6 +23,9 @@ data/*
 docker/Dockerfile
 docker/solr/config/sub/core.properties
 docker/solr/config/sub/core2.properties
+docker/start_converter.rb
+docker/start_indexer.rb
+docker/start_services.rb
 
 docker-compose.yml
 docker-compose_deploy.yml
