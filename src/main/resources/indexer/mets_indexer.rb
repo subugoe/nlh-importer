@@ -196,6 +196,10 @@ or @type="URN"]',
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier[@source="Kalliope"]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
+    recordIdentifiers = mods.xpath('mods:identifier[@type="DE-7/hans"]',
+                                   'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
+
+
     recordIdentifiers = mods.xpath('mods:identifier[@type="local"][not(@invalid="yes")]',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
