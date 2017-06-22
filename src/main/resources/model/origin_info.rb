@@ -1,32 +1,53 @@
+require 'logger'
+
 class OriginInfo
 
-  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_captured_string #,  :issuance, :eventType
-  attr_reader :date_issued_start, :date_issued_end, :date_captured_start, :date_captured_end
+  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
 
-  def check_date(date)
+
+  @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
+  @file_logger.level = Logger::DEBUG
+
+
+  def check_date(date, source)
 
     match = date.match(/(\d*)-(\d*)-(\d*)/)
-    return match[1].to_i if match
+
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (2) for #{source}")
+      return match[1].to_i
+    end
 
     match = date.match(/\[(\d*)\]/)
-    return match[1].to_i if match
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (1) for #{source}")
+      return match[1].to_i
+    end
 
 
     match = date.match(/(s.a.)/)
-    return nil if match
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (3) for #{source}")
+      return nil
+    end
 
     match = date.match(/(\[ca. )(\d*)\]/)
-    return match[2].to_i if match
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (4) for #{source}")
+      return match[2].to_i
+    end
 
 
     match = date.match(/(\d*)(XX)/)
     if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (5) for #{source}")
       value = match[1].to_i
       return {:start => value * 100, :end => value * 100 + 99}
     end
 
     match = date.match(/(\d\d)(\d*)\/(\d*)/)
     if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (6) for #{source}")
       value1 = (match[1]+match[2]).to_i
       if match[3].size == 2
         value2 = (match[1]+match[3]).to_i
@@ -41,8 +62,8 @@ class OriginInfo
 
   end
 
-  def date_issued_start=(date_issued_start)
-    value = check_date(date_issued_start)
+  def check_and_add_date_issued_start(date_issued_start, source)
+    value = check_date(date_issued_start, source)
     if value.class == Hash
       @date_issued_start = value[:start]
       @date_issued_end   = value[:end]
@@ -51,13 +72,13 @@ class OriginInfo
     end
   end
 
-  def date_issued_end=(date_issued_end)
-    @date_issued_end = check_date(date_issued_end)
+  def check_and_add_date_issued_end(date_issued_end, source)
+    @date_issued_end = check_date(date_issued_end, source)
   end
 
 
-  def date_captured_start=(date_captured_start)
-    value = check_date(date_captured_start)
+  def check_and_add_captured_start(date_captured_start, source)
+    value = check_date(date_captured_start, source)
     if value.class == Hash
       @date_captured_start = value[:start]
       @date_captured_end   = value[:end]
@@ -67,8 +88,8 @@ class OriginInfo
   end
 
 
-  def date_captured_end=(date_captured_end)
-    @date_captured_end = check_date(date_captured_end)
+  def check_and_add_captured_end(date_captured_end, source)
+    @date_captured_end = check_date(date_captured_end, source)
   end
 
 

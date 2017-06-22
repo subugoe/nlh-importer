@@ -389,12 +389,12 @@ def getOriginInfo(modsOriginInfoElements, source)
 
       unless captured_start_date == ''
         originInfo.date_captured_string = captured_start_date
-        originInfo.date_captured_start  = captured_start_date
+        originInfo.check_and_add_date_captured_start(captured_start_date, source)
       end
 
 
       unless captured_end_date == ''
-        originInfo.date_captured_end = captured_end_date
+        originInfo.check_and_add_date_captured_end(captured_end_date, source)
       end
 
 
@@ -411,11 +411,11 @@ def getOriginInfo(modsOriginInfoElements, source)
 
       unless issued_start_date == ''
         originInfo.date_issued_string = issued_start_date
-        originInfo.date_issued_start  = issued_start_date
+        originInfo.check_and_add_date_issued_start(issued_start_date, source)
       end
 
       unless issued_end_date == ''
-        originInfo.date_issued_end = issued_end_date
+        originInfo.check_and_add_date_issued_end(issued_end_date, source)
       end
 
       if originInfo.date_issued_start == 0
