@@ -73,6 +73,21 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 @solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
+
+def fileNotFound(type, source, e)
+  if e.message.start_with? "redirection forbidden"
+    @logger.error("[mets_indexer] [GDZ-527] #{type} #{source} not available \t#{e.message}")
+    @file_logger.error("[mets_indexer] [GDZ-527] #{type} #{source} not available \t#{e.message}\n\t#{e.backtrace}")
+  elsif e.message.start_with? "Failed to open TCP connection"
+    @logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{source} because of TCP connection problems \t#{e.message}")
+    @file_logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{source} because of TCP connection problems \t#{e.message}\n\t#{e.backtrace}")
+  else
+    @logger.error("[mets_indexer] Could not open #{type} #{source} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open #{type} #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+end
+
+
 def modifyUrisInArray(images, object_uri)
   arr = images.collect { |uri|
     switchToFedoraUri uri, object_uri
@@ -718,14 +733,17 @@ def getSummary(html_path)
 
   rescue Exception => e
     attempts = attempts + 1
-    retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("[mets_indexer] Could not open summary file #{html_path} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not open summary file #{html_path} \t#{e.message}\n\t#{e.backtrace}")
-    return
+    if (attempts < MAX_ATTEMPTS)
+      sleep 1
+      retry
+    end
+    fileNotFound("summary", html_path, e)
+    return nil
   end
 
 
 end
+
 
 def getFulltext(xml_path)
 
@@ -752,9 +770,11 @@ def getFulltext(xml_path)
 
   rescue Exception => e
     attempts = attempts + 1
-    retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not open xml file #{xml_path} \t#{e.message}\n\t#{e.backtrace}")
+    if (attempts < MAX_ATTEMPTS)
+      sleep 1
+      retry
+    end
+    fileNotFound("fulltext", xml_path, e)
     return nil
   end
 
@@ -765,12 +785,16 @@ def processSummary(summary_hsh)
 
   s = Summary.new
 
-  s.summary_name    = summary_hsh['name']
-  summary_ref       = summary_hsh['uri']
-  s.summary_ref     = summary_ref
-  content           = getSummary(summary_ref)
-  s.summary_content = content.xpath('//text()').to_a.join(" ")
-  #s.summary_content_with_tags = content
+  s.summary_name = summary_hsh['name']
+  summary_ref    = summary_hsh['uri']
+  s.summary_ref  = summary_ref
+  content        = getSummary(summary_ref)
+
+  if content == nil
+    s.summary_content = "ERROR"
+  else
+    s.summary_content = content.xpath('//text()').to_a.join(" ")
+  end
 
   return s
 
@@ -846,21 +870,16 @@ def processFulltexts(meta, doc)
         if @fulltextexist == 'true'
           ftext = getFulltext(from)
           if ftext == nil
-
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
-
-            @logger.error("[mets_indexer] Could not load fulltext #{from}")
-            @file_logger.error("[mets_indexer] Could not load fulltext #{from}")
           else
             fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
             fulltext.fulltext_ref = from
           end
-
           fulltextArr << fulltext
         end
 
-        fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
+        fulltextUriArr << {"fulltexturi" => from, "to" => to, "to_dir" => to_dir}.to_json
       }
 
     elsif (@context != nil) && (@context.downcase == "gdz")
@@ -915,17 +934,12 @@ def processFulltexts(meta, doc)
         if @fulltextexist == 'true'
           ftext = getFulltext(from)
           if ftext == nil
-
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
-
-            @logger.error("[mets_indexer] Could not load fulltext #{from}")
-            @file_logger.error("[mets_indexer] Could not load fulltext #{from}")
           else
             fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
             fulltext.fulltext_ref = from
           end
-
           fulltextArr << fulltext
         end
 
@@ -1199,11 +1213,10 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
 
     if doctype != "collection"
       if logicalElement.type != ' '
-        if (logicalElement.type == "titlepage") || (logicalElement.type  == "title_page") || (logicalElement.type  == "TitlePage") || (logicalElement.type  == "Title_Page")
+        if (logicalElement.type == "titlepage") || (logicalElement.type == "title_page") || (logicalElement.type == "TitlePage") || (logicalElement.type == "Title_Page")
           meta.title_page_index = logicalElement.start_page_index if meta.title_page_index == nil
         end
       end
-
 
 
     end
@@ -1298,7 +1311,7 @@ def checkwork(doc)
 end
 
 
-def parsePath(path)
+def get_doc_from_path(path)
 
   @path = path
 
@@ -1313,21 +1326,21 @@ def parsePath(path)
     }
   rescue Exception => e
     attempts = attempts + 1
-    retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("[mets_indexer] Could not open file #{path} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not open file #{path} \t#{e.message}\n\t#{e.backtrace}")
-    return
+    if (attempts < MAX_ATTEMPTS)
+      sleep 1
+      retry
+    end
+    fileNotFound("METS", path, e)
+    return nil
   end
 
-  return parseDoc(doc, path)
+  return doc
 
 end
 
-def parsePPN(ppn)
+def get_doc_from_ppn(ppn, uri)
 
   @ppn = ppn
-
-  uri = metsUri(ppn)
 
   attempts = 0
   doc      = ""
@@ -1336,13 +1349,15 @@ def parsePPN(ppn)
     doc = Nokogiri::XML(open(uri))
   rescue Exception => e
     attempts = attempts + 1
-    retry if (attempts < MAX_ATTEMPTS)
-    @logger.error("[mets_indexer] Could not open uri '#{uri}' \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not open uri '#{uri}' \t#{e.message}\n\t#{e.backtrace}")
-    return
+    if (attempts < MAX_ATTEMPTS)
+      sleep 1
+      retry
+    end
+    fileNotFound("METS", uri, e)
+    return nil
   end
 
-  return parseDoc(doc, uri)
+  return doc
 
 end
 
@@ -1729,20 +1744,9 @@ $vertx.execute_blocking(lambda { |future|
 
           @logger.info "[mets_indexer] Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
+          uri = metsUri(ppn)
 
-          metsModsMetadata = parsePPN(ppn)
-
-          if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
-            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
-
-            @logger.info "[mets_indexer] Finish indexing METS: #{ppn} "
-          else
-            @logger.error "[mets_indexer] Could not process #{ppn} metadata, object is nil "
-            @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
-            next
-          end
-
+          doc = get_doc_from_ppn(ppn, uri)
 
         elsif (@context != nil) && (@context.downcase == "nlh")
 
@@ -1750,24 +1754,32 @@ $vertx.execute_blocking(lambda { |future|
 
           @logger.info "[mets_indexer] Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
-
-          metsModsMetadata = parsePath(path)
-
-          if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
-            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
-
-            @logger.info "[mets_indexer] Finish indexing METS: #{path} "
-          else
-            @logger.error "[mets_indexer] Could not process #{path} metadata, object is nil "
-            @file_logger.error "[mets_indexer] Could not process #{path} metadata, object is nil"
-            next
-          end
+          doc = get_doc_from_path(path)
 
         else
           @logger.error "[mets_indexer] Could not process context '#{@context}'"
           next
         end
+
+        if doc != nil
+
+          source = path
+          source ||= ppn
+
+          metsModsMetadata = parseDoc(doc, source)
+
+          if metsModsMetadata != nil
+            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
+            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
+
+            @logger.info "[mets_indexer] Finish indexing METS: #{source} "
+          else
+            @logger.error "[mets_indexer] Could not process #{source} metadata, object is nil "
+            @file_logger.error "[mets_indexer] Could not process #{source} metadata, object is nil"
+            next
+          end
+        end
+
       end
 
     rescue Exception => e
