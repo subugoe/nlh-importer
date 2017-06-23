@@ -78,12 +78,17 @@ services:
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - solrdata:/opt/solr/server/solr/mycores/
+      # without two separate data containers, persisting the data level, the config (e.g.
+      # schema.xml) would also be persisted and it could not be changes afterwards, because
+      # the volume will be mounted at runtime and the mounted data (and config) would overwrite
+      # the changed config
+      - solrdata_core1:/opt/solr/server/solr/mycores/<solr_core>/data/
+      - solrdata_core2:/opt/solr/server/solr/mycores/<solr_core2>/data/
     mem_limit: "$SOLR_MEM_LIMIT"
     env_file:
       - .env
     environment:
-      - SOLR_JAVA_MEM=<solr_java_mem>
+      - SOLR_JAVA_MEM=$SOLR_JAVA_MEM
 
 
 
@@ -104,6 +109,7 @@ services:
 
 
 volumes:
-  solrdata:
+  solrdata_core1:
+  solrdata_core2:
   redisdata:
 

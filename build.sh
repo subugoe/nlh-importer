@@ -45,7 +45,9 @@ INDEXER_VERTICLE=start_indexer.rb
 CONVERTER_VERTICLE=start_converter.rb
 VERTICLE_HOME=/usr/verticles
 
-SOLR_JAVA_MEM="-Xms512m -Xmx7G"
+SOLR_JAVA_MEM="-Xms512M -Xmx7424M"
+SOLR_MEM_LIMIT=8GB
+
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<UID>|${myUID}|"                               ./docker/Dockerfile
@@ -62,6 +64,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
+    sed -i '' "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
 
     sed -i '' "s|<myIP>|${myIP}|"                               .env
 
@@ -91,6 +94,7 @@ else
 
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
+    sed -i "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
 
     sed -i "s|<myIP>|${myIP}|"                               .env
 
