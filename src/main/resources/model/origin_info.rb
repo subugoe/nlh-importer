@@ -59,6 +59,12 @@ class OriginInfo
     end
 
 
+    match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (6) for #{source}")
+      return {:start => (match[1]).to_i, :end => (match[2]).to_i}
+    end
+
     return date.to_i
 
   end
