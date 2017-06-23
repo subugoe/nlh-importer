@@ -116,28 +116,13 @@ fi
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
 
-if [ "$environment" == "develop" ]
+docker-compose build --force-rm --no-cache solr
+docker-compose build --force-rm importer_converter importer_indexer importer_services redis
 
-then
-echo "in dev"
-    #docker-compose build --force-rm --no-cache solr
-    #docker-compose build --force-rm importer_converter importer_indexer importer_services redis
-    docker-compose build --force-rm
 
-    docker-compose stop
-    docker-compose rm -f
-    #docker-compose up -d importer_converter importer_indexer importer_services solr redis
-    docker-compose up -d
+docker-compose stop
+docker-compose rm -f
+#docker-compose up -d importer_converter importer_indexer importer_services solr redis
+docker-compose up -d
 
-else
-
-    #docker-compose -f docker-compose_deploy.yml build --force-rm --no-cache
-    docker-compose -f docker-compose_deploy.yml build --force-rm
-
-    docker-compose -f docker-compose_deploy.yml stop
-    docker-compose -f docker-compose_deploy.yml rm -f
-    #docker-compose -f docker-compose_deploy.yml up -d  importer_indexer importer_services importer_converter solr redis
-    docker-compose  -f docker-compose_deploy.yml up -d
-
-fi
 
