@@ -116,8 +116,9 @@ fi
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
 
-docker-compose build --force-rm --no-cache solr
-docker-compose build --force-rm importer_converter importer_indexer importer_services redis
+#docker-compose build --force-rm --no-cache solr
+#docker-compose build --force-rm importer_converter importer_indexer importer_services redis
+docker-compose build --force-rm
 
 
 docker-compose stop
