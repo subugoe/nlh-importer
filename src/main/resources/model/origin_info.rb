@@ -15,40 +15,40 @@ class OriginInfo
     match = date.match(/(\d*)-(\d*)-(\d*)/)
 
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (2) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (2) for #{source}")
       return match[1].to_i
     end
 
     match = date.match(/\[(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (1) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (1) for #{source}")
       return match[1].to_i
     end
 
 
     match = date.match(/(s.a.)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (3) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (3) for #{source}")
       return nil
     end
 
     match = date.match(/(\[ca. )(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (4) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (4) for #{source}")
       return match[2].to_i
     end
 
 
     match = date.match(/(\d*)(XX)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (5) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (5) for #{source}")
       value = match[1].to_i
       return {:start => value * 100, :end => value * 100 + 99}
     end
 
     match = date.match(/(\d\d)(\d*)\/(\d*)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (6) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (6) for #{source}")
       value1 = (match[1]+match[2]).to_i
       if match[3].size == 2
         value2 = (match[1]+match[3]).to_i
@@ -61,7 +61,7 @@ class OriginInfo
 
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (6) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (7) for #{source}")
       return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
 
