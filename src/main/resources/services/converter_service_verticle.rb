@@ -31,7 +31,7 @@ end
 router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
-# POST http://127.0.0.1:8083   /api/converter/jobs
+# POST http://127.0.0.1:8080   /api/converter/jobs
 # {"ppn": "PPN826737668" , "context": "gdz"}
 # or
 # {"id": "mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
@@ -45,8 +45,8 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
       @file_logger.error("[converter_service]  Expected JSON body missing")
       send_error(400, response)
     else
-      @logger.info("[converter_service] Got message: \t#{hsh}")p
-      ushToQueue(@queue, [hsh.to_json])
+      @logger.info("[converter_service] Got message: \t#{hsh}")
+      pushToQueue(@queue, [hsh.to_json])
     end
 
 
@@ -60,4 +60,4 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
 }, false)
 
 
-$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8083
+$vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080

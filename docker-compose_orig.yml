@@ -24,11 +24,11 @@ services:
       - solr
       - redis
       - importer_services
-    mem_limit: 3GB
+    mem_limit: "$IMPORTER_MEM_LIMIT"
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JVM_ARGS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx3G
+      - JAVA_OPTS=$CONVERTER_JAVA_OPTS
+      - JVM_ARGS=$CONVERTER_JVM_ARGS
+      - JRUBY_OPTS=$CONVERTER_JRUBY_OPTS
 
   importer_services:
     extends: importer_base
@@ -38,12 +38,12 @@ services:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     ports:
-      - "8083:8083"
-    mem_limit: 1GB
+      - "$SERVICES_EXTERNAL_PORT:$SERVICES_SOLR_PORT"
+    mem_limit: "$SERVICE_MEM_LIMIT"
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx1G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JVM_ARGS=-Xms512M -Xmx1G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx1G
+      - JAVA_OPTS=$SERVICE_JAVA_OPTS
+      - JVM_ARGS=$SERVICE_JVM_ARGS
+      - JRUBY_OPTS=$SERVICE_JRUBY_OPTS
 
 
   importer_converter:
@@ -55,17 +55,17 @@ services:
       - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    #depends_on:
-    #  - solr
-    #  - redis
-    #  - importer_services
-    mem_limit: 3GB
+    depends_on:
+      - solr
+      - redis
+      - importer_services
+    mem_limit: "$CONVERTER_MEM_LIMIT"
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JVM_ARGS=-Xms512M -Xmx3G -Dvertx.options.blockedThreadCheckInterval=60000 -Dvertx.options.maxWorkerExecuteTime=3600000000000 -Dvertx.options.maxEventLoopExecuteTime=60000000000
-      - JRUBY_OPTS=-J-Xms512M -J-Xmx3G
-      - MAGICK_MEMORY_LIMIT=32
-      - MAGICK_MAP_LIMIT=32
+      - JAVA_OPTS=$CONVERTER_JAVA_OPTS
+      - JVM_ARGS=$CONVERTER_JVM_ARGS
+      - JRUBY_OPTS=$CONVERTER_JRUBY_OPTS
+      - MAGICK_MEMORY_LIMIT=$CONVERTER_MAGICK_MEMORY_LIMIT
+      - MAGICK_MAP_LIMIT=$CONVERTER_MAGICK_MAP_LIMIT
 
 
 
@@ -78,16 +78,13 @@ services:
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
     volumes:
-      - ./data/solr/<solr_core>/data/:/opt/solr/server/solr/mycores/<solr_core>/data/
-      - ./data/solr/<solr_core2>/data/:/opt/solr/server/solr/mycores/<solr_core2>/data/
-    mem_limit: 2GB
+      - solrdata:/opt/solr/server/solr/mycores/
+    mem_limit: "$SOLR_MEM_LIMIT"
     env_file:
       - .env
     environment:
-      - JAVA_OPTS=-Xms512M -Xmx2G
-      - SOLR_JAVA_MEM=-Xms512M -Xmx2G
-      - JVM_ARGS=-Xms512M -Xmx2G
-      - myUID=$myUID
+      - SOLR_JAVA_MEM=<solr_java_mem>
+
 
 
   redis:
@@ -99,11 +96,11 @@ services:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
       - redisdata/:/data/
-    mem_limit: 2GB
+    mem_limit: "$REDIS_MEM_LIMIT"
     env_file:
       - .env
     environment:
-      - JAVA_OPTS=-Xms256M -Xmx2G
+      - JAVA_OPTS=$REDIS_JAVA_OPTS
 
 
 volumes:

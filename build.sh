@@ -31,13 +31,13 @@ cp src/main/resources/start_indexer.rb docker/
 cp src/main/resources/start_converter.rb docker/
 
 cp docker-compose_orig.yml docker-compose.yml
-cp docker-compose_deploy_orig.yml docker-compose_deploy.yml
 
 cp docker/Dockerfile_orig  docker/Dockerfile
 cp docker/solr/Dockerfile_orig  docker/solr/Dockerfile
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core.properties
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.properties
 cp .env_orig .env
+cp ./docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
 
 
 SERVICE_VERTICLE=start_services.rb
@@ -45,6 +45,7 @@ INDEXER_VERTICLE=start_indexer.rb
 CONVERTER_VERTICLE=start_converter.rb
 VERTICLE_HOME=/usr/verticles
 
+SOLR_JAVA_MEM="-Xms512m -Xmx7G"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<UID>|${myUID}|"                               ./docker/Dockerfile
@@ -59,9 +60,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
 
-    sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose_deploy.yml
-    sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose_deploy.yml
-
+    sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
+    sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
 
     sed -i '' "s|<myIP>|${myIP}|"                               .env
 
@@ -89,9 +89,8 @@ else
     sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
 
-    sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose_deploy.yml
-    sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose_deploy.yml
-
+    sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
+    sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
 
     sed -i "s|<myIP>|${myIP}|"                               .env
 
