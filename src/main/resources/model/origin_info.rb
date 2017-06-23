@@ -62,7 +62,7 @@ class OriginInfo
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
       @file_logger.debug("[origin_info.rb] [GDZ-522] Year mapping (6) for #{source}")
-      return {:start => (match[1]).to_i, :end => (match[2]).to_i}
+      return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
 
     return date.to_i
@@ -72,8 +72,9 @@ class OriginInfo
   def check_and_add_date_issued_start(date_issued_start, source)
     value = check_date(date_issued_start, source)
     if value.class == Hash
-      @date_issued_start = value[:start]
-      @date_issued_end   = value[:end]
+      @date_issued_start  = value[:start]
+      @date_issued_end    = value[:end]
+      @date_issued_string = value[:str] if value[:str]
     else
       @date_issued_start = value
     end
@@ -87,8 +88,9 @@ class OriginInfo
   def check_and_add_date_captured_start(date_captured_start, source)
     value = check_date(date_captured_start, source)
     if value.class == Hash
-      @date_captured_start = value[:start]
-      @date_captured_end   = value[:end]
+      @date_captured_start  = value[:start]
+      @date_captured_end    = value[:end]
+      @date_captured_string = value[:str] if value[:str]
     else
       @date_captured_start = value
     end
