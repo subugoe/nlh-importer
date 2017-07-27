@@ -398,6 +398,7 @@
         <field name="docstrct" type="text_lc" indexed="true" stored="true"/>
         <field name="lang" type="text_lc_multi" indexed="true" stored="true"/>
         <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
 
         <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="dc_authority" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
@@ -468,6 +469,7 @@
 
 
         <!--<field name="fulltexts" type="text_ci" indexed="true" stored="false" />-->
+        <!-- # todo change/remove after benchmark stored="true" OT "false" ???-->
         <field name="fulltext" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
         <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
 
@@ -490,6 +492,7 @@
 
         <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <dynamicField name="p_*" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true"/>
 
         <!-- ###### OLD INDEX ####################################################-->
         <field name="IDDOC" type="string" indexed="true" stored="true"/>

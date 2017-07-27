@@ -18,10 +18,17 @@ then
     export environment="develop"
 fi
 
+# todo change/remove after benchmark
+
+export solr_port=8983
+export solr_port2=8983
+export solr_external_port=8443
+export solr_external_port2=8081
 
 export solr_core=${solr_core}
 export myUID=`id -u ${whoami}`
 export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | awk '{print $NF}') | grep 'inet ' | awk '{print $2}' | grep -Eo '([0-9]*\.){3}[0-9]*'`
+
 
 mkdir -p data/solr/$solr_core/data/
 mkdir -p data/solr/$solr_core2/data/
@@ -33,11 +40,13 @@ cp src/main/resources/start_converter.rb docker/
 cp docker-compose_orig.yml docker-compose.yml
 
 cp docker/Dockerfile_orig  docker/Dockerfile
+cp .env_orig .env
+
 cp docker/solr/Dockerfile_orig  docker/solr/Dockerfile
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core.properties
 cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.properties
-cp .env_orig .env
-cp ./docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
+cp docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
+cp docker/solr/config/sub/jetty_orig.xml docker/solr/config/sub/jetty.xml
 
 
 SERVICE_VERTICLE=start_services.rb
@@ -56,13 +65,35 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i '' "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
 
-    sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
-    sed -i '' "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+    sed -i '' "s|<solr_port>|${solr_port}|"                     ./docker/solr/Dockerfile
+
 
     sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
 
+
+    sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
+    sed -i '' "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+
+
+    sed -i '' "s|<solr_port>|${solr_port}|g"                            .env
+    sed -i '' "s|<solr_port2>|${solr_port2}|g"                          .env
+
+    sed -i '' "s|<solr_external_port>|${solr_external_port}|g"          .env
+    sed -i '' "s|<solr_external_port2>|${solr_external_port2}|g"        .env
+
+
+    sed -i '' "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
+
+
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
+
+
+    sed -i '' "s|<solr_port>|${solr_port}|"                     ./docker/solr/config/solr.in.sh
+
+
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
     sed -i '' "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
 
@@ -86,13 +117,35 @@ else
     sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
 
-    sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
-    sed -i "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+    sed -i "s|<solr_port>|${solr_port}|"                     ./docker/solr/Dockerfile
+
 
     sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
 
+
+    sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/config/sub/core.properties
+    sed -i "s|<solr_core>|${solr_core2}|"                    ./docker/solr/config/sub/core2.properties
+
+
+
+    sed -i "s|<solr_port>|${solr_port}|g"                            .env
+    sed -i "s|<solr_port2>|${solr_port2}|g"                          .env
+
+    sed -i "s|<solr_external_port>|${solr_external_port}|g"          .env
+    sed -i "s|<solr_external_port2>|${solr_external_port2}|g"        .env
+
+
+    sed -i "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
+
+
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             ./docker/solr/config/solr.in.sh
+
+
+    sed -i "s|<solr_port>|${solr_port}|"                     ./docker/solr/config/solr.in.sh
+
+
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
     sed -i "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
 
@@ -115,15 +168,16 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
+# todo change/remove after benchmark add solr and switch to commented part
 
 #docker-compose build --force-rm --no-cache solr
-#docker-compose build --force-rm importer_converter importer_indexer importer_services redis
-docker-compose build --force-rm
+docker-compose build --force-rm importer_indexer importer_services redis
+#docker-compose build --force-rm
 
 
 docker-compose stop
 docker-compose rm -f
-#docker-compose up -d importer_converter importer_indexer importer_services solr redis
-docker-compose up -d
+docker-compose up -d importer_indexer importer_services redis
+#docker-compose up -d
 
 

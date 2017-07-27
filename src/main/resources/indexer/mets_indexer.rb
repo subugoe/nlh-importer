@@ -71,8 +71,10 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 
 @queue  = ENV['REDIS_INDEX_QUEUE']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
+# todo change/remove after benchmark
+@solr   = RSolr.connect :url => ENV['SOLR_ADR_2']
+#@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 def fileNotFound(type, source, e)
   if e.message.start_with? "redirection forbidden"
@@ -877,7 +879,10 @@ def processFulltexts(meta, doc)
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
           else
-            fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
+            ftxt = ftext.root.text.gsub(/\s+/, "").strip
+            ftxt.gsub!(/</, "&lt;")
+            ftxt.gsub!(/>/, "&gt;")
+            fulltext.fulltext = ftxt
             fulltext.fulltext_ref = from
           end
           fulltextArr << fulltext
@@ -941,7 +946,10 @@ def processFulltexts(meta, doc)
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
           else
-            fulltext.fulltext     = ftext.root.text.gsub(/\s+/, " ").strip
+            ftxt = ftext.root.text.gsub(/\s+/, " ").strip
+            ftxt.gsub!(/</, "&lt;")
+            ftxt.gsub!(/>/, "&gt;")
+            fulltext.fulltext = ftxt
             fulltext.fulltext_ref = from
           end
           fulltextArr << fulltext
@@ -1465,6 +1473,13 @@ def parseDoc(doc, source)
     unless modsGenreElements.empty?
       meta.addGenre = getGenre(modsGenreElements)
     end
+
+    modsSubjectGenreElements = mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+
+    unless modsSubjectGenreElements.empty?
+      meta.addSubjectGenre = getGenre(modsSubjectGenreElements)
+    end
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")

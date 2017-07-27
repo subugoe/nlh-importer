@@ -263,6 +263,8 @@ class MetsModsMetadata
         h.merge! ({:ft_page_number => ft.fulltext_page_number})
         h.merge! ({:doctype => 'fulltext'})
 
+        merge_title_info(h)
+
         docs << h
       }
 
@@ -301,30 +303,7 @@ class MetsModsMetadata
     h.merge! ({:baseurl => @baseurl})
 
 
-    title     = Array.new
-    subtitle  = Array.new
-    sorttitle = Array.new
-
-    @title_infos.each { |ti|
-      title << ti.nonsort + ti.title
-      subtitle << ti.subtitle
-      unless (ti.title == nil)
-        if ti.title.size > 1
-          sorttitle << ti.title[0].upcase + ti.title[1..-1]
-        elsif ti.title.size == 1
-          sorttitle << ti.title[0].upcase
-        else
-          sorttitle << ''
-        end
-      end
-    }
-
-    h.merge! ({:title => title})
-    h.merge! ({:sorttitle => sorttitle})
-    h.merge! ({:sorttitle_first_value => sorttitle.first})
-
-    h.merge! ({:subtitle => subtitle})
-    h.merge! ({:bytitle => sorttitle.join('; ')})
+    merge_title_info(h)
 
 
     #    h.merge! ({:id => @record_identifiers.first[1]})
@@ -740,7 +719,7 @@ class MetsModsMetadata
 
     if @iswork == true
 
-      fulltext_arr = Array.new
+      fulltext_arr     = Array.new
       fulltext_ref_arr = Array.new
 
       summary_name              = Array.new
@@ -749,9 +728,14 @@ class MetsModsMetadata
       summary_content_with_tags = Array.new
 
 
+      i = 1
+
       @fulltexts.each { |ft|
         fulltext_arr << ft.fulltext
         fulltext_ref_arr << ft.fulltext_ref
+        # todo change/remove after benchmark
+        h.merge! ({"p_#{i}" => ft.fulltext})
+        i += 1
       }
 
 
@@ -778,6 +762,34 @@ class MetsModsMetadata
     h.merge! ({:mods => @mods})
 
     return h
+  end
+
+
+  def merge_title_info(h)
+    title     = Array.new
+    subtitle  = Array.new
+    sorttitle = Array.new
+
+    @title_infos.each { |ti|
+      title << ti.nonsort + ti.title
+      subtitle << ti.subtitle
+      unless (ti.title == nil)
+        if ti.title.size > 1
+          sorttitle << ti.title[0].upcase + ti.title[1..-1]
+        elsif ti.title.size == 1
+          sorttitle << ti.title[0].upcase
+        else
+          sorttitle << ''
+        end
+      end
+    }
+
+    h.merge! ({:title => title})
+    h.merge! ({:sorttitle => sorttitle})
+    h.merge! ({:sorttitle_first_value => sorttitle.first})
+
+    h.merge! ({:subtitle => subtitle})
+    h.merge! ({:bytitle => sorttitle.join('; ')})
   end
 
 end

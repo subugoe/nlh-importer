@@ -21,7 +21,7 @@ services:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     depends_on:
-      - solr
+      #- solr
       - redis
       - importer_services
     mem_limit: "$IMPORTER_MEM_LIMIT"
@@ -56,7 +56,7 @@ services:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     depends_on:
-      - solr
+      #- solr
       - redis
       - importer_services
     mem_limit: "$CONVERTER_MEM_LIMIT"
@@ -89,7 +89,6 @@ services:
       - .env
     environment:
       - SOLR_JAVA_MEM=$SOLR_JAVA_MEM
-
 
 
   redis:

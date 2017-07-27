@@ -41,6 +41,7 @@ COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE/conf/admin-ex
 COPY  config/admin-extra.menu-top.html                  $SOLR_CORE/conf/admin-extra.menu-top.html
 COPY  config/admin-extra.html                           $SOLR_CORE/conf/admin-extra.html
 
+RUN chown 777 $SOLR_CORE/core.properties
 
 # core 2
 
@@ -65,10 +66,12 @@ COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE2/conf/admin-e
 COPY  config/admin-extra.menu-top.html                  $SOLR_CORE2/conf/admin-extra.menu-top.html
 COPY  config/admin-extra.html                           $SOLR_CORE2/conf/admin-extra.html
 
+RUN chown 777 $SOLR_CORE2/core.properties
+
 
 RUN chown -R $SOLR_USER:$SOLR_USER $SOLR_BASE
 
-
+EXPOSE <solr_port>
 WORKDIR /opt/solr
 USER $SOLR_USER
 

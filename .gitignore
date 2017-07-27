@@ -23,6 +23,7 @@ data/*
 docker/Dockerfile
 docker/solr/config/sub/core.properties
 docker/solr/config/sub/core2.properties
+docker/solr/config/sub/jetty.xml
 docker/solr/config/solr.in.sh
 docker/start_converter.rb
 docker/start_indexer.rb
