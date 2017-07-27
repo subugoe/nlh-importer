@@ -10,6 +10,7 @@ class MetsModsMetadata
                 :type_of_resources,
                 :locations,
                 :genres,
+                :subject_genres,
                 :classifications,
                 :sponsors,
 
@@ -78,6 +79,7 @@ class MetsModsMetadata
     @type_of_resources  = Array.new
     @locations          = Array.new
     @genres             = Array.new
+    @subject_genres     = Array.new
     @classifications    = Array.new
     @sponsors           = Array.new
 
@@ -150,6 +152,10 @@ class MetsModsMetadata
 
   def addGenre=(genre)
     @genres += genre
+  end
+
+  def addSubjectGenre=(subject_genre)
+    @subject_genres += subject_genre
   end
 
   def addClassification=(classification)
@@ -421,6 +427,7 @@ class MetsModsMetadata
     h.merge! ({:shelfmark => @locations.collect { |location| location.shelfmark }})
 
     h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
+    h.merge! ({:subject_genre => @subject_genres.collect { |genre| genre.genre }})
 
     # ---
 
