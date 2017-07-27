@@ -59,11 +59,17 @@ class OriginInfo
     end
 
 
+    if date.downcase.start_with? 'ppn'
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (8) for #{source}")
+      return nil
+    end
+
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
       @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (7) for #{source}")
       return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
+
 
     return date.to_i
 
