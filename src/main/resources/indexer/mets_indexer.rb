@@ -1761,7 +1761,11 @@ $vertx.execute_blocking(lambda { |future|
 
           ppn = json['ppn']
 
-          @logger.info "[mets_indexer] Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          if attempts == 0
+            @logger.info "[mets_indexer] Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.info "[mets_indexer] Retry Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          end
 
           uri = metsUri(ppn)
 
@@ -1771,7 +1775,11 @@ $vertx.execute_blocking(lambda { |future|
 
           path = json['path']
 
-          @logger.info "[mets_indexer] Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          if attempts == 0
+            @logger.info "[mets_indexer] Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.info "[mets_indexer] Retry Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          end
 
           doc = get_doc_from_path(path)
 
