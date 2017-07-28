@@ -390,11 +390,11 @@ def getOriginInfo(modsOriginInfoElements, source)
 
     originInfo = OriginInfo.new
 
-    originInfo.place     = oi.xpath("mods:place/mods:placeTerm[@type='text']", 'mods' => 'http://www.loc.gov/mods/v3').text
-    originInfo.publisher = oi.xpath("mods:publisher", 'mods' => 'http://www.loc.gov/mods/v3').text
+    originInfo.places     = oi.xpath("mods:place/mods:placeTerm[@type='text']", 'mods' => 'http://www.loc.gov/mods/v3').collect { |el| el.text }
+    originInfo.publishers = oi.xpath("mods:publisher", 'mods' => 'http://www.loc.gov/mods/v3').collect { |el| el.text }
     #originInfo.issuance = oi.xpath("mods:issuance", 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    originInfo.edition   = oi.xpath("mods:edition", 'mods' => 'http://www.loc.gov/mods/v3').text
+    originInfo.edition    = oi.xpath("mods:edition", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     if (originInfo.edition == '[Electronic ed.]')
 
@@ -882,7 +882,7 @@ def processFulltexts(meta, doc)
             ftxt = ftext.root.text.gsub(/\s+/, "").strip
             ftxt.gsub!(/</, "&lt;")
             ftxt.gsub!(/>/, "&gt;")
-            fulltext.fulltext = ftxt
+            fulltext.fulltext     = ftxt
             fulltext.fulltext_ref = from
           end
           fulltextArr << fulltext
@@ -949,7 +949,7 @@ def processFulltexts(meta, doc)
             ftxt = ftext.root.text.gsub(/\s+/, " ").strip
             ftxt.gsub!(/</, "&lt;")
             ftxt.gsub!(/>/, "&gt;")
-            fulltext.fulltext = ftxt
+            fulltext.fulltext     = ftxt
             fulltext.fulltext_ref = from
           end
           fulltextArr << fulltext

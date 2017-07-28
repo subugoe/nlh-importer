@@ -446,62 +446,74 @@ class MetsModsMetadata
     # ---
 
     # originInfo: edition
-    place                = Array.new
-    placeFacet           = Array.new
+    places                = Array.new
+    placesFacet           = Array.new
+
+    publishers            = Array.new
+    publishersFacet       = Array.new
+
     date_captured_string = ''
     date_captured_start  = ''
     date_captured_end    = ''
-    publisher            = Array.new
-    publisherFacet       = Array.new
 
     @edition_infos.each { |ei|
 
-      place << ei.place
-      placeFacet << ei.placeFacet
+      places << ei.places_to_s
+      placesFacet << ei.placesFacet_to_s
+
+      publishers << ei.publishers_to_s
+      publishersFacet << ei.publishersFacet_to_s
+
       date_captured_string= ei.date_captured_string
       date_captured_start = ei.date_captured_start
       date_captured_end   = ei.date_captured_end
-      publisher << ei.publisher
-      publisherFacet << ei.publisherFacet
     }
 
-    h.merge! ({:place_digitization => place})
-    h.merge! ({:facet_place_digitization => placeFacet})
+    h.merge! ({:place_digitization => places})
+    h.merge! ({:facet_place_digitization => placesFacet})
+
+    h.merge! ({:publisher_digitization => publishers})
+    h.merge! ({:facet_publisher_digitization => publishersFacet})
+
     h.merge! ({:year_digitization_string => date_captured_string}) unless date_captured_string == ''
     h.merge! ({:year_digitization_start => date_captured_start}) unless date_captured_start == ''
     h.merge! ({:year_digitization_end => date_captured_end}) unless date_captured_end == ''
-    h.merge! ({:publisher_digitization => publisher})
-    h.merge! ({:facet_publisher_digitization => publisherFacet})
 
     # originInfo: original
-    place              = Array.new
-    placeFacet         = Array.new
+    places              = Array.new
+    placesFacet         = Array.new
+
+    publishers          = Array.new
+    publishersFacet     = Array.new
+
     date_issued_string = ''
     date_issued_start  = ''
     date_issued_end    = ''
-    publisher          = Array.new
-    publisherFacet     = Array.new
 
 
     @original_infos.each { |oi|
 
-      place << oi.place
-      placeFacet << oi.placeFacet
+      places << oi.places_to_s
+      placesFacet << oi.placesFacet_to_s
+
+      publishers << oi.publishers_to_s
+      publishersFacet << oi.publishersFacet_to_s
+
       date_issued_string = oi.date_issued_string
       date_issued_start  = oi.date_issued_start
       date_issued_end    = oi.date_issued_end
-      publisher << oi.publisher
-      publisherFacet << oi.publisherFacet
     }
 
-    h.merge! ({:place_publish => place})
-    h.merge! ({:facet_place_publish => placeFacet})
+    h.merge! ({:place_publish => places})
+    h.merge! ({:facet_place_publish => placesFacet})
+
+    h.merge! ({:publisher => publishers})
+    h.merge! ({:facet_publisher => publishersFacet})
+
     h.merge! ({:year_publish_string => date_issued_string}) unless date_issued_string == ''
     h.merge! ({:year_publish => date_issued_start}) unless date_issued_start == ''
     h.merge! ({:year_publish_start => date_issued_start}) unless date_issued_start == ''
     h.merge! ({:year_publish_end => date_issued_end}) unless date_issued_end == ''
-    h.merge! ({:publisher => publisher})
-    h.merge! ({:facet_publisher => publisherFacet})
 
 
     h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})

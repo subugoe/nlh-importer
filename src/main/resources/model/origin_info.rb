@@ -2,11 +2,14 @@ require 'logger'
 
 class OriginInfo
 
-  attr_accessor :place, :edition, :publisher, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
+  attr_accessor :places, :publishers, :edition, :date_issued_string, :date_issued_start, :date_issued_end, :date_captured_string, :date_captured_start, :date_captured_end #,  :issuance, :eventType
+
 
   def initialize
     @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
+    @places = Array.new
+    @publishers = Array.new
   end
 
 
@@ -232,25 +235,60 @@ class OriginInfo
   }
 
 
-  def placeFacet
-
-    switch = PLACES[@place]
-    if switch == nil
-      return @place
+  def places_to_s
+    unless @places.empty?
+      @places.join ', '
     else
-      return switch
+      return nil
     end
   end
 
-  def publisherFacet
-
-    switch = PUBLISHER[@plublisher]
-    if switch == nil
-      # todo better solution required
-      return @publisher.gsub(/(Printed and sold by )|(Printed by )/, '')
+  def publishers_to_s
+    unless @publishers.empty?
+      return @publishers.join ', '
     else
-      return switch #.gsub(/(Printed and sold by )|(Printed by )/, '')
+      return nil
     end
+  end
+
+  def placesFacet_to_s
+
+    arr = Array.new
+    @places.each { |el|
+      switch = PLACES[el]
+      if switch == nil
+        arr << el
+      else
+        arr << switch
+      end
+    }
+
+    unless arr.empty?
+      return arr.join ', '
+    else
+      return nil
+    end
+  end
+
+
+  def publishersFacet_to_s
+
+    arr = Array.new
+    @publishers.each { |el|
+      switch = PUBLISHER[el]
+      if switch == nil
+        arr << el.gsub(/(Printed and sold by )|(Printed by )/, '')
+      else
+        arr << switch.gsub(/(Printed and sold by )|(Printed by )/, '')
+      end
+    }
+
+    unless arr.empty?
+      return arr.join ', '
+    else
+      return nil
+    end
+
   end
 
 
