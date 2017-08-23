@@ -70,7 +70,7 @@ class MetsModsMetadata
 
 
   def initialize
-    @title_page_index = 1
+    @title_page_index = ""
 
     @identifiers        = Array.new
     @record_identifiers = Hash.new
@@ -601,8 +601,8 @@ class MetsModsMetadata
 
     }
 
-    @title_page_index = 1 if @title_page_index == nil
-    h.merge! ({:title_page_index => @title_page_index})
+    @title_page_index = 0 if @title_page_index == ''
+    h.merge! ({:title_page_index => @pages[@title_page_index]})
 
     h.merge! ({:log_id => id})
     h.merge! ({:log_type => type})
