@@ -23,16 +23,17 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @pdfdensity    = ENV['PDFDENSITY']
 @from_full_pdf = ENV['IMAGES_FROM_FULL_PDF']
 
-
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
-
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/#{context}_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
+# ---
+
+@queue             = ENV['REDIS_CONVERT_QUEUE']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger.debug "[pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

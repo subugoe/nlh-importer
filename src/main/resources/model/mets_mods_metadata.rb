@@ -70,6 +70,8 @@ class MetsModsMetadata
 
 
   def initialize
+    @title_page_index = 1
+
     @identifiers        = Array.new
     @record_identifiers = Hash.new
     @title_infos        = Array.new
