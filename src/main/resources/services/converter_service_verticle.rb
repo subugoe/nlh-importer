@@ -6,6 +6,11 @@ require 'redis'
 require 'logger'
 
 
+@options = {
+    'sendTimeout' => 300000
+}
+
+
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 @logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -32,13 +37,17 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 # POST http://127.0.0.1:8080   /api/converter/jobs
-# {"ppn": "PPN826737668" , "context": "gdz"}
+# {"id": "PPN826737668___LOG_0000" , "context": "gdz"}
 # or
-# {"id": "mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
+# {"id": "mets_emo_farminstructordiaryno2farmcluny19091920___LOG_0001" , "context": "nlh"}
 router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
+
 
   begin
     hsh = routingContext.get_body_as_json
+
+    # hsh:          {"id"=>"PPN826737668___LOG_0000", "context"=>"gdz"}
+    # hsh.to_json:  {"id":"PPN826737668___LOG_0000","context":"gdz"}
 
     if hsh == nil
       @logger.error("[converter_service] Expected JSON body missing")
@@ -46,9 +55,10 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
       send_error(400, response)
     else
       @logger.info("[converter_service] Got message: \t#{hsh}")
-      pushToQueue(@queue, [hsh.to_json])
-    end
 
+      pushToQueue(@queue, [hsh.to_json])
+
+    end
 
   rescue Exception => e
     @logger.error("[converter_service] Problem with request body \t#{e.message}")
