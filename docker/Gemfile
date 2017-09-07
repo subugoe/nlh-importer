@@ -27,4 +27,7 @@ gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 gem "mini_magick"
 
 
-gem 'rest-client', '~> 2.0', '>= 2.0.2'
+#gem 'pdftk', '~> 0.0.4'
+
+gem 'prawn', '~> 2.2', '>= 2.2.2'
+
