@@ -1226,10 +1226,10 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
     if doctype != "collection"
       if logicalElement.type != ' '
         if (logicalElement.type == "titlepage") || (logicalElement.type == "title_page") || (logicalElement.type == "TitlePage") || (logicalElement.type == "Title_Page")
-          meta.title_page_index = logicalElement.start_page_index if meta.title_page_index == nil
+
+          meta.title_page = log_start_stop_hsh[logicalElement.id]["start"] if meta.title_page == 1
         end
       end
-
 
     end
   else
