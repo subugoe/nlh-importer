@@ -111,10 +111,8 @@ class OriginInfo
   end
 
 
-  # todo not yet implemented
   PUBLISHER = Hash.new
 
-  # todo not yet implemented
   PLACES    = {
 
       '[Albany]'                            => 'Albany',
@@ -237,7 +235,7 @@ class OriginInfo
 
   def places_to_s
     unless @places.empty?
-      @places.join ', '
+      @places.join '; '
     else
       return nil
     end
@@ -245,7 +243,7 @@ class OriginInfo
 
   def publishers_to_s
     unless @publishers.empty?
-      return @publishers.join ', '
+      return @publishers.join '; '
     else
       return nil
     end
@@ -264,7 +262,7 @@ class OriginInfo
     }
 
     unless arr.empty?
-      return arr.join ', '
+      return arr
     else
       return nil
     end
@@ -284,7 +282,7 @@ class OriginInfo
     }
 
     unless arr.empty?
-      return arr.join ', '
+      return arr
     else
       return nil
     end
