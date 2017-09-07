@@ -596,7 +596,7 @@ class MetsModsMetadata
 
     arr = Array.new
     unless @doctype == "collection"
-      @logicalElements.each { |el|
+      @logicalElements.values.each {|el|
 
         if (el.start_page_index != -1) && (el.end_page_index != -1)
           arr << el
@@ -608,15 +608,14 @@ class MetsModsMetadata
         end
       }
     else
-      arr = @logicalElements
+      arr = @logicalElements.values
     end
 
-    # todo check this: with this range, the root div is removed and the doctype of the current work is not clear
 
     h.merge! ({:docstrct => arr[0].type})
 
 
-    arr[1..-1].each { |el|
+    arr[1..-1].each {|el|
 
       id << el.id
       type << el.type
@@ -656,7 +655,7 @@ class MetsModsMetadata
     orderlabel = Array.new
 
 
-    @physicalElements.each { |el|
+    @physicalElements.values.each {|el|
 
       order << el.order.to_i
       orderlabel << el.orderlabel
