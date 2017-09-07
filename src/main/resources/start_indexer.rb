@@ -8,7 +8,7 @@ logger.debug "[start_indexer] Running in #{Java::JavaLang::Thread.current_thread
 
 
 indexer_options = {
-    'instances'                  => 6,
+    'instances'                  => 5,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,
