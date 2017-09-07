@@ -330,7 +330,6 @@
         <field name="access_pattern" type="string" indexed="true" stored="true"/>
         <field name="baseurl" type="string" indexed="false" stored="true"/>
 
-        <!-- todo: begin remove ()after full reindex -->
         <field name="volume_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="volume_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="volume_label" type="text_ci" indexed="true" stored="true" multiValued="true"/>
@@ -469,7 +468,7 @@
 
 
         <!--<field name="fulltexts" type="text_ci" indexed="true" stored="false" />-->
-        <!-- # todo change/remove after benchmark stored="true" OT "false" ???-->
+        <!-- # todo for production change to stored="false" -->
         <field name="fulltext" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
         <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
 
