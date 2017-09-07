@@ -121,7 +121,7 @@ class MetsModsMetadata
   end
 
   def addIdentifiers=(identifier)
-    @identifiers += identifier
+    @identifiers = identifier
   end
 
   def addRecordIdentifiers=(record_identifier_hash)
@@ -130,7 +130,7 @@ class MetsModsMetadata
 
 
   def addTitleInfo=(titleInfo)
-    @title_infos += titleInfo
+    @title_infos = titleInfo
   end
 
 
@@ -144,60 +144,60 @@ class MetsModsMetadata
 
 
   def addName=(name)
-    @names += name
+    @names = name
   end
 
   def addSponsor=(sponsor)
-    @sponsors += sponsor
+    @sponsors = sponsor
   end
 
   def addTypeOfResource=(typeOfResource)
-    @type_of_resources += typeOfResource
+    @type_of_resources = typeOfResource
   end
 
   def addLocation=(location)
-    @locations += location
+    @locations = location
   end
 
   def addGenre=(genre)
-    @genres += genre
+    @genres = genre
   end
 
   def addSubjectGenre=(subject_genre)
-    @subject_genres += subject_genre
+    @subject_genres = subject_genre
   end
 
   def addClassification=(classification)
-    @classifications += classification
+    @classifications = classification
   end
 
   def addOriginalInfo=(originInfo)
-    @original_infos += originInfo
+    @original_infos = originInfo
   end
 
   def addEditionInfo=(originInfo)
-    @edition_infos += originInfo
+    @edition_infos = originInfo
   end
 
 
   def addLanguage=(language)
-    @languages += language
+    @languages = language
   end
 
   def addPhysicalDescription=(physicalDescription)
-    @physical_descriptions += physicalDescription
+    @physical_descriptions = physicalDescription
   end
 
   def addNote=(note)
-    @notes += note
+    @notes = note
   end
 
   def addPage=(page)
-    @pages += page
+    @pages = page
   end
 
   def addPage_key=(page_key)
-    @page_keys += page_key
+    @page_keys = page_key
   end
 
   #def addVolume=(volume)
@@ -205,27 +205,27 @@ class MetsModsMetadata
   #end
 
   def addSubject=(subject)
-    @subjects += subject
+    @subjects = subject
   end
 
   def addRelatedItem=(relatedItem)
-    @related_items += relatedItem
+    @related_items = relatedItem
   end
 
   def addPart=(part)
-    @parts += part
+    @parts = part
   end
 
   def addRecordInfo=(recordInfo)
-    @record_infos += recordInfo
+    @record_infos = recordInfo
   end
 
   def addRightInfo=(rightInfo)
-    @right_infos += rightInfo
+    @right_infos = rightInfo
   end
 
   def addPresentationImageUri=(presentationImageUri)
-    @presentation_image_uris += presentationImageUri
+    @presentation_image_uris = presentationImageUri
   end
 
   def addThumbImageUri=(thumbImageUri)
@@ -233,24 +233,33 @@ class MetsModsMetadata
   end
 
   def addFulltextUri=(fulltextUri)
-    @fulltext_uris += fulltextUri
+    @fulltext_uris = fulltextUri
   end
 
 
-  def addLogicalElement=(logicalElement)
-    @logicalElements += logicalElement
+  # def addLogicalElement=(logicalElement)
+  #   @logicalElements += logicalElement
+  # end
+
+  def addToLogicalElement(logicalElement)
+    @logicalElements[logicalElement.id] = logicalElement
   end
 
-  def addPhysicalElement=(physicalElement)
-    @physicalElements += physicalElement
+
+  # def addPhysicalElement=(physicalElement)
+  #   @physicalElements += physicalElement
+  # end
+
+  def addToPhysicalElement(physicalElement)
+    @physicalElements[physicalElement.id] = physicalElement
   end
 
   def addFulltext=(fulltext)
-    @fulltexts += fulltext
+    @fulltexts = fulltext
   end
 
   def addSummary=(summary)
-    @summary += summary
+    @summary = summary
   end
 
   def to_s
