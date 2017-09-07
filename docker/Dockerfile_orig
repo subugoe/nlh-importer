@@ -18,6 +18,7 @@ RUN apt-get update \
     && apt-get install -y curl vim libc6-dev --no-install-recommends \
         imagemagick \
         ghostscript \
+        pdftk \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -55,9 +56,7 @@ WORKDIR <VERTICLE_HOME>
 
 RUN jruby -S bundle install
 
-
 RUN chown -R importer <VERTICLE_HOME>
-
 
 USER importer
 
