@@ -492,10 +492,10 @@ class MetsModsMetadata
 
     @edition_infos.each {|ei|
 
-      places << ei.places_to_s
+      places << ei.places # _to_s
       placesFacet << ei.placesFacet_to_s
 
-      publishers << ei.publishers_to_s
+      publishers << ei.publishers # _to_s
       publishersFacet << ei.publishersFacet_to_s
 
       date_captured_string= ei.date_captured_string
@@ -514,23 +514,23 @@ class MetsModsMetadata
     h.merge! ({:year_digitization_end => date_captured_end}) unless date_captured_end == ''
 
     # originInfo: original
-    places              = Array.new
-    placesFacet         = Array.new
+    places      = Array.new
+    placesFacet = Array.new
 
-    publishers          = Array.new
-    publishersFacet     = Array.new
+    publishers      = Array.new
+    publishersFacet = Array.new
 
     date_issued_string = ''
     date_issued_start  = ''
     date_issued_end    = ''
 
 
-    @original_infos.each { |oi|
+    @original_infos.each {|oi|
 
-      places << oi.places_to_s
+      places << oi.places # _to_s
       placesFacet << oi.placesFacet_to_s
 
-      publishers << oi.publishers_to_s
+      publishers << oi.publishers # _to_s
       publishersFacet << oi.publishersFacet_to_s
 
       date_issued_string = oi.date_issued_string
