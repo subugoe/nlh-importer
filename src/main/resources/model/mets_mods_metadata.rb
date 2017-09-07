@@ -780,18 +780,13 @@ class MetsModsMetadata
       summary_content_with_tags = Array.new
 
 
-      i = 1
-
-      @fulltexts.each { |ft|
+      @fulltexts.each {|ft|
         fulltext_arr << ft.fulltext
         fulltext_ref_arr << ft.fulltext_ref
-        # todo change/remove after benchmark
-        h.merge! ({"p_#{i}" => ft.fulltext})
-        i += 1
       }
 
 
-      @summary.each { |summary|
+      @summary.each {|summary|
 
         summary_name << summary.summary_name
         summary_content << summary.summary_content
