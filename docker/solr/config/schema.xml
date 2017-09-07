@@ -524,6 +524,8 @@
     <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
     <copyField source="summary_name" dest="metadata"/>
+    <copyField source="purl" dest="metadata"/>
+    <copyField source="catalogue" dest="metadata"/>
 
     <!-- copy fields into default for search -->
     <copyField source="fulltext" dest="default"/>
@@ -544,6 +546,8 @@
     <copyField source="id" dest="default"/>
     <copyField source="note" dest="default"/>
     <copyField source="subject" dest="default"/>
+    <copyField source="purl" dest="default"/>
+    <copyField source="catalogue" dest="default"/>
 
 
     <!-- copy fields into facetfields -->
