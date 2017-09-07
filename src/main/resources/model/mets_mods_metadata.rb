@@ -128,6 +128,13 @@ class MetsModsMetadata
     @record_identifiers.merge!(record_identifier_hash)
   end
 
+  def addPurl=(purl)
+    @purl = purl
+  end
+
+  def addCatalogue=(catalogues)
+    @catalogues = catalogues
+  end
 
   def addTitleInfo=(titleInfo)
     @title_infos = titleInfo
