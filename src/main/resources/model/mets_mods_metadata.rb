@@ -632,8 +632,8 @@ class MetsModsMetadata
 
     }
 
-    @title_page_index = 0 if @title_page_index == ''
-    h.merge! ({:title_page_index => @pages[@title_page_index]})
+    # <product_id>:<work_id>:<seiten-bezeichner>
+    h.merge! ({:title_page => "#{@product}:#{@work}:#{@pages[@title_page - 1]}"})
 
     h.merge! ({:log_id => id})
     h.merge! ({:log_type => type})
