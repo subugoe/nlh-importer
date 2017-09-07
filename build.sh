@@ -18,12 +18,9 @@ then
     export environment="develop"
 fi
 
-# todo change/remove after benchmark
 
 export solr_port=8983
-export solr_port2=8983
 export solr_external_port=8443
-export solr_external_port2=8081
 
 export solr_core=${solr_core}
 export myUID=`id -u ${whoami}`
@@ -64,10 +61,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i '' "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
-
-
     sed -i '' "s|<solr_port>|${solr_port}|"                     ./docker/solr/Dockerfile
-
 
     sed -i '' "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i '' "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml
@@ -116,10 +110,7 @@ else
 
     sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
-
-
     sed -i "s|<solr_port>|${solr_port}|"                     ./docker/solr/Dockerfile
-
 
     sed -i "s|<solr_core>|${solr_core}|g"                    ./docker-compose.yml
     sed -i "s|<solr_core2>|${solr_core2}|g"                  ./docker-compose.yml

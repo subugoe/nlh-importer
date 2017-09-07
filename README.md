@@ -61,7 +61,7 @@ Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you
 ```
 POST 127.0.0.1:8083     /api/indexer/jobs
 { 
-    "ppn ": "PPN591416441_1 ", 
+    "id": "PPN591416441_1 ", 
     "context": "gdz" 
 }
 ```
@@ -86,7 +86,17 @@ GET 127.0.0.1:8083     /api/reindexer/status
 ```
 POST 127.0.0.1:8083     /api/converter/jobs
 {
-	"ppn": "PPN591416441",
+	"id": "PPN591416441",
+	"context": "gdz"
+}
+```
+
+##### Convert a structural part of a document
+
+```
+POST 127.0.0.1:8083     /api/converter/jobs
+{
+	"id": "PPN591416441___LOG0008",
 	"context": "gdz"
 }
 ```
