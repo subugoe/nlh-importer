@@ -484,14 +484,15 @@
 
         <!-- only stored fields -->
         <field name="location" type="string" indexed="false" stored="true" multiValued="true"/>
+
         <field name="purl" type="string" indexed="false" stored="true" multiValued="false"/>
+        <field name="catalogue" type="string" indexed="false" stored="true" multiValued="true"/>
+
         <field name="structrun" type="string" indexed="false" stored="true" multiValued="false"/>
 
         <dynamicField name="*_url" type="string_mv" stored="true" multiValued="true"/>
 
         <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
-        <dynamicField name="p_*" type="text_general" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true"/>
 
         <!-- ###### OLD INDEX ####################################################-->
         <field name="IDDOC" type="string" indexed="true" stored="true"/>
