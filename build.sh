@@ -50,6 +50,7 @@ SERVICE_VERTICLE=start_services.rb
 INDEXER_VERTICLE=start_indexer.rb
 CONVERTER_VERTICLE=start_converter.rb
 VERTICLE_HOME=/usr/verticles
+CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
 
 SOLR_JAVA_MEM="-Xms512M -Xmx7424M"
 SOLR_MEM_LIMIT=8GB
@@ -159,16 +160,15 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
-# todo change/remove after benchmark add solr and switch to commented part
 
-#docker-compose build --force-rm --no-cache solr
-docker-compose build --force-rm importer_indexer importer_services redis
-#docker-compose build --force-rm
+#docker-compose build --force-rm --no-cache importer_converter
+#docker-compose build --force-rm importer_indexer importer_services redis solr
+docker-compose build --force-rm
 
 
 docker-compose stop
 docker-compose rm -f
-docker-compose up -d importer_indexer importer_services redis
-#docker-compose up -d
+docker-compose up -d
+#importer_indexer importer_services redis solr
 
 
