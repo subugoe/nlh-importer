@@ -84,13 +84,13 @@ class MetsModsMetadata
     @title_infos = Array.new
     #@personalNames      = Array.new
     #@corporateNames     = Array.new
-    @names              = Array.new
-    @type_of_resources  = Array.new
-    @locations          = Array.new
-    @genres             = Array.new
-    @subject_genres     = Array.new
-    @classifications    = Array.new
-    @sponsors           = Array.new
+    @names             = Array.new
+    @type_of_resources = Array.new
+    @locations         = Array.new
+    @genres            = Array.new
+    @subject_genres    = Array.new
+    @classifications   = Array.new
+    @sponsors          = Array.new
 
     @original_infos        = Array.new
     @edition_infos         = Array.new
@@ -100,19 +100,19 @@ class MetsModsMetadata
 
     #@volumes =Array.new
 
-    @pages                 = Array.new
-    @page_keys             = Array.new
-    @subjects              = Array.new
-    @related_items         = Array.new
-    @parts                 = Array.new
-    @record_infos          = Array.new
-    @right_infos           = Array.new
+    @pages         = Array.new
+    @page_keys     = Array.new
+    @subjects      = Array.new
+    @related_items = Array.new
+    @parts         = Array.new
+    @record_infos  = Array.new
+    @right_infos   = Array.new
 
     @presentation_image_uris = Array.new
     @thumb_image_uris        = Array.new
     @fulltext_uris           = Array.new
-    @logicalElements         = Array.new
-    @physicalElements        = Array.new
+    @logicalElements         = Hash.new
+    @physicalElements        = Hash.new
 
     @fulltexts = Array.new
     @summary   = Array.new
@@ -267,7 +267,7 @@ class MetsModsMetadata
 
     if @iswork == true
 
-      @fulltexts.each { |ft|
+      @fulltexts.each {|ft|
 
         h = Hash.new
 
@@ -358,7 +358,7 @@ class MetsModsMetadata
     person_roleterm_authority = Array.new
 
 
-    @names.each { |name|
+    @names.each {|name|
 
       n = ''
       if name.family != ' '
@@ -442,17 +442,17 @@ class MetsModsMetadata
 
     # ---
 
-    h.merge! ({:shelfmark => @locations.collect { |location| location.shelfmark }})
+    h.merge! ({:shelfmark => @locations.collect {|location| location.shelfmark}})
 
-    h.merge! ({:genre => @genres.collect { |genre| genre.genre }})
-    h.merge! ({:subject_genre => @subject_genres.collect { |genre| genre.genre }})
+    h.merge! ({:genre => @genres.collect {|genre| genre.genre}})
+    h.merge! ({:subject_genre => @subject_genres.collect {|genre| genre.genre}})
 
     # ---
 
     dc           = Array.new
     dc_authority = Array.new
 
-    @classifications.each { |classification|
+    @classifications.each {|classification|
 
       dc << classification.value
       dc_authority << classification.authority
@@ -464,17 +464,17 @@ class MetsModsMetadata
     # ---
 
     # originInfo: edition
-    places                = Array.new
-    placesFacet           = Array.new
+    places      = Array.new
+    placesFacet = Array.new
 
-    publishers            = Array.new
-    publishersFacet       = Array.new
+    publishers      = Array.new
+    publishersFacet = Array.new
 
     date_captured_string = ''
     date_captured_start  = ''
     date_captured_end    = ''
 
-    @edition_infos.each { |ei|
+    @edition_infos.each {|ei|
 
       places << ei.places_to_s
       placesFacet << ei.placesFacet_to_s
@@ -534,7 +534,7 @@ class MetsModsMetadata
     h.merge! ({:year_publish_end => date_issued_end}) unless date_issued_end == ''
 
 
-    h.merge! ({:lang => @languages.collect { |lang| lang.languageterm }})
+    h.merge! ({:lang => @languages.collect {|lang| lang.languageterm}})
 
 
     h.merge! ({:product => @product})
@@ -665,7 +665,7 @@ class MetsModsMetadata
     extent              = Array.new
     digitalOrigin       = Array.new
 
-    @physical_descriptions.each { |pd|
+    @physical_descriptions.each {|pd|
 
       form << pd.form
       reformattingQuality << pd.reformattingQuality
@@ -683,7 +683,7 @@ class MetsModsMetadata
     type  = Array.new
     value = Array.new
 
-    @notes.each { |n|
+    @notes.each {|n|
 
       type << n.type
       value << n.value
@@ -701,7 +701,7 @@ class MetsModsMetadata
     topic      = Array.new
     geographic = Array.new
 
-    @subjects.each { |subj|
+    @subjects.each {|subj|
 
       t = subj.type
       s = subj.subject
@@ -721,26 +721,26 @@ class MetsModsMetadata
 
 
     # rights_owner, rights_owner_site_url, rights_owner_contact, rights_license,  rights_reference
-    h.merge! ({:rights_owner => @right_infos.collect { |rights| rights.owner }})
-    h.merge! ({:rights_owner_site_url => @right_infos.collect { |rights| rights.ownerSiteURL }})
-    h.merge! ({:rights_owner_contact => @right_infos.collect { |rights| rights.ownerContact }})
-    h.merge! ({:rights_license => @right_infos.collect { |rights| rights.license }})
-    h.merge! ({:rights_reference => @right_infos.collect { |rights| rights.reference }})
+    h.merge! ({:rights_owner => @right_infos.collect {|rights| rights.owner}})
+    h.merge! ({:rights_owner_site_url => @right_infos.collect {|rights| rights.ownerSiteURL}})
+    h.merge! ({:rights_owner_contact => @right_infos.collect {|rights| rights.ownerContact}})
+    h.merge! ({:rights_license => @right_infos.collect {|rights| rights.license}})
+    h.merge! ({:rights_reference => @right_infos.collect {|rights| rights.reference}})
 
 
-    h.merge! ({:relateditem_id => @related_items.collect { |rel_item| rel_item.id }})
-    h.merge! ({:relateditem_title => @related_items.collect { |rel_item| rel_item.title }})
-    h.merge! ({:relateditem_title_abbreviated => @related_items.collect { |rel_item| rel_item.title_abbreviated }})
-    h.merge! ({:relateditem_title_partnumber => @related_items.collect { |rel_item| rel_item.title_partnumber }})
-    h.merge! ({:relateditem_note => @related_items.collect { |rel_item| rel_item.note }})
-    h.merge! ({:relateditem_type => @related_items.collect { |rel_item| rel_item.type }})
+    h.merge! ({:relateditem_id => @related_items.collect {|rel_item| rel_item.id}})
+    h.merge! ({:relateditem_title => @related_items.collect {|rel_item| rel_item.title}})
+    h.merge! ({:relateditem_title_abbreviated => @related_items.collect {|rel_item| rel_item.title_abbreviated}})
+    h.merge! ({:relateditem_title_partnumber => @related_items.collect {|rel_item| rel_item.title_partnumber}})
+    h.merge! ({:relateditem_note => @related_items.collect {|rel_item| rel_item.note}})
+    h.merge! ({:relateditem_type => @related_items.collect {|rel_item| rel_item.type}})
 
     # currentno, currentnosort
 
     currentnosort = Array.new
     currentno     = Array.new
 
-    @parts.each { |part|
+    @parts.each {|part|
 
       cns = part.currentnosort.to_i
       if cns < 2147483647
@@ -807,7 +807,7 @@ class MetsModsMetadata
     subtitle  = Array.new
     sorttitle = Array.new
 
-    @title_infos.each { |ti|
+    @title_infos.each {|ti|
       title << ti.nonsort + ti.title
       subtitle << ti.subtitle
       unless (ti.title == nil)
