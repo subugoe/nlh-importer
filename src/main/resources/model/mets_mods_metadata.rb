@@ -2,6 +2,10 @@ class MetsModsMetadata
 
   attr_accessor :identifiers,
                 :record_identifiers,
+
+                :purl,
+                :catalogues,
+
                 :idparentdoc,
                 :title_infos,
                 #:personalNames,
@@ -36,7 +40,7 @@ class MetsModsMetadata
                 :page_keys,
                 :image_format,
 
-                :title_page_index,
+                :title_page,
 
                 :subjects,
                 :related_items,
@@ -70,11 +74,14 @@ class MetsModsMetadata
 
 
   def initialize
-    @title_page_index = ""
+    @title_page = 1
 
     @identifiers        = Array.new
     @record_identifiers = Hash.new
-    @title_infos        = Array.new
+
+    @catalogues = Array.new
+
+    @title_infos = Array.new
     #@personalNames      = Array.new
     #@corporateNames     = Array.new
     @names              = Array.new
@@ -306,6 +313,15 @@ class MetsModsMetadata
 
     #h.merge! ({:id => recordId})
     h.merge! ({:id => @record_identifiers.first[1]})
+
+    # e.g. http://resolver.sub.uni-goettingen.de/purl?PPN13357363X
+    @purl = "http://resolver.sub.uni-goettingen.de/purl?#{@work}" if @purl == nil
+    h.merge! ({:purl => @purl})
+
+    # e.g. http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=23760034X
+    id = @work.match(/PPN(\S*)/)[1]
+    @catalogues += "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if @catalogues.empty?
+    h.merge! ({:catalogue => @catalogues})
 
     h.merge! ({:access_pattern => @access_pattern})
     h.merge! ({:baseurl => @baseurl})
