@@ -1,0 +1,50 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    builder (3.2.3)
+    elasticsearch (2.0.2)
+      elasticsearch-api (= 2.0.2)
+      elasticsearch-transport (= 2.0.2)
+    elasticsearch-api (2.0.2)
+      multi_json
+    elasticsearch-transport (2.0.2)
+      faraday
+      multi_json
+    faraday (0.13.0)
+      multipart-post (>= 1.2, < 3)
+    faraday_middleware (0.12.2)
+      faraday (>= 0.7.4, < 1.0)
+    json_pure (2.1.0)
+    logger (1.2.8)
+    mini_magick (4.8.0)
+    mini_portile2 (2.2.0)
+    multi_json (1.12.1)
+    multipart-post (2.0.0)
+    nokogiri (1.8.0)
+      mini_portile2 (~> 2.2.0)
+    oai (0.4.0)
+      builder (>= 3.1.0)
+      faraday
+      faraday_middleware
+    orchard (0.2)
+    redis (3.3.3)
+    rsolr (2.0.2)
+      builder (>= 2.1.2)
+      faraday
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  elasticsearch (~> 2.0)
+  json_pure (~> 2.0, >= 2.0.2)
+  logger (~> 1.2, >= 1.2.8)
+  mini_magick
+  nokogiri (~> 1.6, >= 1.6.8)
+  oai (~> 0.4.0)
+  orchard (~> 0.2)
+  redis (~> 3.3, >= 3.3.1)
+  rsolr (~> 2.0, >= 2.0.2)
+
+BUNDLED WITH
+   1.12.5
