@@ -39,9 +39,8 @@ services:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     depends_on:
-      #- solr
+      - solr
       - redis
-      - importer_services
     mem_limit: "$CONVERTER_MEM_LIMIT"
     environment:
       - JAVA_OPTS=$CONVERTER_JAVA_OPTS
