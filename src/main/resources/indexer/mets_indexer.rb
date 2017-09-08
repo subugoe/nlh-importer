@@ -47,7 +47,7 @@ require 'model/summary'
     "HANS_DE_7_w042081" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz/misc/summary/HANS_DE_7_w042081/Cantor_Algebra.html", 'name' => "Cantor_Algebra"}
 }
 
-MAX_ATTEMPTS    = ENV['MAX_ATTEMPTS'].to_i
+MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
 #@oai_endpoint   = ENV['METS_VIA_OAI']
 @short_product  = ENV['SHORT_PRODUCT']
@@ -61,8 +61,8 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 #@context       = ENV['CONTEXT']
 
-@logger        = Logger.new(STDOUT)
-@logger.level  = Logger::DEBUG
+@logger       = Logger.new(STDOUT)
+@logger.level = Logger::DEBUG
 
 @file_logger       = Logger.new(ENV['LOG'] + "/mets_indexer_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
@@ -72,9 +72,7 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @queue  = ENV['REDIS_INDEX_QUEUE']
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
-# todo change/remove after benchmark
-@solr   = RSolr.connect :url => ENV['SOLR_ADR_2']
-#@solr   = RSolr.connect :url => ENV['SOLR_ADR']
+@solr = RSolr.connect :url => ENV['SOLR_ADR']
 
 def fileNotFound(type, source, e)
   if e.message.start_with? "redirection forbidden"
@@ -91,7 +89,7 @@ end
 
 
 def modifyUrisInArray(images, object_uri)
-  arr = images.collect { |uri|
+  arr = images.collect {|uri|
     switchToFedoraUri uri, object_uri
   }
 
@@ -390,11 +388,11 @@ def getOriginInfo(modsOriginInfoElements, source)
 
     originInfo = OriginInfo.new
 
-    originInfo.places     = oi.xpath("mods:place/mods:placeTerm[@type='text']", 'mods' => 'http://www.loc.gov/mods/v3').collect { |el| el.text }
-    originInfo.publishers = oi.xpath("mods:publisher", 'mods' => 'http://www.loc.gov/mods/v3').collect { |el| el.text }
+    originInfo.places     = oi.xpath("mods:place/mods:placeTerm[@type='text']", 'mods' => 'http://www.loc.gov/mods/v3').collect {|el| el.text}
+    originInfo.publishers = oi.xpath("mods:publisher", 'mods' => 'http://www.loc.gov/mods/v3').collect {|el| el.text}
     #originInfo.issuance = oi.xpath("mods:issuance", 'mods' => 'http://www.loc.gov/mods/v3').text
 
-    originInfo.edition    = oi.xpath("mods:edition", 'mods' => 'http://www.loc.gov/mods/v3').text
+    originInfo.edition = oi.xpath("mods:edition", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     if (originInfo.edition == '[Electronic ed.]')
 
@@ -484,7 +482,7 @@ def getphysicalDescription(modsPhysicalDescriptionElements)
     #pd.forms = physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').map {|el| {el['authority'] => el.text}}
 
     forms = Hash.new
-    physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').each { |el| forms.merge! el['authority'] => el.text }
+    physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').each {|el| forms.merge! el['authority'] => el.text}
 
     pd.form                = forms['marccategory']
     pd.reformattingQuality = physdesc.xpath('mods:reformattingQuality', 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -537,27 +535,27 @@ def getSubject(modsSubjectElements)
 
       subject.type = 'personal'
 
-      str             = personal.collect { |s| s.text if s != nil }.join("; ")
+      str             = personal.collect {|s| s.text if s != nil}.join("; ")
       subject.subject = str
 
 
     elsif !corporate.empty?
 
       subject.type    = 'corporate'
-      str             = corporate.collect { |s| s.text if s != nil }.join("; ")
+      str             = corporate.collect {|s| s.text if s != nil}.join("; ")
       subject.subject = str
 
 
     elsif !geographic.empty?
 
       subject.type    = 'geographic'
-      subject.subject = geographic.children.collect { |s| s.text if (s != nil && s.children != nil) }.join("/")
+      subject.subject = geographic.children.collect {|s| s.text if (s != nil && s.children != nil)}.join("/")
 
 
     elsif !topic.empty?
 
       subject.type    = 'topic'
-      subject.subject = topic.collect { |s| s.child.text if (s != nil && s.child != nil) }.join("/")
+      subject.subject = topic.collect {|s| s.child.text if (s != nil && s.child != nil)}.join("/")
 
     end
 
@@ -683,6 +681,7 @@ def processPresentationImages(meta)
       raise
     end
 
+
     product = @short_product
 
     meta.baseurl        = baseurl
@@ -728,8 +727,8 @@ def getSummary(html_path)
 
     else
 
-      fulltext = File.open(html_path) { |f|
-        Nokogiri::HTML(f) { |config|
+      fulltext = File.open(html_path) {|f|
+        Nokogiri::HTML(f) {|config|
           #config.noblanks
         }
       }
@@ -765,8 +764,8 @@ def getFulltext(xml_path)
 
     else
 
-      fulltext = File.open(xml_path) { |f|
-        Nokogiri::XML(f) { |config|
+      fulltext = File.open(xml_path) {|f|
+        Nokogiri::XML(f) {|config|
           #config.noblanks
         }
       }
@@ -810,7 +809,7 @@ end
 def processFulltexts(meta, doc)
 
 
-  fulltext_FLocat = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
+  #fulltext_FLocat = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
   #fulltext_uris   = fulltext_FLocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
 
   phy_struct_map  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']", 'mets' => 'http://www.loc.gov/METS/')
@@ -879,7 +878,7 @@ def processFulltexts(meta, doc)
             fulltext.fulltext     = "ERROR"
             fulltext.fulltext_ref = from
           else
-            ftxt = ftext.root.text.gsub(/\s+/, "").strip
+            ftxt = ftext.root.text.gsub(/\s+/, " ").strip
             ftxt.gsub!(/</, "&lt;")
             ftxt.gsub!(/>/, "&gt;")
             fulltext.fulltext     = ftxt
@@ -975,6 +974,7 @@ def addToHash(hsh, pos, val)
   else
     hsh[pos] << val
   end
+
 end
 
 def getLogicalPageRange(doc, meta)
@@ -1008,28 +1008,8 @@ def getLogicalPageRange(doc, meta)
     end
 
 
-    # type   = physEl.xpath('@TYPE', 'mets' => 'http://www.loc.gov/METS/').text
-    # fileid = physEl.xpath("mets:fptr", 'mets' => 'http://www.loc.gov/METS/').first.xpath("@FILEID", 'mets' => 'http://www.loc.gov/METS/').text
-
-    # begin
-    #   to = order.to_i
-    #   # if to_.downcase.include? "phys_"
-    #   #   to = to_.match(/(\S*_)(\S*)/)[2].to_i
-    #   # elsif to_.downcase.include? "phys"
-    #   #   to = to_.downcase.gsub('phys', '').to_i
-    #   # else
-    #   #   raise "Link target (#{to_}) doesn't match the expected pattern"
-    #   # end
-    # rescue Exception => e
-    #   @logger.error("[mets_indexer] No regex match for link target #{to_} \t#{e.message}")
-    #   @file_logger.error("[mets_indexer] No regex match for link target #{to_} \t#{e.message}\n\t#{e.backtrace}")
-    #   raise
-    # end
-
-    if meta.doctype == "work"
-      max = to if to > max
-      min = to if to < min
-    end
+    # todo check if sorting is required
+    #order_arr = from_to_hsh[from_].sort
 
     addToHash(logPhyHsh, from_, to)
   }
@@ -1331,8 +1311,8 @@ def get_doc_from_path(path)
   doc      = ""
 
   begin
-    doc = File.open(path) { |f|
-      Nokogiri::XML(f) { |config|
+    doc = File.open(path) {|f|
+      Nokogiri::XML(f) {|config|
         config.noblanks
       }
     }
@@ -1396,7 +1376,7 @@ def parseDoc(doc, source)
   meta.product = ENV['SHORT_PRODUCT']
 
 
-# Titel
+  # Titel
   begin
     modsTitleInfoElements = mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3')
 
@@ -1422,6 +1402,8 @@ def parseDoc(doc, source)
       meta.addOriginalInfo = originInfoHash[:original]
       meta.addEditionInfo  = originInfoHash[:edition]
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1435,6 +1417,8 @@ def parseDoc(doc, source)
     unless modsNameElements.empty?
       meta.addName = getName(modsNameElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:name for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1480,6 +1464,7 @@ def parseDoc(doc, source)
       meta.addSubjectGenre = getGenre(modsSubjectGenreElements)
     end
 
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1492,6 +1477,8 @@ def parseDoc(doc, source)
     unless modsClassificationElements.empty?
       meta.addClassification = getClassification(modsClassificationElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1505,6 +1492,8 @@ def parseDoc(doc, source)
     unless modsLanguageElements.empty?
       meta.addLanguage = getLanguage(modsLanguageElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:language for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1517,6 +1506,8 @@ def parseDoc(doc, source)
     unless modsPhysicalDescriptionElements.empty?
       meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1530,6 +1521,8 @@ def parseDoc(doc, source)
     unless modsNoteElements.empty?
       meta.addNote = getNote(modsNoteElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:note for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1542,6 +1535,7 @@ def parseDoc(doc, source)
     unless modsSponsorElements.empty?
       meta.addSponsor = modsSponsorElements.text
     end
+
 
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
@@ -1556,6 +1550,8 @@ def parseDoc(doc, source)
     unless modsSubjectElements.empty?
       meta.addSubject = getSubject(modsSubjectElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1568,6 +1564,8 @@ def parseDoc(doc, source)
     unless modsRelatedItemElements.empty?
       meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1580,6 +1578,8 @@ def parseDoc(doc, source)
     unless modsPartElements.empty?
       meta.addPart = getPart(modsPartElements)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
     @file_logger.error("[mets_indexer] Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1607,8 +1607,8 @@ def parseDoc(doc, source)
       meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
     end
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve rights info for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1618,6 +1618,7 @@ def parseDoc(doc, source)
     meta.doctype = "work"
 
     # presentation images
+
     begin
       metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
@@ -1637,6 +1638,8 @@ def parseDoc(doc, source)
       unless metsFullTextUriElements.empty?
         processFulltexts(meta, doc)
       end
+
+
     rescue Exception => e
       @logger.error("[mets_indexer] Problems to resolve full texts for #{source} (#{e.message})")
       @file_logger.error("[mets_indexer] Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1693,7 +1696,7 @@ def parseDoc(doc, source)
   meta.addLogicalElement = logicalElementArr
 
 
-# physical structure
+  # physical structure
 
   unless meta.doctype == "collection"
 
@@ -1707,14 +1710,13 @@ def parseDoc(doc, source)
 
   end
 
-# add summary
+
+  # add summary
 
   if @summary_hsh[meta.work]
 
     begin
-
       meta.addSummary = [processSummary(@summary_hsh[meta.work])]
-
     rescue Exception => e
       @logger.error("[mets_indexer] Problems to resolve summary texts for #{source} (#{e.message})")
       @file_logger.error("[mets_indexer] Problems to resolve summary texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1762,9 +1764,9 @@ $vertx.execute_blocking(lambda { |future|
           ppn = json['ppn']
 
           if attempts == 0
-            @logger.info "[mets_indexer] Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.info "[mets_indexer] Retry Indexing METS: #{ppn} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Retry Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           end
 
           uri = metsUri(ppn)
@@ -1820,7 +1822,7 @@ $vertx.execute_blocking(lambda { |future|
 
   # future.complete(doc.to_s)
 
-}) { |res_err, res|
+}) {|res_err, res|
 #
 }
 
