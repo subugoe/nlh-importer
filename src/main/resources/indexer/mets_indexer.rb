@@ -1779,11 +1779,9 @@ $vertx.execute_blocking(lambda { |future|
         json = JSON.parse msg
 
         @context = json['context']
-
+        id = json['id']
 
         if (@context != nil) && (@context.downcase == "gdz")
-
-          ppn = json['ppn']
 
           if attempts == 0
             @logger.info "[mets_indexer] Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
@@ -1791,21 +1789,19 @@ $vertx.execute_blocking(lambda { |future|
             @logger.info "[mets_indexer] Retry Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           end
 
-          uri = metsUri(ppn)
+          uri = metsUri(id)
 
-          doc = get_doc_from_ppn(ppn, uri)
+          doc = get_doc_from_ppn(id, uri)
 
         elsif (@context != nil) && (@context.downcase == "nlh")
 
-          path = json['path']
-
           if attempts == 0
-            @logger.info "[mets_indexer] Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.info "[mets_indexer] Retry Indexing METS: #{path} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.info "[mets_indexer] Retry Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           end
 
-          doc = get_doc_from_path(path)
+          doc = get_doc_from_path(id)
 
         else
           @logger.error "[mets_indexer] Could not process context '#{@context}'"
@@ -1814,19 +1810,16 @@ $vertx.execute_blocking(lambda { |future|
 
         if doc != nil
 
-          source = path
-          source ||= ppn
-
-          metsModsMetadata = parseDoc(doc, source)
+          metsModsMetadata = parseDoc(doc, id)
 
           if metsModsMetadata != nil
             addDocsToSolr(metsModsMetadata.doc_to_solr_string)
             addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
 
-            @logger.info "[mets_indexer] Finish indexing METS: #{source} "
+            @logger.info "[mets_indexer] Finish indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.error "[mets_indexer] Could not process #{source} metadata, object is nil "
-            @file_logger.error "[mets_indexer] Could not process #{source} metadata, object is nil"
+            @logger.error "[mets_indexer] Could not process #{id} metadata, object is nil "
+            @file_logger.error "[mets_indexer] Could not process #{id} metadata, object is nil"
             next
           end
         end
@@ -1834,9 +1827,9 @@ $vertx.execute_blocking(lambda { |future|
       end
 
     rescue Exception => e
+      @logger.error "[mets_indexer] Processing problem with '#{res[1]}' \t#{e.message}\n\t#{e.backtrace}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "[mets_indexer] Could not process redis data '#{res[1]}' (#{e.message})"
       @file_logger.error "[mets_indexer] Could not process redis data '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
     end
 
