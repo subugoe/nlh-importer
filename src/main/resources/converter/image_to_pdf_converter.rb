@@ -7,6 +7,16 @@ require 'json'
 require 'fileutils'
 require 'mini_magick'
 require 'model/mets_mods_metadata'
+require 'open-uri'
+#require 'combine_pdf'
+
+require 'vertx/future'
+require 'vertx/composite_future'
+
+
+@options = {
+    'sendTimeout' => 300000
+}
 
 context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
@@ -14,157 +24,191 @@ MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 productin     = ENV['IN'] + '/' + ENV['PRODUCT']
 @imageinpath  = productin + ENV['IMAGE_IN_SUB_PATH']
 @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-@pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/image_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-@logger.debug "[image to pdf converter worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
-def pushToQueue(queue, hsh)
-  @rredis.lpush(queue, hsh.to_json)
-end
-
-def copyFile(from, to, to_dir)
-
-  begin
-    FileUtils.mkdir_p(to_dir)
-    FileUtils.cp(from, to)
-
-    fixity = (Digest::MD5.file from).hexdigest
-
-    hsh = Hash.new
-    hsh.merge!({"from" => from})
-    hsh.merge!({"to" => to})
-    hsh.merge!({"fixity" => fixity})
-
-    pushToQueue("fixitychecker", hsh)
+@queue  = ENV['REDIS_CONVERT_QUEUE']
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 
-    @rredis.incr 'imagescopied'
-  rescue Exception => e
-    @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
+# ---
+
+def log_error(msg, e)
+
+  unless e == nil
+    @logger.error("[image_to_pdf_converter] #{msg} \t#{e.message}")
+    @file_logger.error("[image_to_pdf_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+  else
+    @logger.error("[image_to_pdf_converter] #{msg}")
+    @file_logger.error("[image_to_pdf_converter] #{msg}")
   end
 
-  return to
-
 end
 
-def convert(work, product, solr_page_arr, image_format, to_full_pdf, to_pdf_dir)
 
-  begin
-    FileUtils.mkdir_p(to_pdf_dir)
-    FileUtils.rm(to_full_pdf, :force => true)
+def log_info(msg)
+  @logger.info("[image_to_pdf_converter] #{msg}")
+  @file_logger.info("[image_to_pdf_converter] #{msg}")
+end
 
-    @logger.debug "creating #{to_full_pdf}"
+def log_debug(msg)
+  @logger.debug("[image_to_pdf_converter] #{msg}")
+  @file_logger.debug("[image_to_pdf_converter] #{msg}")
+end
 
-    MiniMagick::Tool::Convert.new do |convert|
+# ---
+
+log_debug "Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
-      solr_page_arr.each { |path|
-        convert << "#{path}"
+def removeQueue(queue)
+  keys = @rredis.hkeys(queue)
+  unless keys.empty?
+    @rredis.hdel(queue, keys)
+  end
+end
+
+
+def push_to_event_bus(id, context)
+
+  request_logical_part = false
+
+  if id.include? '___LOG_'
+    match = id.match(/(\S*)___(LOG_)([\d]*)/)
+    work  = match[1]
+    #log_id_value         = match[3]
+    log_id               = match[2]+match[3]
+    request_logical_part = true
+  else
+    work = id
+    #log_id_value = 0
+    log_id = "LOG_0000"
+  end
+
+  solr_resp = @solr.get 'select', :params => {:q => "work:#{work}", :fl => "id doctype"}
+  if solr_resp['response']['numFound'] == 0
+    log_error "Work: '#{work}' for id: '#{id}' could not be found in index, conversion not possible", nil
+    return
+  end
+
+  doctype = solr_resp['response']['docs'].first['doctype']
+
+  if doctype == 'work'
+
+    resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+
+    log_start_page_index = 0
+    log_end_page_index   = -1
+
+    if request_logical_part
+
+      log_id_index = resp['log_id'].index log_id
+
+      log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
+      log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1
+
+    end
+
+    pages       = resp['page'][log_start_page_index..log_end_page_index]
+    pages_count = pages.size
+
+    # todo remove this
+    puts "log_id: #{log_id}, pages_count: #{pages_count}"
+
+    pages.each {|page|
+      msg = {
+          'context'              => context,
+          'id'                   => id,
+          'work'                 => work,
+          "log_id"               => log_id,
+          "request_logical_part" => request_logical_part,
+          'page'                 => page,
+          'pages_count'          => pages_count
       }
-      convert << "-define" << "pdf:use-cropbox=true"
-#      convert << "-density" << "100"
+      $vertx.event_bus().send("image.load", msg.to_json, @options)
+    }
 
-#      convert << solr_page_arr.join(' ')
-      convert << "#{to_full_pdf}"
+    unless request_logical_part
+      log_debug "Generate PDF for work #{work}"
+    else
+      log_debug "Generate PDF for logical part #{log_id} of #{work}"
     end
 
-  rescue Exception => e
-    @file_logger.error "Could not convert images to Full PDF: '#{to_full_pdf}'\n\t#{e.message}"
+
+  else
+    log_error "Could not create a PDF for the multivolume work: '#{work}', PDF not created", nil
   end
 
 end
 
-
-def convert(from, to_page_pdf, to_pdf_dir)
-
-  begin
-    FileUtils.mkdir_p(to_pdf_dir)
-    #FileUtils.rm(to_full_pdf, :force => true)
-
-    MiniMagick::Tool::Convert.new do |convert|
-
-      convert << from
-      convert << "-define" << "pdf:use-cropbox=true"
-      #convert << "-density" << "100"
-      convert << "#{to_page_pdf}"
-
-    end
-
-  rescue Exception => e
-    @file_logger.error "Could not convert images to Full PDF: '#{to_page_pdf}'\n\t#{e.message}"
+def removeQueue(queue)
+  keys = @rredis.hkeys(queue)
+  unless keys.empty?
+    @rredis.hdel(queue, keys)
   end
-
 end
 
 
-$vertx.execute_blocking(lambda { |future|
+$vertx.execute_blocking(lambda {|future|
 
 
   while true do
 
-    res = @rredis.brpop("worksToProcess") # ⇒ nil, [String, String]
+    res = @rredis.brpop(@queue) # ⇒ nil, [String, String]
+
 
     attempts = 0
+
     begin
 
       if (res != '' && res != nil)
 
+        msg  = res[1]
+        json = JSON.parse msg
 
-        json    = JSON.parse(res[1])
-        work    = json['work']
-        product = json['product']
+        context = json['context']
 
+        unless context == nil
 
-        solr_work = @solr.get 'select', :params => {:q => "work:#{work}", :fl => "image_format, page"}
+          raise "Unknown context '#{context}', use {gdz | nlh}" unless (context.downcase == "nlh") || (context.downcase == "gdz")
 
+          id = json['id']
 
-        image_format  = solr_work['response']['docs'].first['image_format']
-        solr_page_arr = solr_work['response']['docs'].first['page']
+          log_info "Convert work id=#{id}"
 
-        @logger.debug "Creating #{solr_page_arr.size} PDFs for Work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          removeQueue(id)
 
-        to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/"
+          push_to_event_bus(id, context)
 
-        solr_page_arr.each { |page|
-
-          from        = "#{@imageoutpath}/#{product}/#{work}/#{page}.#{image_format}"
-          to_page_pdf = "#{@pdfoutpath}/#{product}/#{work}/#{page}.pdf"
-          convert(from, to_page_pdf, to_pdf_dir) # convert to page pdfs
-        }
-
-        @logger.debug "\tFinish PDF creation for work: #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-
-        #convert(work, product, image_paths, image_format, to_full_pdf, to_pdf_dir) # convert to page pdfs
-
+        else
+          raise "No context specified in request, use {gdz | nlh}"
+        end
 
       else
-        @logger.error "Get empty string or nil from redis"
+        raise "Could not process empty string or nil"
       end
 
     rescue Exception => e
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
-      @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
+      log_error "Could not process redis data '#{res[1]}'", e
+      next
     end
   end
 
 
   # future.complete(doc.to_s)
 
-}) { |res_err, res|
+}) {|res_err, res|
   #
 }
 
