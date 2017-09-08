@@ -319,15 +319,6 @@ class MetsModsMetadata
 
 
     h.merge! ({:identifier => @identifiers})
-
-    # todo remove this when recordId has changed for fid.mathematica
-    #if !@record_identifiers.first[1].start_with?('PPN') && !@record_identifiers.first[1].start_with?('DE_')
-    #  recordId = "HANS_DE_7_" + @record_identifiers.first[1]
-    #else
-    #  recordId = @record_identifiers.first[1]
-    #end
-
-    #h.merge! ({:id => recordId})
     h.merge! ({:id => @record_identifiers.first[1]})
 
     # e.g. http://resolver.sub.uni-goettingen.de/purl?PPN13357363X
@@ -342,14 +333,7 @@ class MetsModsMetadata
     h.merge! ({:access_pattern => @access_pattern})
     h.merge! ({:baseurl => @baseurl})
 
-
     merge_title_info(h)
-
-
-    #    h.merge! ({:id => @record_identifiers.first[1]})
-
-    # --- :displayform, :type, :role, :namepart, :date
-
 
     facet_creator_personal  = Array.new
     facet_creator_corporate = Array.new
