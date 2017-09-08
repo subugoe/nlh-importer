@@ -136,31 +136,36 @@ def getIdentifiers(mods, source)
 
   begin
     identifiers = mods.xpath('mods:identifier', 'mods' => 'http://www.loc.gov/mods/v3')
-    identifiers.each do |id_element|
 
-      if id_element.attributes['type'] != nil
-        type = id_element.attributes['type'].value
-      else
-        type = "unknown"
-      end
+    #.each do |id_element|
 
-      id = id_element.text
-      ids << "#{type} #{id}"
-    end
+    while identifiers.count > 0
 
-    identifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
-    identifiers.each do |id_element|
-      if id_element.attributes['source'] != nil
-        type = id_element.attributes['source'].value
-      elsif id_element.attributes['type'] != nil
-        type = id_element.attributes['type'].value if type == nil
-      else
-        type = "unknown"
-      end
+      id_element = identifiers.shift
+      type       = id_element.attributes['type']&.value
+      type       = "unknown" if type == nil
 
       id = id_element.text
       ids << "#{type} #{id}"
     end
+    identifiers = nil
+
+    recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3')
+
+    #.each do |id_element|
+
+    while recordIdentifiers.count > 0
+
+      id_element = recordIdentifiers.shift
+
+      type = id_element.attributes['source']&.value
+      type = id_element.attributes['type']&.value if type == nil
+      type = "unknown" if type == nil
+
+      id = id_element.text
+      ids << "#{type} #{id}"
+    end
+    recordIdentifiers = nil
 
   rescue Exception => e
     @logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}")
@@ -175,7 +180,6 @@ def getRecordIdentifiers(mods, source)
 
   ids = Hash.new
 
-  # todo there could be more than one recordIdentifier in the future
   begin
     recordIdentifiers = mods.xpath('mods:identifier[@type="gbv-ppn"]',
                                    'mods' => 'http://www.loc.gov/mods/v3')
@@ -206,19 +210,23 @@ or @type="URN"]',
     recordIdentifiers = mods.xpath('mods:recordInfo/mods:recordIdentifier',
                                    'mods' => 'http://www.loc.gov/mods/v3') if recordIdentifiers.empty?
 
-    recordIdentifiers.each do |id_element|
+    while recordIdentifiers.count > 0
+
+      #recordIdentifiers.each do |id_element|
+      id_element = recordIdentifiers.shift
+
       id_source = id_element.attributes['source']
       id_type   = id_element.attributes['type']
-      if id_source != nil
-        type = id_source.value
-      elsif id_type != nil
-        type = id_type.value
-      else
-        type = 'recordIdentifier'
-      end
+
+      type = id_source&.value
+      type = id_type&.value if type == nil
+      type = 'recordIdentifier' if type != nil
+
       id        = id_element.text
       ids[type] = id
     end
+    recordIdentifiers = nil
+
   rescue Exception => e
     @logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}")
     @file_logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -231,26 +239,21 @@ end
 def getTitleInfos(modsTitleInfoElements)
 
   titleInfoArr = Array.new
-  modsTitleInfoElements.each { |ti|
+
+  while modsTitleInfoElements.count > 0
+
+
+    ti = modsTitleInfoElements.shift
+
     titleInfo = TitleInfo.new
 
-    titleInfo.title = ti.xpath('mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
-
+    titleInfo.title    = ti.xpath('mods:title', 'mods' => 'http://www.loc.gov/mods/v3').text
     titleInfo.subtitle = checkEmptyString ti.xpath('mods:subTitle', 'mods' => 'http://www.loc.gov/mods/v3').text
-
-    titleInfo.nonsort = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
-
-    # if nonsort == ""
-    #   nonsort = titleInfo.title
-    # else
-    #   nonsort = nonsort + ' ' if (nonsort[-1] != " ")
-    #   nonsort = nonsort + titleInfo.title
-    # end
-    #
-    #titleInfo.nonsort = nonsort
+    titleInfo.nonsort  = ti.xpath('mods:nonSort', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     titleInfoArr << titleInfo
-  }
+  end
+  modsTitleInfoElements = nil
 
   return titleInfoArr
 end
@@ -270,6 +273,8 @@ def getMissingTitleInfos(modsPartElements, structMapDiv)
     titleInfo.nonsort  = ""
     titleInfoArr << titleInfo
   end
+  label  = nil
+  detail = nil
 
   return titleInfoArr
 end
@@ -279,7 +284,9 @@ def getName(modsNameElements)
 
   nameArr = Array.new
 
-  modsNameElements.each { |name|
+  while modsNameElements.count > 0
+
+    name = modsNameElements.shift
 
     n = Name.new
 
@@ -309,17 +316,13 @@ def getName(modsNameElements)
 
 
     nameArr << n
-  }
+
+  end
+
+  modsNameElements = nil
 
   return nameArr
 
-end
-
-def getTypeOfResource(modsTypeOfResourceElements)
-
-  typeOfResourceArr = Array.new
-
-  return typeOfResourceArr
 end
 
 
@@ -327,7 +330,10 @@ def getLocation(modsLocationElements)
 
   locationArr = Array.new
 
-  modsLocationElements.each { |li|
+  while modsLocationElements.count > 0
+
+    li = modsLocationElements.shift
+
     locationInfo = Location.new
 
     shelfmark_l1 = li.xpath("mods:physicalLocation[@type='shelfmark']", 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -341,21 +347,29 @@ def getLocation(modsLocationElements)
 
     locationArr << locationInfo
 
+  end
+  modsLocationElements = nil
 
-  }
   return locationArr
 end
 
 def getGenre(modsGenreElements)
 
   genreArr = Array.new
-  modsGenreElements.each { |g|
+
+  while modsGenreElements.count > 0
+
+    g = modsGenreElements.shift
+
     genre = Genre.new
 
     genre.genre = g.text
 
     genreArr << genre
-  }
+
+  end
+  modsGenreElements = nil
+
 
   return genreArr
 end
@@ -363,7 +377,11 @@ end
 def getClassification(modsClassificationElements)
 
   classificationArr = Array.new
-  modsClassificationElements.each { |dc|
+
+  while modsClassificationElements.count > 0
+
+    dc = modsClassificationElements.shift
+
     classification = Classification.new
 
     c = checkEmptyString dc.text
@@ -374,7 +392,9 @@ def getClassification(modsClassificationElements)
 
 
     classificationArr << classification
-  }
+
+  end
+  modsClassificationElements = nil
 
   return classificationArr
 end
@@ -384,7 +404,9 @@ def getOriginInfo(modsOriginInfoElements, source)
   originalInfoArr = Array.new
   editionInfoArr  = Array.new
 
-  modsOriginInfoElements.each { |oi|
+  while modsOriginInfoElements.count > 0
+
+    oi = modsOriginInfoElements.shift
 
     originInfo = OriginInfo.new
 
@@ -450,7 +472,8 @@ def getOriginInfo(modsOriginInfoElements, source)
       originalInfoArr << originInfo
     end
 
-  }
+  end
+  modsOriginInfoElements = nil
 
   return {:original => originalInfoArr, :edition => editionInfoArr}
 
@@ -459,14 +482,18 @@ end
 def getLanguage(modsLanguageElements)
 
   langArr = Array.new
-  modsLanguageElements.each { |l|
+  while modsLanguageElements.count > 0
+
+    l = modsLanguageElements.shift
+
     lang = LanguageTerm.new
 
     lang.languageterm = l.xpath('mods:languageTerm', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     langArr << lang
-  }
 
+  end
+  modsLanguageElements = nil
   return langArr
 end
 
@@ -475,8 +502,10 @@ def getphysicalDescription(modsPhysicalDescriptionElements)
 
   physicalDescriptionArr = Array.new
 
-  modsPhysicalDescriptionElements.each { |physdesc|
-    pd    = PhysicalDescription.new
+  while modsPhysicalDescriptionElements.count > 0
+
+    physdesc = modsPhysicalDescriptionElements.shift
+    pd       = PhysicalDescription.new
 
     # e.g.  => [{"marcform"=>"electronic"}, {"marccategory"=>"electronic resource"}, {"marcsmd"=>"remote"}, {"gmd"=>"electronic resource "}]
     #pd.forms = physdesc.xpath('mods:form', 'mods' => 'http://www.loc.gov/mods/v3').map {|el| {el['authority'] => el.text}}
@@ -490,8 +519,10 @@ def getphysicalDescription(modsPhysicalDescriptionElements)
     pd.digitalOrigin       = physdesc.xpath('mods:digitalOrigin', 'mods' => 'http://www.loc.gov/mods/v3').text
 
     physicalDescriptionArr << pd
-  }
 
+  end
+
+  modsPhysicalDescriptionElements = nil
   return physicalDescriptionArr
 end
 
@@ -500,18 +531,18 @@ def getNote(modsNoteElements)
 
   noteArr = Array.new
 
+  while modsNoteElements.count > 0
 
-  modsNoteElements.each { |note|
-    n       = Note.new
-
-    # :type, :note
+    note = modsNoteElements.shift
+    n    = Note.new
 
     n.type  = checkEmptyString note["type"]
     n.value = checkEmptyString note.text
 
     noteArr << n
-  }
 
+  end
+  modsNoteElements = nil
 
   return noteArr
 end
@@ -521,7 +552,10 @@ def getSubject(modsSubjectElements)
 
   subjectArr = Array.new
 
-  modsSubjectElements.each { |su|
+  while modsSubjectElements.count > 0
+
+    su = modsSubjectElements.shift
+
     subject = Subject.new
 
 
@@ -561,8 +595,8 @@ def getSubject(modsSubjectElements)
 
     subjectArr << subject
 
-  }
-
+  end
+  modsSubjectElements = nil
 
   return subjectArr
 end
@@ -572,7 +606,9 @@ def getRelatedItem(modsRelatedItemElements)
 
   relatedItemArr = Array.new
 
-  modsRelatedItemElements.each { |ri|
+  while modsRelatedItemElements.count > 0
+
+    ri          = modsRelatedItemElements.shift
     relatedItem = RelatedItem.new
 
     relatedItem.id                = checkEmptyString ri.xpath('mods:recordInfo/mods:recordIdentifier', 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -583,8 +619,9 @@ def getRelatedItem(modsRelatedItemElements)
     relatedItem.type              = checkEmptyString ri.xpath("@type", 'mods' => 'http://www.loc.gov/mods/v3').text
 
     relatedItemArr << relatedItem
-  }
 
+  end
+  modsRelatedItemElements = nil
   return relatedItemArr
 end
 
@@ -592,8 +629,10 @@ end
 def getPart(modsPartElements)
 
   partArr = Array.new
+  while modsPartElements.count > 0
 
-  modsPartElements.each { |p|
+    p = modsPartElements.shift
+
     part = Part.new
 
     part.currentnosort = checkEmptyString p.xpath("@order", 'mods' => 'http://www.loc.gov/mods/v3').text
@@ -605,8 +644,8 @@ def getPart(modsPartElements)
     end
 
     partArr << part
-  }
 
+  end
   return partArr
 
 end
@@ -649,7 +688,9 @@ def processPresentationImages(meta)
     meta.work           = work
     meta.image_format   = ENV['IMAGE_OUT_FORMAT']
 
-    presentation_image_uris.each { |image_uri|
+    while presentation_image_uris_arr.count > 0
+
+      image_uri = presentation_image_uris_arr.shift.text
 
       begin
         match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
@@ -664,9 +705,10 @@ def processPresentationImages(meta)
       page_arr << page
       path_arr << {"image_uri" => image_uri}.to_json
 
-    }
-
+    end
+    presentation_image_uris_arr = nil
   elsif (@context != nil) && (@context.downcase == "gdz")
+
 
     begin
       # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
@@ -690,7 +732,9 @@ def processPresentationImages(meta)
     meta.work           = work
     meta.image_format   = ENV['IMAGE_OUT_FORMAT']
 
-    presentation_image_uris.each { |image_uri|
+    while presentation_image_uris_arr.count > 0
+
+      image_uri = presentation_image_uris_arr.shift.text
 
       begin
         match = image_uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
@@ -705,7 +749,8 @@ def processPresentationImages(meta)
       page_arr << page
       path_arr << {"image_uri" => image_uri}.to_json
 
-    }
+    end
+    presentation_image_uris_arr = nil
   end
 
   meta.addPage_key = id_arr
@@ -836,11 +881,14 @@ def processFulltexts(meta, doc)
         raise
       end
 
-      fulltext_FLocat.each { |flocat|
+      while fulltext_uris.count > 0
+
+        uri_node = fulltext_uris.shift
+        uri      = uri_node&.text
 
         fulltext = Fulltext.new
 
-        uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+        #  uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
 
         begin
           match    = uri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
@@ -865,10 +913,9 @@ def processFulltexts(meta, doc)
 
         fulltext.fulltext_of_work = work
 
-        id                            = flocat.xpath("parent::*/@ID").text
-        #      phy_struct_map.xpath("mets:fptr[@FILEID=#{id}]").xpath("parent::*/@ORDER").text
+        id = uri_node.xpath("parent::*/parent::*/@ID").text
 
-        page_number                   = phy_struct_map.xpath("//mets:fptr[@FILEID='#{id}']", 'mets' => 'http://www.loc.gov/METS/').xpath("parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
+        page_number                   = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:fptr[@FILEID='#{id}']/parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
         fulltext.fulltext_page_number = page_number
 
 
@@ -888,8 +935,9 @@ def processFulltexts(meta, doc)
         end
 
         fulltextUriArr << {"fulltexturi" => from, "to" => to, "to_dir" => to_dir}.to_json
-      }
 
+      end
+      fulltext_uris = nil
     elsif (@context != nil) && (@context.downcase == "gdz")
 
 
@@ -906,11 +954,14 @@ def processFulltexts(meta, doc)
 
       product = @short_product
 
-      fulltext_FLocat.each { |flocat|
+      while fulltext_uris.count > 0
+
+        uri_node = fulltext_uris.shift
+        uri      = uri_node&.text
 
         fulltext = Fulltext.new
 
-        uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+        #uri = flocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
 
         begin
           match  = uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
@@ -933,10 +984,12 @@ def processFulltexts(meta, doc)
 
         fulltext.fulltext_of_work = work
 
-        id                            = flocat.xpath("parent::*/@ID").text
+        id = uri_node.xpath("parent::*/parent::*/@ID").text
+        #id = flocat.xpath("parent::*/@ID").text
         #        phy_struct_map.xpath("mets:fptr[@FILEID=#{id}]").xpath("parent::*/@ORDER").text
 
-        page_number                   = phy_struct_map.xpath("//mets:fptr[@FILEID='#{id}']", 'mets' => 'http://www.loc.gov/METS/').xpath("parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
+        #page_number                   = phy_struct_map.xpath("//mets:fptr[@FILEID='#{id}']", 'mets' => 'http://www.loc.gov/METS/').xpath("parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
+        page_number                   = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:fptr[@FILEID='#{id}']/parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
         fulltext.fulltext_page_number = page_number
 
         if @fulltextexist == 'true'
@@ -957,8 +1010,9 @@ def processFulltexts(meta, doc)
         # todo not required to copy the fulltexts, retrieved via HTTP
         #fulltextUriArr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
 
-      }
 
+      end
+      fulltext_uris = nil
     end
 
     meta.addFulltext = fulltextArr
@@ -1356,8 +1410,6 @@ end
 def parseDoc(doc, source)
 
   meta = MetsModsMetadata.new
-
-#=begin
 
   mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
 
