@@ -51,6 +51,7 @@ INDEXER_VERTICLE=start_indexer.rb
 CONVERTER_VERTICLE=start_converter.rb
 VERTICLE_HOME=/usr/verticles
 CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
+LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
 
 SOLR_JAVA_MEM="-Xms512M -Xmx7424M"
 SOLR_MEM_LIMIT=8GB
@@ -78,6 +79,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     sed -i '' "s|<solr_external_port>|${solr_external_port}|g"          .env
     sed -i '' "s|<solr_external_port2>|${solr_external_port2}|g"        .env
+
+    sed -i '' "s|<logo_path>|${LOGO_PATH}|g"         .env
 
 
     sed -i '' "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
@@ -127,6 +130,8 @@ else
 
     sed -i "s|<solr_external_port>|${solr_external_port}|g"          .env
     sed -i "s|<solr_external_port2>|${solr_external_port2}|g"        .env
+
+    sed -i "s|<logo_path>|${LOGO_PATH}|g"         .env
 
 
     sed -i "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
