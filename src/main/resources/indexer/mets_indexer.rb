@@ -1425,32 +1425,37 @@ def parseDoc(doc, source)
   meta.addIdentifiers      = getIdentifiers(mods, source)
   meta.addRecordIdentifiers= getRecordIdentifiers(mods, source)
 
-  meta.product = ENV['SHORT_PRODUCT']
+  meta.work = source
 
+
+  meta.addPurl, meta.addCatalogue = get_purl_and_catalogue(doc)
+
+
+  meta.product = ENV['SHORT_PRODUCT']
 
   # Titel
   begin
-    modsTitleInfoElements = mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3')
 
-    unless modsTitleInfoElements.empty?
-      meta.addTitleInfo = getTitleInfos(modsTitleInfoElements)
+    unless mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addTitleInfo = getTitleInfos(mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
     else
       modsPartElements  = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
       structMapDiv      = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
       meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
     end
+
+
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-# Erscheinungsort
+  # Erscheinungsort
   begin
-    modsOriginInfoElements = mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsOriginInfoElements.empty?
-      originInfoHash       = getOriginInfo(modsOriginInfoElements, source)
+    unless mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      originInfoHash       = getOriginInfo(mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3'), source)
       meta.addOriginalInfo = originInfoHash[:original]
       meta.addEditionInfo  = originInfoHash[:edition]
     end
@@ -1462,12 +1467,12 @@ def parseDoc(doc, source)
   end
 
 
-# Name
+  # Name
   begin
-    modsNameElements = mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsNameElements.empty?
-      meta.addName = getName(modsNameElements)
+
+    unless mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addName = getName(mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1476,44 +1481,31 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# TypeOfResource:
+
+  # Location (shelfmark)
   begin
-    modsTypeOfResourceElements = mods.xpath('mods:typeOfResource', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsTypeOfResourceElements.empty?
-      meta.addTypeOfResource = getTypeOfResource(modsTypeOfResourceElements)
+    unless mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addLocation = getLocation(mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
-  rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:typeOfResource for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:typeOfResource for #{source} \t#{e.message}\n\t#{e.backtrace}")
-  end
 
 
-# Location (shelfmark)
-  begin
-    modsLocationElements = mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
-
-    unless modsLocationElements.empty?
-      meta.addLocation = getLocation(modsLocationElements)
-    end
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:location for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
-# Genre
+  # Genre
   begin
-    modsGenreElements = mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsGenreElements.empty?
-      meta.addGenre = getGenre(modsGenreElements)
+    unless mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addGenre = getGenre(mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
-    modsSubjectGenreElements = mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsSubjectGenreElements.empty?
-      meta.addSubjectGenre = getGenre(modsSubjectGenreElements)
+    unless mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addSubjectGenre = getGenre(mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1522,12 +1514,11 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# Classification
+  # Classification
   begin
-    modsClassificationElements = mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsClassificationElements.empty?
-      meta.addClassification = getClassification(modsClassificationElements)
+    unless mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addClassification = getClassification(mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1537,12 +1528,11 @@ def parseDoc(doc, source)
   end
 
 
-# Language
+  # Language
   begin
-    modsLanguageElements = mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsLanguageElements.empty?
-      meta.addLanguage = getLanguage(modsLanguageElements)
+    unless mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addLanguage = getLanguage(mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1551,12 +1541,11 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# PhysicalDescription:
+  # PhysicalDescription:
   begin
-    modsPhysicalDescriptionElements = mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsPhysicalDescriptionElements.empty?
-      meta.addPhysicalDescription = getphysicalDescription(modsPhysicalDescriptionElements)
+    unless mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addPhysicalDescription = getphysicalDescription(mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1566,12 +1555,11 @@ def parseDoc(doc, source)
   end
 
 
-# Note:
+  # Note:
   begin
-    modsNoteElements= mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsNoteElements.empty?
-      meta.addNote = getNote(modsNoteElements)
+    unless mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addNote = getNote(mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1580,12 +1568,12 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# Sponsor:
-  begin
-    modsSponsorElements = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/') # [0].text
 
-    unless modsSponsorElements.empty?
-      meta.addSponsor = modsSponsorElements.text
+  # Sponsor:
+  begin
+
+    unless mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').empty?
+      meta.addSponsor = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').text
     end
 
 
@@ -1595,12 +1583,11 @@ def parseDoc(doc, source)
   end
 
 
-# Subject:
+  # Subject:
   begin
-    modsSubjectElements = mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsSubjectElements.empty?
-      meta.addSubject = getSubject(modsSubjectElements)
+    unless mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addSubject = getSubject(mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1609,12 +1596,11 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# RelatedItem
+  # RelatedItem
   begin
-    modsRelatedItemElements = mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsRelatedItemElements.empty?
-      meta.addRelatedItem = getRelatedItem(modsRelatedItemElements)
+    unless mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addRelatedItem = getRelatedItem(mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1623,12 +1609,11 @@ def parseDoc(doc, source)
     @file_logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
   end
 
-# Part (of multipart Documents)
+  # Part (of multipart Documents)
   begin
-    modsPartElements = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsPartElements.empty?
-      meta.addPart = getPart(modsPartElements)
+    unless mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addPart = getPart(mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
@@ -1638,26 +1623,14 @@ def parseDoc(doc, source)
   end
 
 
-# RecordInfo:
+  # RecordInfo:
   begin
-    modsRecordInfoElements = mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
 
-    unless modsRecordInfoElements.empty?
-      meta.addRecordInfo = getRecordInfo(modsRecordInfoElements)
+    unless mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      meta.addRecordInfo = getRecordInfo(mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
-  rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
-  end
 
 
-# rights info
-  begin
-    metsRightsMDElements = doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/')
-
-    unless metsRightsMDElements.empty?
-      meta.addRightInfo = metsRigthsMDElements(metsRightsMDElements)
-    end
   rescue Exception => e
     @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} (#{e.message})")
     @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
@@ -1672,22 +1645,19 @@ def parseDoc(doc, source)
     # presentation images
 
     begin
-      metsPresentationImageUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-      unless metsPresentationImageUriElements.empty?
-        meta.addPresentationImageUri = metsPresentationImageUriElements.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
-        processPresentationImages(meta)
-      end
+      processPresentationImages(doc, meta)
+
     rescue Exception => e
       @logger.error("[mets_indexer] Problems to resolve presentation images for #{source} (#{e.message})")
       @file_logger.error("[mets_indexer] Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
     end
 
+
     # full texts
     begin
-      metsFullTextUriElements = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
 
-      unless metsFullTextUriElements.empty?
+      unless doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').empty?
         processFulltexts(meta, doc)
       end
 
