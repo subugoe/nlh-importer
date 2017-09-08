@@ -670,16 +670,22 @@ def getRecordInfo(modsRecordInfoElements)
 end
 
 
-def processPresentationImages(meta)
+def processPresentationImages(doc, meta)
+
+
+  #meta.addPresentationImageUri = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect {|el| el.text}
+
+  presentation_image_uris_arr = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat/@xlink:href", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink').to_a
+
 
   path_arr = Array.new
   id_arr   = Array.new
   page_arr = Array.new
 
-  presentation_image_uris = meta.presentation_image_uris
+  #presentation_image_uris = meta.presentation_image_uris
 
 
-  firstUri = presentation_image_uris[0]
+  firstUri = presentation_image_uris_arr[0].text
 
   if (@context != nil) && (@context.downcase == "nlh")
 
@@ -869,8 +875,9 @@ def processFulltexts(meta, doc)
 
   #fulltext_FLocat = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
   #fulltext_uris   = fulltext_FLocat.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect { |el| el.text }
+  fulltext_uris = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat/@xlink:href", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink')
 
-  phy_struct_map  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']", 'mets' => 'http://www.loc.gov/METS/')
+  #phy_struct_map = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']", 'mets' => 'http://www.loc.gov/METS/')
 
   if @fulltextexist == 'true'
 
@@ -878,8 +885,8 @@ def processFulltexts(meta, doc)
     fulltextArr    = Array.new
 
     #fulltext_uris = meta.fulltext_uris
-    firstUri       = fulltext_FLocat.first.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
-
+    #firstUri = fulltext_FLocat.first.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+    firstUri = fulltext_uris.first&.text
 
     if (@context != nil) && (@context.downcase == "nlh")
 
