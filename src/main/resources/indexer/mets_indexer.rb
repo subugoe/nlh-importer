@@ -1042,242 +1042,181 @@ def processFulltexts(meta, doc)
 
 end
 
-def addToHash(hsh, pos, val)
-  if hsh[pos] == nil
-    hsh[pos] = [val]
+def addToHash(log_start_stop_hsh, from, to)
+
+  if log_start_stop_hsh[from] == nil
+    log_start_stop_hsh[from] = {'start' => to, 'end' => to}
   else
-    hsh[pos] << val
+    if log_start_stop_hsh[from]['start'] > to
+      log_start_stop_hsh[from]['start'] = to
+    end
+    if log_start_stop_hsh[from]['end'] < to
+      log_start_stop_hsh[from]['end'] = to
+    end
   end
 
 end
 
-def getLogicalPageRange(doc, meta)
+def getLogicalPageRange(doc, meta, from_to_hsh)
 
-  logPhyHsh = Hash.new
+  log_start_stop_hsh = Hash.new
 
-  min, max, to = 1, 1, 1
+  min, max = 1, 1
 
-  files        = Hash.new
-  defaultfiles = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file", 'mets' => 'http://www.loc.gov/METS/')
-  defaultfiles.each { |defaultfile|
-    id  = defaultfile.xpath('@ID', 'mets' => 'http://www.loc.gov/METS/').text
-    uri = defaultfile.xpath("mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').xpath("@xlink:href", 'xlink' => "http://www.w3.org/1999/xlink").text
-    files.merge!({id => uri})
-  }
+  #links = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
 
-  links = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
+  #links.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").each { |el| log_id_set << el.text }
+  #links = nil
 
-  links.each { |link|
 
-    from_ = link.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").to_s
-    to_   = link.xpath('@xlink:to', 'xlink' => "http://www.w3.org/1999/xlink").to_s
+  while from_to_hsh.count > 0
 
-    physEl = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_}']", 'mets' => 'http://www.loc.gov/METS/')
-    order  = physEl.xpath('@ORDER', 'mets' => 'http://www.loc.gov/METS/').text
+    from_, to_phys_arr = from_to_hsh.shift
 
-    unless order.empty?
-      to = order.to_i
-    else
-      next
+    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_phys_arr.first}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
+    max = to if to > max
+    min = to if to < min
+    addToHash(log_start_stop_hsh, from_, to)
+
+
+    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_phys_arr.last}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
+    max = to if to > max
+    min = to if to < min
+    addToHash(log_start_stop_hsh, from_, to)
+
+
+  end
+
+  meta.phys_first_page_index = min
+  meta.phys_last_page_index  = max
+
+  return log_start_stop_hsh
+
+end
+
+
+def getInfoFromMetsMptrs(part_url)
+
+  product = ''
+  work    = ''
+
+  #if !part_uri.empty?
+
+  #part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
+
+
+  if (@context != nil) && (@context.downcase == "nlh")
+
+    begin
+      # https://nl.sub.uni-goettingen.de/mets/ecj:busybody.mets.xml
+      match = part_url.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
+      match = part_url.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
+
+      product = match[2]
+      work    = match[3]
+    rescue Exception => e
+      @logger.error("[mets_indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
+      @file_logger.error("[mets_indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
+      raise
     end
 
 
-    # todo check if sorting is required
-    #order_arr = from_to_hsh[from_].sort
-
-    addToHash(logPhyHsh, from_, to)
-  }
-
-  if meta.doctype == "work"
-    meta.phys_first_page_index = min
-    meta.phys_last_page_index  = max
-  end
-
-  hsh = Hash.new
-
-  logPhyHsh.each { |key, value|
-    value.sort!
-    hsh[key] = {"start" => value.min, "end" => value.max}
-  }
+  elsif (@context != nil) && (@context.downcase == "gdz")
 
 
-  return hsh
-end
+    count = 0
 
-def getAttributesFromPhysicalDiv(div, doctype, level)
-
-  physicalElement = PhysicalElement.new
-
-
-  # type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
-  # if type != nil
-  #   physicalElement.type = checkEmptyString(type.value)
-  # else
-  #   physicalElement.type = ' '
-  # end
-  #
-  # id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
-  # if id != nil
-  #   physicalElement.id = checkEmptyString(id.value)
-  # else
-  #   physicalElement.id = ' '
-  # end
-  #
-  # physicalElement.level = level
-
-
-  order           = div.xpath("@ORDER", 'mets' => 'http://www.loc.gov/METS/').first
-  if order != nil
-    physicalElement.order = checkEmptyString(order.value)
-  else
-    physicalElement.order = ' '
-  end
-
-  orderlabel = div.xpath("@ORDERLABEL", 'mets' => 'http://www.loc.gov/METS/').first
-  if orderlabel != nil
-    physicalElement.orderlabel = checkEmptyString(orderlabel.value)
-  else
-    physicalElement.orderlabel = ' '
-  end
-
-
-  return physicalElement
-
-end
-
-def getInfoFromMetsMptrs(mptrs)
-
-  if !mptrs.empty?
-
-    part_uri = mptrs[0].xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
-
-
-    if (@context != nil) && (@context.downcase == "nlh")
-
-      begin
-        # https://nl.sub.uni-goettingen.de/mets/ecj:busybody.mets.xml
-        match = part_uri.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
-        match = part_uri.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
-
-        product = match[2]
-        work    = match[3]
-      rescue Exception => e
-        @logger.error("[mets_indexer] No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}")
-        @file_logger.error("[mets_indexer] No regex match for part URI #{part_uri} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
-        raise
+    # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
+    begin
+      match = part_url.match(/(\S*PPN=)(\S*)/)
+      if match == nil
+        # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
+        match = part_url.match(/(\S*)\/mets\/(\S*).xml/)
       end
 
-    elsif (@context != nil) && (@context.downcase == "gdz")
+      work    = match[2]
+      product = "gdz"
 
+    rescue Exception => e
+      if (match == nil) && (count < 1)
+        count += 1
 
-      count = 0
+        @logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
+        @file_logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
 
-      # http://gdz.sub.uni-goettingen.de/mets_export.php?PPN=PPN877624038
-      begin
-        match = part_uri.match(/(\S*PPN=)(\S*)/)
-        if match == nil
-          # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
-          match = part_uri.match(/(\S*)\/mets\/(\S*).xml/)
-        end
+        part_uri.gsub!(' ', '')
 
-        work = match[2]
-      rescue Exception => e
-        if (match == nil) && (count < 1)
-          count += 1
-
-          @logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
-          @file_logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_uri}'. Remove spaces and processed again!")
-
-          part_uri.gsub!(' ', '')
-
-          retry
-        end
-        @logger.error("[mets_indexer] No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}")
-        @file_logger.error("[mets_indexer] No regex match for '#{part_uri}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
-        raise
+        retry
       end
-
-      product = @short_product
-
-
+      @logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@ppn} \t#{e.message}")
+      @file_logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
+      raise
     end
 
-    return {'work' => work, 'product' => product}
 
   end
 
+  return {'work' => work, 'product' => product}
+
+  #end
+
 end
 
-def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, meta)
+def getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, base_level, meta)
+
 
   logicalElement = LogicalElement.new
 
+  logicalElement.level = div.ancestors.length - base_level
 
-  type = div.xpath("@TYPE", 'mets' => 'http://www.loc.gov/METS/').first
-  if type != nil
-    logicalElement.type = checkEmptyString(type.value)
-  else
-    logicalElement.type = ' '
-  end
+  logicalElement.type = checkEmptyString(div.attributes['TYPE']&.text)
 
-  dmdid = div.xpath("@DMDID", 'mets' => 'http://www.loc.gov/METS/').first
-  if dmdid != nil
-    logicalElement.dmdid = checkEmptyString(dmdid.value)
-  else
-    logicalElement.dmdid = ' '
-  end
+  logicalElement.dmdid = checkEmptyString(div.attributes['DMDID']&.text)
 
-  id = div.xpath("@ID", 'mets' => 'http://www.loc.gov/METS/').first
-  if id != nil
-    logicalElement.id = checkEmptyString(id.value)
-  else
-    logicalElement.id = ' '
-  end
+  logicalElement.id = checkEmptyString(div.attributes['ID']&.text)
 
-  admid = div.xpath("@ADMID", 'mets' => 'http://www.loc.gov/METS/').first
-  if admid != nil
-    logicalElement.admid = checkEmptyString(admid.value)
-  else
-    logicalElement.admid = ' '
-  end
+  logicalElement.admid = checkEmptyString(div.attributes['ADMID']&.text)
 
-  label = div.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
-  if label != nil
-    logicalElement.label = checkEmptyString(label.value)
-  else
-    logicalElement.label = type.value if type != nil
-
-  end
+  logicalElement.label = checkEmptyString(div.attributes['LABEL']&.text)
+  logicalElement.label = logicalElement.type if (logicalElement.label == " ") || (logicalElement.label == nil)
 
 
-  mptrs = div.xpath("mets:mptr[@LOCTYPE='URL']", 'mets' => 'http://www.loc.gov/METS/')
-  if doctype == "collection"
+  part_url = div.xpath("mets:mptr[@LOCTYPE='URL']/@xlink:href", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink').text
 
-    hsh = getInfoFromMetsMptrs(mptrs)
+  if !part_url.empty?
+    if doctype == "collection"
 
-    if hsh != nil
-      logicalElement.part_product = hsh['product']
-      logicalElement.part_work    = hsh['work']
-      #logicalElement.volume_uri = volume_uri
-      logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
+      hsh = getInfoFromMetsMptrs(part_url)
+
+      if hsh != nil
+        logicalElement.part_product = hsh['product']
+        logicalElement.part_work    = hsh['work']
+        #logicalElement.volume_uri = volume_uri
+        logicalElement.part_key = "#{hsh['product']}:#{hsh['work']}"
+      end
+
+    elsif logicalElement.level == 0
+
+      hsh = getInfoFromMetsMptrs(part_url)
+
+
+      if hsh != nil
+        logicalElement.parentdoc_work   = hsh['work']
+        logicalElement.start_page_index = -1
+        logicalElement.end_page_index   = -1
+      end
+
+      return logicalElement
+
     end
-
-  elsif level == 0
-
-    hsh = getInfoFromMetsMptrs(mptrs)
-
-    if hsh != nil
-      logicalElement.parentdoc_work = hsh['work']
-    end
-
   end
 
+  if (doctype == "work")
 
-  unless logicalElementStartStopMapping[logicalElement.id] == nil
-    logicalElement.start_page_index = logicalElementStartStopMapping[logicalElement.id]["start"]
-    logicalElement.end_page_index   = logicalElementStartStopMapping[logicalElement.id]["end"]
+    if (log_start_stop_hsh[logicalElement.id] != nil)
+      logicalElement.start_page_index = log_start_stop_hsh[logicalElement.id]["start"]
+      logicalElement.end_page_index   = log_start_stop_hsh[logicalElement.id]["end"]
 
-    if doctype != "collection"
       if logicalElement.type != ' '
         if (logicalElement.type == "titlepage") || (logicalElement.type == "title_page") || (logicalElement.type == "TitlePage") || (logicalElement.type == "Title_Page")
 
@@ -1286,84 +1225,44 @@ def getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, le
       end
 
     end
-  else
-    logicalElement.start_page_index = -1
-    logicalElement.end_page_index   = -1
-    #logicalElement.parentdoc_work = work
+
   end
 
 
-  logicalElement.level = level
+  @logger.debug("getAttributesFromLogicalDiv -> #{logicalElement.id}")
 
 
   return logicalElement
 
 end
 
-def getLogicalElements(logicalElementArr, div, logicalElementStartStopMapping, doctype, level, meta)
 
-  logicalElementArr << getAttributesFromLogicalDiv(div, doctype, logicalElementStartStopMapping, level, meta)
+def getLogicalElements(div, log_level_arr, log_start_stop_hsh, doctype, meta, level)
 
-  divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
-
-
-  unless divs.empty?
-    divs.each { |innerdiv|
-      getLogicalElements(logicalElementArr, innerdiv, logicalElementStartStopMapping, doctype, level+1, meta)
-    }
-  end
-
+  logicalElement = getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, log_level_arr[level], meta)
+  meta.addToLogicalElement(logicalElement)
 
 end
 
 
-def getPhysicalElements(physicalElementArr, div, doctype, level)
+def metsRigthsMDElements(rights, source)
 
-  physicalElementArr << getAttributesFromPhysicalDiv(div, doctype, level) unless level == 0
+  ri = Right.new
 
-  divs = div.xpath("mets:div", 'mets' => 'http://www.loc.gov/METS/')
+  if rights != nil
 
+    ri.owner        = "Niedersächsische Staats- und Universitätsbibliothek Göttingen"
+    ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text if source == "PPN726234869"
+    ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
+    ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
+    ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
 
-  unless divs.empty?
-    divs.each { |innerdiv|
-      getPhysicalElements(physicalElementArr, innerdiv, doctype, level+1)
-    }
+    links        = rights.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
+    ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text if links != nil
+
   end
 
-
-end
-
-
-def metsRigthsMDElements(metsRightsMDElements)
-
-  rightsInfoArr = Array.new
-
-  metsRightsMDElements.each { |right|
-
-    ri = Right.new
-
-    rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
-    rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de')[0] if rights == nil
-
-
-    if rights != nil
-      ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text
-      ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
-      ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
-      ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
-
-
-      links        = right.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
-      ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text if links != nil
-
-    end
-
-    rightsInfoArr << ri
-
-  }
-
-  return rightsInfoArr
-
+  return ri
 
 end
 
@@ -1717,38 +1616,86 @@ def parseDoc(doc, source)
   end
 
 
-# logical structure
-
-  logicalElementArr = Array.new
-
-  logicalElementStartStopMapping = getLogicalPageRange(doc, meta)
+  # logical structure
 
 
-  maindiv = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+  # e.g.: {"LOG_0000"=>["PHYS_0001", "PHYS_0002", "PHYS_0003", "PHYS_0004", "PHYS_0005", "PHYS_0006"], "LOG_0001"=> ...
+
+  from_to_hsh = Hash.new
+  doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/').map {|el| el.text}.each {|el|
+
+    from_to_hsh[el] = doc.xpath("//mets:structLink/mets:smLink[@xlink:from='#{el}']/@xlink:to", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => "http://www.w3.org/1999/xlink").map {|e| e.text}
 
 
-  getLogicalElements(logicalElementArr, maindiv, logicalElementStartStopMapping, meta.doctype, 0, meta)
+  }
 
-  if (meta.doctype == "collection") & (logicalElementArr.empty?)
+
+  log_start_stop_hsh = getLogicalPageRange(doc, meta, from_to_hsh) if meta.doctype == "work"
+  from_to_hsh        = nil
+
+  base_level = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')[0].ancestors.length
+  div_arr = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
+
+  while div_arr.count > 0
+
+    div = div_arr.shift
+
+    meta.addToLogicalElement(
+        getAttributesFromLogicalDiv(
+            div,
+            meta.doctype,
+            log_start_stop_hsh,
+            base_level,
+            meta))
+
+
+  end
+  base_level         = nil
+  log_start_stop_hsh = nil
+  log_id_arr         = nil
+
+
+
+  if (meta.doctype == "collection") & (meta.logicalElements.empty?)
     @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
     @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
   end
-
-
-  meta.addLogicalElement = logicalElementArr
 
 
   # physical structure
 
   unless meta.doctype == "collection"
 
-    physicalElementArr = Array.new
+    level       = 0
+    phys_id_arr = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/')
 
-    maindiv = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']/mets:div", 'mets' => 'http://www.loc.gov/METS/').first
+    while phys_id_arr.count > 0
 
-    getPhysicalElements(physicalElementArr, maindiv, meta.doctype, 0)
+      phys_id = phys_id_arr.shift.text
 
-    meta.addPhysicalElement = physicalElementArr
+      if level == 0
+        level += 1
+        next
+      end
+
+      physicalElement = PhysicalElement.new
+
+      div_attributes_hsh = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{phys_id}']", 'mets' => 'http://www.loc.gov/METS/').first.attributes
+
+      physicalElement.id = checkEmptyString(div_attributes_hsh['ID']&.value)
+      physicalElement.order = checkEmptyString(div_attributes_hsh['ORDER']&.value)
+      physicalElement.orderlabel = checkEmptyString(div_attributes_hsh['ORDERLABEL']&.value)
+
+      meta.addToPhysicalElement(physicalElement)
+
+      div_attributes_hsh = nil
+
+      level += 1
+
+
+    end
+
+    phys_id_arr = nil
 
   end
 
@@ -1766,19 +1713,45 @@ def parseDoc(doc, source)
 
   end
 
-# do some data checks
+
+  # rights info
+  begin
+
+    rightsInfoArr = Array.new
+
+    doc.xpath("//mets:amdSec/mets:rightsMD/mets:mdWrap/mets:xmlData", 'mets' => 'http://www.loc.gov/METS/').each {|right|
+
+      rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de/')[0]
+      rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de')[0] if rights == nil
+
+
+      rightsInfoArr << metsRigthsMDElements(rights, source)
+    }
+
+    meta.addRightInfo = rightsInfoArr
+
+  rescue Exception => e
+    @logger.error("[mets_indexer] Problems to resolve rights info for #{source} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
+  # do some data checks
 
   if (meta.doctype != 'collection') && (meta.pages.size != meta.phys_last_page_index)
     @logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
     @file_logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
   end
 
+
+
   return meta
+
+  # end
 
 end
 
 
-$vertx.execute_blocking(lambda { |future|
+$vertx.execute_blocking(lambda {|future|
 
 
   while true do
