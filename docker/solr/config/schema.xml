@@ -308,7 +308,7 @@
         <field name="iswork" type="boolean" indexed="true"/>
         <field name="isanchor" type="boolean" indexed="true"/>
         <field name="ismets" type="boolean" indexed="true"/>
-
+        <field name="islog" type="boolean" indexed="true"/>
 
         <!-- {'fulltext' | 'work' | 'collection' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
@@ -338,6 +338,7 @@
         <field name="log_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_label" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="log_order" type="tint" indexed="true" stored="true"/>
         <field name="log_dmdid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_admid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_level" type="tint" indexed="true" stored="true" multiValued="true"/>
