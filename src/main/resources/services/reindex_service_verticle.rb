@@ -7,6 +7,8 @@ require 'redis'
 require 'logger'
 require 'oai'
 require 'open-uri'
+#require 'fog'
+require 'aws-sdk'
 
 
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
@@ -27,10 +29,34 @@ productin    = ENV['IN'] + '/' + ENV['PRODUCT']
 
 @gdzsolr = RSolr.connect :url => ENV['GDZ_SOLR_ADR']
 
+# todo comment in
+@s3_client = Aws::S3::Client.new(
+    :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+    :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+    :endpoint          => ENV['S3_ENDPOINT'],
+    :force_path_style  => true,
+    :region            => 'us-west-2')
+
+@nlh_bucket = ENV['S3_NLH_BUCKET']
+@gdz_bucket = ENV['S3_GDZ_BUCKET']
+
 # ---
 
 @logger.debug "[reindex_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
+
+def get_s3_mets_keys directory
+
+  # for test
+  # returns just 1000 keys (the first page of results - by default, 10k)
+  #@s3.directories.get(directory, prefix: 'mets/').files.map {|file| file.key}
+
+  # returns just all keys
+  #keys = Array.new
+  #@s3.directories.get(directory, prefix: 'mets/').files.each {|file| keys << file.key}
+  #return keys
+
+end
 
 def pushToQueue(queue, arr)
   @rredis.lpush(queue, arr)
@@ -57,45 +83,62 @@ def parseId(id)
 
 end
 
+def process_keys keys, context
+
+  puts "keys.size: #{keys.size}"
+
+  arr = Array.new
+  keys.each {|key|
+    arr << {"s3_key" => key, "context" => context}.to_json
+  }
+
+  pushToQueue(@queue, arr)
+end
 
 # --- ---
 
 
 def reindex(context)
 
+  #puts "ruby #{RUBY_VERSION} (#{RUBY_RELEASE_DATE}) [#{RUBY_PLATFORM}]"
+
   @rredis.del @queue
 
+  bucket = ''
 
   case context
-
-    when :nlh
-
-      arr = Array.new
-
-      paths = Dir.glob("#{@inpath}/*.xml", File::FNM_CASEFOLD).select { |e| !File.directory? e }
-      paths.each { |path|
-        arr << {"path" => path, "context" => "nlh"}.to_json
-      }
-
-      pushToQueue(@queue, arr)
-      @logger.debug("[reindex_service] sum=#{arr.size}")
-
-    when :gdz
-
-      arr = Array.new
-
-      gdz_works = @gdzsolr.get 'select', :params => {:q => "isanchor:true OR iswork:true", :sort => "pid asc", :fl => "pid", :wt => "csv", :rows => 100000, :indent => "true"}
-      ppn_arr   = gdz_works.split("\n")
-      ppn_arr.each { |ppn|
-        arr << {"ppn" => ppn, "context" => "gdz"}.to_json
-      }
-
-      pushToQueue(@queue, arr)
-      @logger.debug("[reindex_service] sum=#{arr.size}")
-
-
+    when "nlh"
+      bucket = @nlh_bucket
+    when "gdz"
+      bucket = @gdz_bucket
   end
 
+
+  i = 0
+  begin
+
+    # todo comment in
+    response = @s3_client.list_objects(bucket: bucket, prefix: 'mets')
+
+    keys = response.contents.map(&:key)
+    process_keys keys, context
+
+    i += keys.size
+
+=begin
+      while response.next_page? do
+        response = response.next_page
+        keys =  response.contents.map(&:key)
+        process_keys keys, context
+        i += keys.size
+      end
+=end
+
+  rescue Exception => e
+    puts "e.message: #{e.message}\n\te.backtrace: #{e.backtrace}"
+  end
+
+  @logger.debug("[reindex_service] sum=#{i}")
 
 end
 
@@ -107,8 +150,8 @@ router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 
 # POST http://127.0.0.1:8080   /api/reindexer/jobs
-# {"context": "gdz"}
-router.post("/api/reindexer/jobs").blocking_handler(lambda { |routingContext|
+# {"s3_key": "mets/PPN129323659_0031.xml" , "context": "gdz"}
+router.post("/api/reindexer/jobs").blocking_handler(lambda {|routingContext|
 
   begin
     hsh = routingContext.get_body_as_json
@@ -127,10 +170,10 @@ router.post("/api/reindexer/jobs").blocking_handler(lambda { |routingContext|
 
 
       if (context != nil) && (context.downcase == "gdz")
-        reindex :gdz
+        reindex "gdz"
 
       elsif (context != nil) && (context.downcase == "nlh")
-        reindex :nlh
+        reindex ":nlh"
 
       else
         @logger.error "[reindex_service] Could not process context '#{context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
@@ -150,7 +193,7 @@ router.post("/api/reindexer/jobs").blocking_handler(lambda { |routingContext|
 
 
 # GET http://127.0.0.1:8080   /api/reindexer/status
-router.get("/api/reindexer/status").blocking_handler(lambda { |routingContext|
+router.get("/api/reindexer/status").blocking_handler(lambda {|routingContext|
 
   size = @rredis.llen(@queue)
   routingContext.response.put_header("content-type", "application/json").end(JSON.generate({'size' => size}))
