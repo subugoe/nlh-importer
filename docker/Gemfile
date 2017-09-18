@@ -18,8 +18,8 @@ gem 'nokogiri', '~> 1.6', '>= 1.6.8'
 gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 
 
-#gem 'fileutils', '~> 0.7'
-# ggf.
+# gem 'fileutils', '~> 0.7'
+#         or
 # gem 'rubysl-fileutils', '~> 2.0', '>= 2.0.3'
 
 
@@ -27,7 +27,12 @@ gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 gem "mini_magick"
 
 
+# pdf processing lib
 #gem 'pdftk', '~> 0.0.4'
 
+# pdf processing lib for disclaimer creation
 gem 'prawn', '~> 2.2', '>= 2.2.2'
+
+# S3 library
+gem 'aws-sdk', '~> 3.0', '>= 3.0.1'
 
