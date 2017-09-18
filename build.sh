@@ -18,7 +18,6 @@ then
     export environment="develop"
 fi
 
-
 export solr_port=8983
 export solr_external_port=8443
 
@@ -45,6 +44,11 @@ cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.pro
 cp docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
 cp docker/solr/config/sub/jetty_orig.xml docker/solr/config/sub/jetty.xml
 
+S3_PROVIDER=${S3_PROVIDER}
+S3_AWS_ACCESS_KEY_ID=${S3_AWS_ACCESS_KEY_ID}
+S3_AWS_SECRET_ACCESS_KEY=${S3_AWS_SECRET_ACCESS_KEY}
+S3_ENDPOINT=${S3_ENDPOINT}
+
 
 SERVICE_VERTICLE=start_services.rb
 INDEXER_VERTICLE=start_indexer.rb
@@ -53,8 +57,8 @@ VERTICLE_HOME=/usr/verticles
 CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
 LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
 
-SOLR_JAVA_MEM="-Xms512M -Xmx7424M"
-SOLR_MEM_LIMIT=8GB
+SOLR_JAVA_MEM="-Xms512M -Xmx1G"
+SOLR_MEM_LIMIT=1GB
 
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -83,6 +87,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<logo_path>|${LOGO_PATH}|g"         .env
 
 
+
+    sed -i '' "s|<S3_PROVIDER>|${S3_AWS_ACCESS_KEY_ID}|g"                    .env
+    sed -i '' "s|<S3_AWS_ACCESS_KEY_ID>|${S3_AWS_ACCESS_KEY_ID}|g"           .env
+    sed -i '' "s|<S3_AWS_SECRET_ACCESS_KEY>|${S3_AWS_SECRET_ACCESS_KEY}|g"   .env
+    sed -i '' "s|<S3_ENDPOINT>|${S3_ENDPOINT}|g"                             .env
+
+
+
     sed -i '' "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
 
 
@@ -107,6 +119,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|"       .env
     sed -i '' "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|"   .env
     sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             .env
+    sed -i '' "s|<CONVERTER_VERTX_OPTIONS>|${CONVERTER_VERTX_OPTIONS}|"             .env
 
 else
     sed -i "s|<UID>|${myUID}|"                               ./docker/Dockerfile
@@ -134,6 +147,14 @@ else
     sed -i "s|<logo_path>|${LOGO_PATH}|g"         .env
 
 
+    sed -i "s|<S3_PROVIDER>|${S3_AWS_ACCESS_KEY_ID}|g"                    .env
+    sed -i "s|<S3_AWS_ACCESS_KEY_ID>|${S3_AWS_ACCESS_KEY_ID}|g"           .env
+    sed -i "s|<S3_AWS_SECRET_ACCESS_KEY>|${S3_AWS_SECRET_ACCESS_KEY}|g"   .env
+    sed -i "s|<S3_ENDPOINT>|${S3_ENDPOINT}|g"                             .env
+
+
+
+
     sed -i "s|<solr_port>|${solr_port}|g"                    ./docker/solr/config/sub/jetty.xml
 
 
@@ -158,6 +179,7 @@ else
     sed -i "s|<INDEXER_VERTICLE>|${INDEXER_VERTICLE}|"       .env
     sed -i "s|<CONVERTER_VERTICLE>|${CONVERTER_VERTICLE}|"   .env
     sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             .env
+    sed -i "s|<CONVERTER_VERTX_OPTIONS>|${CONVERTER_VERTX_OPTIONS}|"             .env
 fi
 
 

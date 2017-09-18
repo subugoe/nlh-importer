@@ -25,9 +25,9 @@ services:
       - redis
     mem_limit: "$IMPORTER_MEM_LIMIT"
     environment:
-      - JAVA_OPTS=$CONVERTER_JAVA_OPTS
-      - JVM_ARGS=$CONVERTER_JVM_ARGS
-      - JRUBY_OPTS=$CONVERTER_JRUBY_OPTS
+      - JAVA_OPTS=$IMPORTER_JAVA_OPTS
+      - JVM_ARGS=$IMPORTER_JVM_ARGS
+      - JRUBY_OPTS=$IMPORTER_JRUBY_OPTS
 
   importer_converter:
     extends: importer_base
