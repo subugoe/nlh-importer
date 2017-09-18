@@ -8,7 +8,15 @@ require 'redis'
 require 'json'
 require 'set'
 
-require 'model/mets_mods_metadata'
+require 'aws-sdk'
+
+require 'model/mets_dmdsec_metadata'
+require 'model/mets_fulltext_metadata'
+require 'model/mets_image_metadata'
+require 'model/mets_logical_metadata'
+require 'model/mets_physical_metadata'
+require 'model/mets_summary_metadata'
+
 require 'model/title_info'
 require 'model/origin_info'
 require 'model/name'
@@ -74,16 +82,28 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 
 @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
-def fileNotFound(type, source, e)
+# todo comment in
+@s3 = Aws::S3::Client.new(
+    :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+    :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+    :endpoint          => ENV['S3_ENDPOINT'],
+    :force_path_style  => true,
+    :region            => 'us-west-2')
+
+@nlh_bucket = ENV['S3_NLH_BUCKET']
+@gdz_bucket = ENV['S3_GDZ_BUCKET']
+
+
+def fileNotFound(type, e)
   if e.message.start_with? "redirection forbidden"
-    @logger.error("[mets_indexer] [GDZ-527] #{type} #{source} not available \t#{e.message}")
-    @file_logger.error("[mets_indexer] [GDZ-527] #{type} #{source} not available \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}")
+    @file_logger.error("[mets_indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}\n\t#{e.backtrace}")
   elsif e.message.start_with? "Failed to open TCP connection"
-    @logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{source} because of TCP connection problems \t#{e.message}")
-    @file_logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{source} because of TCP connection problems \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}")
+    @file_logger.error("[mets_indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}\n\t#{e.backtrace}")
   else
-    @logger.error("[mets_indexer] Could not open #{type} #{source} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not open #{type} #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not open #{type} #{@id} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not open #{type} #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 end
 
@@ -130,7 +150,7 @@ def checkEmptyString(str)
 end
 
 
-def getIdentifiers(mods, source)
+def getIdentifiers(mods)
 
   ids = Array.new
 
@@ -158,7 +178,7 @@ def getIdentifiers(mods, source)
 
       id_element = recordIdentifiers.shift
 
-      type = id_element.attributes['source']&.value
+      type = id_element.attributes['id']&.value
       type = id_element.attributes['type']&.value if type == nil
       type = "unknown" if type == nil
 
@@ -168,15 +188,15 @@ def getIdentifiers(mods, source)
     recordIdentifiers = nil
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not retrieve an identifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not retrieve an identifier for #{@id} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not retrieve an identifier for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
 end
 
 
-def getRecordIdentifiers(mods, source)
+def getRecordIdentifiers(mods)
 
   ids = Hash.new
 
@@ -228,8 +248,8 @@ or @type="URN"]',
     recordIdentifiers = nil
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}")
-    @file_logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}")
+    @file_logger.error("[mets_indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   return ids
@@ -412,7 +432,7 @@ def getClassification(modsClassificationElements)
   return classificationArr
 end
 
-def getOriginInfo(modsOriginInfoElements, source)
+def getOriginInfo(modsOriginInfoElements)
 
   originalInfoArr = Array.new
   editionInfoArr  = Array.new
@@ -443,18 +463,18 @@ def getOriginInfo(modsOriginInfoElements, source)
 
       unless captured_start_date == ''
         originInfo.date_captured_string = captured_start_date
-        originInfo.check_and_add_date_captured_start(captured_start_date, source)
+        originInfo.check_and_add_date_captured_start(captured_start_date, @id)
       end
 
 
       unless captured_end_date == ''
-        originInfo.check_and_add_date_captured_end(captured_end_date, source)
+        originInfo.check_and_add_date_captured_end(captured_end_date, @id)
       end
 
 
       if originInfo.date_captured_start == 0
-        @logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{source} (check conversion problem)")
-        @file_logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{source} (check conversion problem)")
+        @logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{@id} (check conversion problem)")
+        @file_logger.error("[mets_indexer] [GDZ-546] date_captured_start=0 for #{@id} (check conversion problem)")
       end
 
     else
@@ -465,16 +485,16 @@ def getOriginInfo(modsOriginInfoElements, source)
 
       unless issued_start_date == ''
         originInfo.date_issued_string = issued_start_date
-        originInfo.check_and_add_date_issued_start(issued_start_date, source)
+        originInfo.check_and_add_date_issued_start(issued_start_date, @id)
       end
 
       unless issued_end_date == ''
-        originInfo.check_and_add_date_issued_end(issued_end_date, source)
+        originInfo.check_and_add_date_issued_end(issued_end_date, @id)
       end
 
       if originInfo.date_issued_start == 0
-        @logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{source} (check conversion problem)")
-        @file_logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{source} (check conversion problem)")
+        @logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{@id} (check conversion problem)")
+        @file_logger.error("[mets_indexer] [GDZ-546] date_issued_start=0 for #{@id} (check conversion problem)")
       end
 
     end
@@ -670,19 +690,13 @@ def getRecordInfo(modsRecordInfoElements)
 end
 
 
-def processPresentationImages(doc, meta)
-
-
-  #meta.addPresentationImageUri = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').collect {|el| el.text}
+def processPresentationImages(doc, image_meta)
 
   presentation_image_uris_arr = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='DEFAULT']/mets:file/mets:FLocat/@xlink:href", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink').to_a
 
-
-  path_arr = Array.new
+  #path_arr = Array.new
   id_arr   = Array.new
   page_arr = Array.new
-
-  #presentation_image_uris = meta.presentation_image_uris
 
 
   firstUri = presentation_image_uris_arr[0].text
@@ -701,11 +715,11 @@ def processPresentationImages(doc, meta)
       raise
     end
 
-    meta.baseurl        = baseurl
-    meta.access_pattern = @access_pattern
-    meta.product        = product
-    meta.work           = work
-    meta.image_format   = ENV['IMAGE_OUT_FORMAT']
+    image_meta.image_format   = ENV['IMAGE_OUT_FORMAT']
+    image_meta.baseurl        = baseurl
+    image_meta.access_pattern = @access_pattern
+    image_meta.product        = product
+    image_meta.work           = work
 
     while presentation_image_uris_arr.count > 0
 
@@ -722,12 +736,12 @@ def processPresentationImages(doc, meta)
 
       id_arr << "#{product}:#{work}:#{page}"
       page_arr << page
-      path_arr << {"image_uri" => image_uri}.to_json
+      #path_arr << {"image_uri" => image_uri}.to_json
 
     end
     presentation_image_uris_arr = nil
-  elsif (@context != nil) && (@context.downcase == "gdz")
 
+  elsif (@context != nil) && (@context.downcase == "gdz")
 
     begin
       # GDZ:  http://gdz-srv1.sub.uni-goettingen.de/content/PPN663109388/120/0/00000007.jpg
@@ -742,14 +756,14 @@ def processPresentationImages(doc, meta)
       raise
     end
 
-
     product = @short_product
 
-    meta.baseurl        = baseurl
-    meta.access_pattern = @access_pattern
-    meta.product        = product
-    meta.work           = work
-    meta.image_format   = ENV['IMAGE_OUT_FORMAT']
+    image_meta.image_format   = ENV['IMAGE_OUT_FORMAT']
+    image_meta.baseurl        = baseurl
+    image_meta.access_pattern = @access_pattern
+    image_meta.product        = product
+    image_meta.work           = work
+
 
     while presentation_image_uris_arr.count > 0
 
@@ -766,14 +780,15 @@ def processPresentationImages(doc, meta)
 
       id_arr << "#{product}:#{work}:#{page}"
       page_arr << page
-      path_arr << {"image_uri" => image_uri}.to_json
+      #path_arr << {"image_uri" => image_uri}.to_json
 
     end
     presentation_image_uris_arr = nil
+
   end
 
-  meta.addPage_key = id_arr
-  meta.addPage     = page_arr
+  image_meta.add_page_key_arr = id_arr
+  image_meta.add_page_arr     = page_arr
 
 end
 
@@ -806,7 +821,7 @@ def getSummary(html_path)
       sleep 1
       retry
     end
-    fileNotFound("summary", html_path, e)
+    fileNotFound("summary", e)
     return nil
   end
 
@@ -843,7 +858,7 @@ def getFulltext(xml_path)
       sleep 1
       retry
     end
-    fileNotFound("fulltext", xml_path, e)
+    fileNotFound("fulltext", e)
     return nil
   end
 
@@ -870,7 +885,7 @@ def processSummary(summary_hsh)
 end
 
 
-def processFulltexts(meta, doc)
+def processFulltexts(fulltext_meta, doc)
 
 
   #fulltext_FLocat = doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/')
@@ -884,7 +899,7 @@ def processFulltexts(meta, doc)
     fulltextUriArr = Array.new
     fulltextArr    = Array.new
 
-    #fulltext_uris = meta.fulltext_uris
+    #fulltext_uris = fulltext_meta.fulltext_uris
     #firstUri = fulltext_FLocat.first.xpath("@xlink:href", 'xlink' => 'http://www.w3.org/1999/xlink').text
     firstUri = fulltext_uris.first&.text
 
@@ -1035,67 +1050,61 @@ def processFulltexts(meta, doc)
       fulltext_uris = nil
     end
 
-    meta.addFulltext = fulltextArr
+    fulltext_meta.addFulltext = fulltextArr
 
 
   end
 
 end
 
-def addToHash(log_start_stop_hsh, from, to)
+def addToHash(from_log_id_to_start_end_hsh, logical_id, to)
 
-  if log_start_stop_hsh[from] == nil
-    log_start_stop_hsh[from] = {'start' => to, 'end' => to}
+  if from_log_id_to_start_end_hsh[logical_id] == nil
+    from_log_id_to_start_end_hsh[logical_id] = {'start' => to, 'end' => to}
   else
-    if log_start_stop_hsh[from]['start'] > to
-      log_start_stop_hsh[from]['start'] = to
+    if from_log_id_to_start_end_hsh[logical_id]['start'] > to
+      from_log_id_to_start_end_hsh[logical_id]['start'] = to
     end
-    if log_start_stop_hsh[from]['end'] < to
-      log_start_stop_hsh[from]['end'] = to
+    if from_log_id_to_start_end_hsh[logical_id]['end'] < to
+      from_log_id_to_start_end_hsh[logical_id]['end'] = to
     end
   end
 
 end
 
-def getLogicalPageRange(doc, meta, from_to_hsh)
+def get_logical_page_range(doc, logical_meta, from_logical_id_to_physical_ids_hsh)
 
-  log_start_stop_hsh = Hash.new
+  from_log_id_to_start_end_hsh = Hash.new
 
   min, max = 1, 1
 
-  #links = doc.xpath("//mets:structLink/mets:smLink", 'mets' => 'http://www.loc.gov/METS/')
+  while from_logical_id_to_physical_ids_hsh.count > 0
 
-  #links.xpath('@xlink:from', 'xlink' => "http://www.w3.org/1999/xlink").each { |el| log_id_set << el.text }
-  #links = nil
+    logical_id, physical_ids = from_logical_id_to_physical_ids_hsh.shift
 
-
-  while from_to_hsh.count > 0
-
-    from_, to_phys_arr = from_to_hsh.shift
-
-    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_phys_arr.first}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
+    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{physical_ids.first}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
     max = to if to > max
     min = to if to < min
-    addToHash(log_start_stop_hsh, from_, to)
+    addToHash(from_log_id_to_start_end_hsh, logical_id, to)
 
 
-    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{to_phys_arr.last}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
+    to  = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{physical_ids.last}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
     max = to if to > max
     min = to if to < min
-    addToHash(log_start_stop_hsh, from_, to)
+    addToHash(from_log_id_to_start_end_hsh, logical_id, to)
 
 
   end
 
-  meta.phys_first_page_index = min
-  meta.phys_last_page_index  = max
+  logical_meta.phys_first_page_index = min
+  logical_meta.phys_last_page_index  = max
 
-  return log_start_stop_hsh
+  return from_log_id_to_start_end_hsh
 
 end
 
 
-def getInfoFromMetsMptrs(part_url)
+def get_info_from_mets_mptrs(part_url)
 
   product = ''
   work    = ''
@@ -1141,19 +1150,17 @@ def getInfoFromMetsMptrs(part_url)
       if (match == nil) && (count < 1)
         count += 1
 
-        @logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
-        @file_logger.error("[mets_indexer] [GDZ-522] - #{@ppn} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
+        @logger.error("[mets_indexer] [GDZ-522] - #{@id} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
+        @file_logger.error("[mets_indexer] [GDZ-522] - #{@id} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
 
-        part_uri.gsub!(' ', '')
+        part_url.gsub!(' ', '')
 
         retry
       end
-      @logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@ppn} \t#{e.message}")
-      @file_logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@ppn} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}")
+      @file_logger.error("[mets_indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}\n\t#{e.backtrace}")
       raise
     end
-
-
   end
 
   return {'work' => work, 'product' => product}
@@ -1162,43 +1169,39 @@ def getInfoFromMetsMptrs(part_url)
 
 end
 
-def getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, base_level, meta)
 
+def get_attributes_from_logical_div(div, doctype, from_log_id_to_start_end_hsh, base_level, logical_meta, dmdsec_hsh)
 
   logicalElement = LogicalElement.new
 
-  logicalElement.level = div.ancestors.length - base_level
+  logicalElement.doctype = doctype
+  logicalElement.level   = div.ancestors.length - base_level
+  logicalElement.type    = checkEmptyString(div.attributes['TYPE']&.text)
+  logicalElement.dmdid   = checkEmptyString(div.attributes['DMDID']&.text)
+  logicalElement.id      = checkEmptyString(div.attributes['ID']&.text)
+  logicalElement.admid   = checkEmptyString(div.attributes['ADMID']&.text)
+  logicalElement.label   = checkEmptyString(div.attributes['LABEL']&.text)
+  logicalElement.label   = logicalElement.type if (logicalElement.label == " ") || (logicalElement.label == nil)
 
-  logicalElement.type = checkEmptyString(div.attributes['TYPE']&.text)
-
-  logicalElement.dmdid = checkEmptyString(div.attributes['DMDID']&.text)
-
-  logicalElement.id = checkEmptyString(div.attributes['ID']&.text)
-
-  logicalElement.admid = checkEmptyString(div.attributes['ADMID']&.text)
-
-  logicalElement.label = checkEmptyString(div.attributes['LABEL']&.text)
-  logicalElement.label = logicalElement.type if (logicalElement.label == " ") || (logicalElement.label == nil)
-
+  logicalElement.dmdsec_meta = dmdsec_hsh[logicalElement.dmdid]
 
   part_url = div.xpath("mets:mptr[@LOCTYPE='URL']/@xlink:href", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => 'http://www.w3.org/1999/xlink').text
+
 
   if !part_url.empty?
     if doctype == "collection"
 
-      hsh = getInfoFromMetsMptrs(part_url)
+      hsh = get_info_from_mets_mptrs(part_url)
 
       if hsh != nil
         logicalElement.part_product = hsh['product']
         logicalElement.part_work    = hsh['work']
-        #logicalElement.volume_uri = volume_uri
-        logicalElement.part_key = "#{hsh['product']}:#{hsh['work']}"
+        logicalElement.part_key     = "#{hsh['product']}:#{hsh['work']}"
       end
 
     elsif logicalElement.level == 0
 
-      hsh = getInfoFromMetsMptrs(part_url)
-
+      hsh = get_info_from_mets_mptrs(part_url)
 
       if hsh != nil
         logicalElement.parentdoc_work   = hsh['work']
@@ -1213,14 +1216,13 @@ def getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, base_level, me
 
   if (doctype == "work")
 
-    if (log_start_stop_hsh[logicalElement.id] != nil)
-      logicalElement.start_page_index = log_start_stop_hsh[logicalElement.id]["start"]
-      logicalElement.end_page_index   = log_start_stop_hsh[logicalElement.id]["end"]
+    if (from_log_id_to_start_end_hsh[logicalElement.id] != nil)
+      logicalElement.start_page_index = from_log_id_to_start_end_hsh[logicalElement.id]["start"]
+      logicalElement.end_page_index   = from_log_id_to_start_end_hsh[logicalElement.id]["end"]
 
       if logicalElement.type != ' '
         if (logicalElement.type == "titlepage") || (logicalElement.type == "title_page") || (logicalElement.type == "TitlePage") || (logicalElement.type == "Title_Page")
-
-          meta.title_page = log_start_stop_hsh[logicalElement.id]["start"] if meta.title_page == 1
+          logical_meta.title_page_index = from_log_id_to_start_end_hsh[logicalElement.id]["start"] if logical_meta.title_page_index == 1
         end
       end
 
@@ -1228,31 +1230,28 @@ def getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, base_level, me
 
   end
 
-
-  @logger.debug("getAttributesFromLogicalDiv -> #{logicalElement.id}")
-
-
   return logicalElement
 
 end
 
 
-def getLogicalElements(div, log_level_arr, log_start_stop_hsh, doctype, meta, level)
+=begin
 
-  logicalElement = getAttributesFromLogicalDiv(div, doctype, log_start_stop_hsh, log_level_arr[level], meta)
+def getLogicalElements(div, log_level_arr, log_start_stop_hsh, doctype, logical_meta, level)
+  logicalElement = get_attributes_from_logical_div(div, doctype, log_start_stop_hsh, log_level_arr[level], meta)
   meta.addToLogicalElement(logicalElement)
-
 end
+=end
 
 
-def metsRigthsMDElements(rights, source)
+def metsRigthsMDElements(rights)
 
   ri = Right.new
 
   if rights != nil
 
     ri.owner        = "Niedersächsische Staats- und Universitätsbibliothek Göttingen"
-    ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text if source == "PPN726234869"
+    ri.owner        = rights.xpath('dv:owner', 'dv' => 'http://dfg-viewer.de/').text if @id == "PPN726234869"
     ri.ownerContact = rights.xpath('dv:ownerContact', 'dv' => 'http://dfg-viewer.de/').text
     ri.ownerSiteURL = rights.xpath('dv:ownerSiteURL', 'dv' => 'http://dfg-viewer.de/').text
     ri.license      = rights.xpath('dv:license', 'dv' => 'http://dfg-viewer.de/').text
@@ -1266,8 +1265,8 @@ def metsRigthsMDElements(rights, source)
 
 end
 
-def metsUri(ppn)
-  return "http://gdz.sub.uni-goettingen.de/mets/#{ppn}" # ".xml"
+def metsUri()
+  return "http://gdz.sub.uni-goettingen.de/mets/#{@id}" # ".xml"
 end
 
 
@@ -1276,15 +1275,20 @@ def checkwork(doc)
 end
 
 
-def get_doc_from_path(path)
+# todo comment in
+def get_doc_from_s3 s3_key, s3_bucket
+  resp = @s3.get_object({bucket: s3_bucket, key: s3_key})
+  Nokogiri::XML(resp.body.read.gsub('"', "'"))
+end
 
-  @path = path
+
+def get_doc_from_path()
 
   attempts = 0
   doc      = ""
 
   begin
-    doc = File.open(path) {|f|
+    doc = File.open(@id) {|f|
       Nokogiri::XML(f) {|config|
         config.noblanks
       }
@@ -1295,7 +1299,7 @@ def get_doc_from_path(path)
       sleep 1
       retry
     end
-    fileNotFound("METS", path, e)
+    fileNotFound("METS", e)
     return nil
   end
 
@@ -1303,9 +1307,7 @@ def get_doc_from_path(path)
 
 end
 
-def get_doc_from_ppn(ppn, uri)
-
-  @ppn = ppn
+def get_doc_from_ppn(uri)
 
   attempts = 0
   doc      = ""
@@ -1318,7 +1320,7 @@ def get_doc_from_ppn(ppn, uri)
       sleep 1
       retry
     end
-    fileNotFound("METS", uri, e)
+    fileNotFound("METS", e)
     return nil
   end
 
@@ -1326,47 +1328,33 @@ def get_doc_from_ppn(ppn, uri)
 
 end
 
-def parseDoc(doc, source)
 
-  meta = MetsModsMetadata.new
+def metadata_for_dmdsec(doc, dmdSec_id)
 
-  mods = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
+  dmdsec_meta = MetsDmdsecMetadata.new
 
-  meta.context = @context
+  mods = doc.xpath("//mets:dmdSec[@ID='#{dmdSec_id}']/mets:mdWrap/mets:xmlData/mods:mods", 'mods' => 'http://www.loc.gov/mods/v3', 'mets' => 'http://www.loc.gov/METS/')
 
-  begin
-    meta.mods = mods.to_xml
-  rescue Exception => e
-    @logger.error "[mets_indexer] Could not get MODS XML for #{source} \t#{e.message}"
-    @file_logger.error("[mets_indexer] Could not get MODS XML for #{source} \t#{e.message}\n\t#{e.backtrace}")
-  end
+  # Identifier
+  dmdsec_meta.addIdentifiers       = getIdentifiers(mods)
+  dmdsec_meta.addRecordIdentifiers = getRecordIdentifiers(mods)
 
-  meta.addIdentifiers      = getIdentifiers(mods, source)
-  meta.addRecordIdentifiers= getRecordIdentifiers(mods, source)
-
-  meta.work = source
-
-
-  meta.addPurl, meta.addCatalogue = get_purl_and_catalogue(doc)
-
-
-  meta.product = ENV['SHORT_PRODUCT']
+  dmdsec_meta.addPurl, dmdsec_meta.addCatalogue = get_purl_and_catalogue(doc)
 
   # Titel
   begin
 
-    unless mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addTitleInfo = getTitleInfos(mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
-    else
-      modsPartElements  = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
-      structMapDiv      = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
-      meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
+    if !mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      dmdsec_meta.addTitleInfo = getTitleInfos(mods.xpath('mods:titleInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
+    elsif !mods.xpath('mods:titleInfo/mods:detail/mods:number', 'mods' => 'http://www.loc.gov/mods/v3').empty?
+      modsPartElements         = mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3') # [0].text
+      structMapDiv             = doc.xpath("//mets:structMap[@TYPE='LOGICAL']/mets:div[@LABEL]", 'mets' => 'http://www.loc.gov/METS/').first
+      dmdsec_meta.addTitleInfo = getMissingTitleInfos(modsPartElements, structMapDiv)
     end
 
-
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:titleInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1374,15 +1362,15 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      originInfoHash       = getOriginInfo(mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3'), source)
-      meta.addOriginalInfo = originInfoHash[:original]
-      meta.addEditionInfo  = originInfoHash[:edition]
+      originInfoHash              = getOriginInfo(mods.xpath('mods:originInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addOriginalInfo = originInfoHash[:original]
+      dmdsec_meta.addEditionInfo  = originInfoHash[:edition]
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:originInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1391,13 +1379,13 @@ def parseDoc(doc, source)
 
 
     unless mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addName = getName(mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addName = getName(mods.xpath('mods:name', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:name for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:name for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:name for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:name for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1405,13 +1393,13 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addLocation = getLocation(mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addLocation = getLocation(mods.xpath('mods:location', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:location for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:location for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:location for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:location for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1419,31 +1407,31 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addGenre = getGenre(mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addGenre = getGenre(mods.xpath('mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
     unless mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addSubjectGenre = getGenre(mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addSubjectGenre = getGenre(mods.xpath('mods:subject/mods:genre', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:genre for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:genre for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   # Classification
   begin
 
     unless mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addClassification = getClassification(mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addClassification = getClassification(mods.xpath('mods:classification', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:classification for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:classification for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:classification for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1451,26 +1439,26 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addLanguage = getLanguage(mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addLanguage = getLanguage(mods.xpath('mods:language', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:language for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:language for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:language for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:language for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   # PhysicalDescription:
   begin
 
     unless mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addPhysicalDescription = getphysicalDescription(mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addPhysicalDescription = getphysicalDescription(mods.xpath('mods:physicalDescription', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:physicalDescription for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1478,13 +1466,13 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addNote = getNote(mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addNote = getNote(mods.xpath('mods:note', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:note for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:note for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:note for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:note for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1492,13 +1480,13 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').empty?
-      meta.addSponsor = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').text
+      dmdsec_meta.addSponsor = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').text
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve gdz:sponsorship for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1506,39 +1494,39 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addSubject = getSubject(mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addSubject = getSubject(mods.xpath('mods:subject', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:subject for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:subject for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:subject for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   # RelatedItem
   begin
 
     unless mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addRelatedItem = getRelatedItem(mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addRelatedItem = getRelatedItem(mods.xpath('mods:relatedItem', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:relatedItem for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
   # Part (of multipart Documents)
   begin
 
     unless mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addPart = getPart(mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addPart = getPart(mods.xpath('mods:part', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:part for #{source} (#{e.message})\n#{e.backtrace}")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:part for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:part for #{@id} (#{e.message})\n#{e.backtrace}")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:part for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
 
 
@@ -1546,173 +1534,14 @@ def parseDoc(doc, source)
   begin
 
     unless mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3').empty?
-      meta.addRecordInfo = getRecordInfo(mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
+      dmdsec_meta.addRecordInfo = getRecordInfo(mods.xpath('mods:recordInfo', 'mods' => 'http://www.loc.gov/mods/v3'))
     end
 
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve mods:recordInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
-
-
-  if checkwork(doc) != nil
-
-    meta.iswork  = true
-    meta.doctype = "work"
-
-    # presentation images
-
-    begin
-
-      processPresentationImages(doc, meta)
-
-    rescue Exception => e
-      @logger.error("[mets_indexer] Problems to resolve presentation images for #{source} (#{e.message})")
-      @file_logger.error("[mets_indexer] Problems to resolve presentation images for #{source} \t#{e.message}\n\t#{e.backtrace}")
-    end
-
-
-    # full texts
-    begin
-
-      unless doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').empty?
-        processFulltexts(meta, doc)
-      end
-
-
-    rescue Exception => e
-      @logger.error("[mets_indexer] Problems to resolve full texts for #{source} (#{e.message})")
-      @file_logger.error("[mets_indexer] Problems to resolve full texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
-    end
-
-
-  else
-
-    meta.iswork   = false
-    meta.doctype  = "collection"
-    meta.isanchor = true
-
-
-    if (@context != nil) && (@context.downcase == "nlh")
-
-      # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
-
-      begin
-        match           = @path.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
-        meta.collection = match[4]
-        meta.product    = match[3]
-      rescue Exception => e
-        @logger.error("[mets_indexer] No regex match for collection #{@path} \t#{e.message}")
-        @file_logger.error("[mets_indexer] No regex match for collection #{@path} \t#{e.message}\n\t#{e.backtrace}")
-        raise
-      end
-
-    elsif (@context != nil) && (@context.downcase == "gdz")
-
-      meta.collection = @ppn
-    end
-
-  end
-
-
-  # logical structure
-
-
-  # e.g.: {"LOG_0000"=>["PHYS_0001", "PHYS_0002", "PHYS_0003", "PHYS_0004", "PHYS_0005", "PHYS_0006"], "LOG_0001"=> ...
-
-  from_to_hsh = Hash.new
-  doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/').map {|el| el.text}.each {|el|
-
-    from_to_hsh[el] = doc.xpath("//mets:structLink/mets:smLink[@xlink:from='#{el}']/@xlink:to", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => "http://www.w3.org/1999/xlink").map {|e| e.text}
-
-
-  }
-
-
-  log_start_stop_hsh = getLogicalPageRange(doc, meta, from_to_hsh) if meta.doctype == "work"
-  from_to_hsh        = nil
-
-  base_level = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')[0].ancestors.length
-  div_arr = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
-
-  while div_arr.count > 0
-
-    div = div_arr.shift
-
-    meta.addToLogicalElement(
-        getAttributesFromLogicalDiv(
-            div,
-            meta.doctype,
-            log_start_stop_hsh,
-            base_level,
-            meta))
-
-
-  end
-  base_level         = nil
-  log_start_stop_hsh = nil
-  log_id_arr         = nil
-
-
-
-  if (meta.doctype == "collection") & (meta.logicalElements.empty?)
-    @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
-    @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{source}'.")
-  end
-
-
-  # physical structure
-
-  unless meta.doctype == "collection"
-
-    level       = 0
-    phys_id_arr = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/')
-
-    while phys_id_arr.count > 0
-
-      phys_id = phys_id_arr.shift.text
-
-      if level == 0
-        level += 1
-        next
-      end
-
-      physicalElement = PhysicalElement.new
-
-      div_attributes_hsh = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{phys_id}']", 'mets' => 'http://www.loc.gov/METS/').first.attributes
-
-      physicalElement.id = checkEmptyString(div_attributes_hsh['ID']&.value)
-      physicalElement.order = checkEmptyString(div_attributes_hsh['ORDER']&.value)
-      physicalElement.orderlabel = checkEmptyString(div_attributes_hsh['ORDERLABEL']&.value)
-
-      meta.addToPhysicalElement(physicalElement)
-
-      div_attributes_hsh = nil
-
-      level += 1
-
-
-    end
-
-    phys_id_arr = nil
-
-  end
-
-
-  # add summary
-
-  if @summary_hsh[meta.work]
-
-    begin
-      meta.addSummary = [processSummary(@summary_hsh[meta.work])]
-    rescue Exception => e
-      @logger.error("[mets_indexer] Problems to resolve summary texts for #{source} (#{e.message})")
-      @file_logger.error("[mets_indexer] Problems to resolve summary texts for #{source} \t#{e.message}\n\t#{e.backtrace}")
-    end
-
-  end
-
 
   # rights info
   begin
@@ -1725,34 +1554,262 @@ def parseDoc(doc, source)
       rights = right.xpath('dv:rights', 'dv' => 'http://dfg-viewer.de')[0] if rights == nil
 
 
-      rightsInfoArr << metsRigthsMDElements(rights, source)
+      rightsInfoArr << metsRigthsMDElements(rights)
     }
 
-    meta.addRightInfo = rightsInfoArr
+    dmdsec_meta.addRightInfo = rightsInfoArr
 
   rescue Exception => e
-    @logger.error("[mets_indexer] Problems to resolve rights info for #{source} (#{e.message})")
-    @file_logger.error("[mets_indexer] Problems to resolve rights info for #{source} \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[mets_indexer] Problems to resolve rights info for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve rights info for #{@id} \t#{e.message}\n\t#{e.backtrace}")
   end
+
+  return dmdsec_meta
+
+end
+
+def metadata_for_structure_elements(doc)
+
+  dmdsec_hsh = Hash.new
+
+  doc.xpath('//mets:dmdSec/@ID', 'mods' => 'http://www.loc.gov/mods/v3', 'mets' => 'http://www.loc.gov/METS/').map {|el|
+
+    dmdSec_id = el.text
+
+    dmdsec_hsh[dmdSec_id] = metadata_for_dmdsec(doc, dmdSec_id)
+
+  }
+
+
+  first_dmd_id                      = dmdsec_hsh.keys.sort.first
+  dmdsec_hsh[first_dmd_id].is_child = false
+
+  return dmdsec_hsh
+
+end
+
+def retrieve_fulltext_data(doc, fulltext_meta)
+  begin
+    unless doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').empty?
+      processFulltexts(fulltext_meta, doc)
+    end
+  rescue Exception => e
+    @logger.error("[mets_indexer] Problems to resolve full texts for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve full texts for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+  end
+end
+
+def retrieve_image_data(doc, image_meta)
+
+  begin
+    processPresentationImages(doc, image_meta)
+  rescue Exception => e
+    @logger.error("[mets_indexer] Problems to resolve presentation images for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve presentation images for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
+end
+
+
+def retrieve_summary_data(doc, summary_meta)
+  begin
+    summary_meta.addSummary = [processSummary(@summary_hsh[@id])]
+  rescue Exception => e
+    @logger.error("[mets_indexer] Problems to resolve summary texts for #{@id} (#{e.message})")
+    @file_logger.error("[mets_indexer] Problems to resolve summary texts for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+  end
+end
+
+def get_from_logical_id_to_physical_ids_hsh(doc)
+  from_logical_id_to_physical_ids_hsh = Hash.new
+  doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/').map {|el| el.text}.each {|el|
+    from_logical_id_to_physical_ids_hsh[el] = doc.xpath("//mets:structLink/mets:smLink[@xlink:from='#{el}']/@xlink:to", 'mets' => 'http://www.loc.gov/METS/', 'xlink' => "http://www.w3.org/1999/xlink").map {|e| e.text}
+  }
+  from_logical_id_to_physical_ids_hsh
+end
+
+
+def retrieve_logical_structure_data(doc, logical_meta, dmdsec_hsh)
+  # e.g.: {"LOG_0000"=>["PHYS_0001", "PHYS_0002", "PHYS_0003", "PHYS_0004", "PHYS_0005", "PHYS_0006"], "LOG_0001"=> ...
+
+
+  from_log_id_to_start_end_hsh = get_logical_page_range(doc, logical_meta, get_from_logical_id_to_physical_ids_hsh(doc)) if logical_meta.doctype == "work"
+
+  base_level = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')[0]&.ancestors.length
+  div_arr    = doc.xpath("//mets:structMap[@TYPE='LOGICAL']//mets:div", 'mets' => 'http://www.loc.gov/METS/')
+
+  while div_arr.count > 0
+
+    div = div_arr.shift
+
+    logical_meta.addToLogicalElement(
+        get_attributes_from_logical_div(
+            div,
+            logical_meta.doctype,
+            from_log_id_to_start_end_hsh,
+            base_level,
+            logical_meta, dmdsec_hsh))
+
+  end
+  base_level                   = nil
+  from_log_id_to_start_end_hsh = nil
+  log_id_arr                   = nil
+
+
+  if (logical_meta.doctype == "collection") & (logical_meta.logicalElements.empty?)
+    @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
+    @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
+  end
+end
+
+def retrieve_physical_structure_data(doc, physical_meta)
+
+  level       = 0
+  phys_id_arr = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div/@ID", 'mets' => 'http://www.loc.gov/METS/')
+
+  while phys_id_arr.count > 0
+
+    phys_id = phys_id_arr.shift.text
+
+    if level == 0
+      level += 1
+      next
+    end
+
+    physicalElement = PhysicalElement.new
+
+    div_attributes_hsh = doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{phys_id}']", 'mets' => 'http://www.loc.gov/METS/').first.attributes
+
+    physicalElement.id         = checkEmptyString(div_attributes_hsh['ID']&.value)
+    physicalElement.order      = checkEmptyString(div_attributes_hsh['ORDER']&.value)
+    physicalElement.orderlabel = checkEmptyString(div_attributes_hsh['ORDERLABEL']&.value)
+    physicalElement.ordertype  = checkEmptyString(div_attributes_hsh['TYPE']&.value)
+
+    physical_meta.addToPhysicalElement(physicalElement)
+
+    div_attributes_hsh = nil
+
+    level += 1
+
+
+  end
+
+  phys_id_arr = nil
+
+end
+
+def parseDoc(doc)
+
+  # meta = MetsDmdsecMetadata.new
+
+
+  # get metadata
+  dmdsec_hsh = metadata_for_structure_elements(doc)
+
+  first_dmd_id = dmdsec_hsh.keys.sort.first
+
+  meta = dmdsec_hsh[first_dmd_id]
+
+  meta.context = @context
+  meta.product = ENV['SHORT_PRODUCT']
+  meta.work    = @id
+
+
+  if checkwork(doc) != nil
+    meta.iswork  = true
+    meta.doctype = "work"
+  else
+    meta.iswork = false
+    # todo is collection the right naming (it is a multivolume work)
+    meta.doctype  = "collection"
+    meta.isanchor = true
+
+    # todo change this when nlh has switched to use a recordId or workId
+    if (@context != nil) && (@context.downcase == "nlh")
+
+      # /inpath/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml
+
+      begin
+        match           = @id.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
+        meta.collection = match[4]
+        meta.product    = match[3]
+      rescue Exception => e
+        @logger.error("[mets_indexer] No regex match for collection #{@id} \t#{e.message}")
+        @file_logger.error("[mets_indexer] No regex match for collection #{@id} \t#{e.message}\n\t#{e.backtrace}")
+        raise
+      end
+
+    elsif (@context != nil) && (@context.downcase == "gdz")
+      meta.collection = @id
+    end
+
+
+  end
+
+
+  # logical structure
+  logical_meta         = MetsLogicalMetadata.new
+  logical_meta.doctype = meta.doctype
+  logical_meta.work    = @id
+  retrieve_logical_structure_data(doc, logical_meta, dmdsec_hsh)
+
+
+  # get physical structure
+  physical_meta = MetsPhysicalMetadata.new
+  # <product_id>:<work_id>:<seiten-bezeichner>
+  retrieve_physical_structure_data(doc, physical_meta) if meta.doctype == "work"
+
+
+  # get image data or collection
+  image_meta = MetsImageMetadata.new
+  retrieve_image_data(doc, image_meta) if meta.doctype == "work"
+
+
+  # get fulltexts
+  fulltext_meta = MetsFulltextMetadata.new
+  retrieve_fulltext_data(doc, fulltext_meta) if meta.doctype == "work"
+
+
+  # get summary(id)
+  if @summary_hsh[@id]
+    summary_meta = MetsSummaryMetadata.new
+    retrieve_summary_data(doc, summary_meta)
+  end
+
+  unless meta.product == nil || meta.work == nil || image_meta.pages == nil || logical_meta.title_page_index == nil
+    logical_meta.title_page = "#{meta.product}:#{meta.work}:#{image_meta.pages[logical_meta.title_page_index - 1]}"
+  end
+
+  # add MODS
+  begin
+    mods      = doc.xpath('//mods:mods', 'mods' => 'http://www.loc.gov/mods/v3')[0]
+    meta.mods = mods.to_xml
+  rescue Exception => e
+    @logger.error "[mets_indexer] Could not get MODS XML for #{@id} \t#{e.message}"
+    @file_logger.error("[mets_indexer] Could not get MODS XML for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+  end
+
 
   # do some data checks
-
-  if (meta.doctype != 'collection') && (meta.pages.size != meta.phys_last_page_index)
-    @logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
-    @file_logger.error("[mets_indexer] [GDZ-497] - #{source} - number of pages is not equal physical page size")
+  if (meta.doctype != 'collection') && (image_meta.pages.size != logical_meta.phys_last_page_index)
+    @logger.error("[mets_indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size")
+    @file_logger.error("[mets_indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size")
   end
 
 
-
-  return meta
-
-  # end
+  return {:meta          => meta,
+          :logical_meta  => logical_meta,
+          :physical_meta => physical_meta,
+          :image_meta    => image_meta,
+          :fulltext_meta => fulltext_meta,
+          :summary_meta  => summary_meta}
 
 end
 
 
 $vertx.execute_blocking(lambda {|future|
 
+  from_s3 = true
 
   while true do
 
@@ -1764,55 +1821,86 @@ $vertx.execute_blocking(lambda {|future|
 
       if (res != '' && res != nil)
 
-        # { "ppn": "PPN248412353", "context": "gdz" }
-        # or
-        # {"path": "/<inpath>/METS_Daten/mets_emo_farminstructordiaryno2farmcluny19091920.xml" , "context": "nlh"}
+        doc = ''
 
+        # {"s3_key" => key, "context" => context}.to_json
+        # s3_obj_key= mets/<id>.xml
         msg  = res[1]
         json = JSON.parse msg
 
         @context = json['context']
-        id = json['id']
+        s3_key   = json['s3_key']
 
-        if (@context != nil) && (@context.downcase == "gdz")
 
-          if attempts == 0
-            @logger.info "[mets_indexer] Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        s3_bucket = ''
+
+        case @context
+          when 'nlh'
+            s3_bucket = @nlh_bucket
+          when 'gdz'
+            s3_bucket = @gdz_bucket
+        end
+
+
+        puts "@context: #{@context}, s3_key: #{s3_key}, s3_bucket: #{s3_bucket}"
+
+
+        @id = s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
+
+        if from_s3
+
+          if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
+
+            if attempts == 0
+              @logger.info "[mets_indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            else
+              @logger.info "[mets_indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            end
+
+            doc = get_doc_from_s3(s3_key, s3_bucket)
+
           else
-            @logger.info "[mets_indexer] Retry Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "[mets_indexer] Could not process context '#{@context}'"
+            next
           end
-
-          uri = metsUri(id)
-
-          doc = get_doc_from_ppn(id, uri)
-
-        elsif (@context != nil) && (@context.downcase == "nlh")
-
-          if attempts == 0
-            @logger.info "[mets_indexer] Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          else
-            @logger.info "[mets_indexer] Retry Indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          end
-
-          doc = get_doc_from_path(id)
 
         else
-          @logger.error "[mets_indexer] Could not process context '#{@context}'"
-          next
+
+          # todo remove for prod
+          if (@context.downcase == "gdz")
+            doc = get_doc_from_ppn(metsUri())
+          elsif (@context.downcase == "nlh")
+            doc = get_doc_from_path()
+          end
+          # end remove
+
         end
+
 
         if doc != nil
 
-          metsModsMetadata = parseDoc(doc, id)
+          # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
+          metsModsMetadata = parseDoc(doc)
 
           if metsModsMetadata != nil
-            addDocsToSolr(metsModsMetadata.doc_to_solr_string)
-            addDocsToSolr(metsModsMetadata.fulltext_to_solr_string) if !metsModsMetadata.fulltexts.empty?
+            hsh = Hash.new
+            metsModsMetadata.each_value {|part|
+              hsh.merge! part.to_solr_string unless part == nil
+            }
 
-            @logger.info "[mets_indexer] Finish indexing METS: #{id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            # todo remove the embedded log fields and use the following (externalized) solr logical documents
+            hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string
+
+            # todo add fulltexts as child-docs
+
+            addDocsToSolr(hsh)
+
+            addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
+
+            @logger.info "[mets_indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
-            @logger.error "[mets_indexer] Could not process #{id} metadata, object is nil "
-            @file_logger.error "[mets_indexer] Could not process #{id} metadata, object is nil"
+            @logger.error "[mets_indexer] Could not process #{@id} metadata, object is nil "
+            @file_logger.error "[mets_indexer] Could not process #{@id} metadata, object is nil"
             next
           end
         end

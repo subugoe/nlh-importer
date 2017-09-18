@@ -2,7 +2,21 @@ require 'helper/mappings'
 
 class LogicalElement
 
-  attr_accessor :doctype, :id, :dmdid, :admid, :start_page_index, :end_page_index, :part_product, :part_work, :part_key, :level, :parentdoc_work, :parentdoc_label, :parentdoc_type # :label, :type, :volume_uri
+  attr_accessor :doctype,
+                :id,
+                :dmdid,
+                :admid,
+                :order,
+                :start_page_index,
+                :end_page_index,
+                :part_product,
+                :part_work,
+                :part_key,
+                :level,
+                :parentdoc_work,
+                :parentdoc_label,
+                :parentdoc_type,
+                :dmdsec_meta      # :label, :type, :volume_uri
 
   def label=(label)
     l = Mappings.strctype_label(label)

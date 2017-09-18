@@ -1,13 +1,26 @@
-class MetsModsMetadata
+class MetsDmdsecMetadata
 
-  attr_accessor :identifiers,
+  attr_accessor :is_child,
+                :isnlh,
+                :iswork,
+                :isanchor,
+                :context,
+                :doctype,
+
+                :product,
+                :collection,
+                :work,
+
+                :identifiers,
                 :record_identifiers,
-
                 :purl,
                 :catalogues,
 
                 :idparentdoc,
+
                 :title_infos,
+                :bytitle,
+
                 #:personalNames,
                 #:corporateNames,
                 :names,
@@ -18,30 +31,14 @@ class MetsModsMetadata
                 :classifications,
                 :sponsors,
 
-                :is_child,
-                :isnlh,
-                :iswork,
-                :isanchor,
-                :context,
-                :doctype,
-
-                :access_pattern,
-                :baseurl,
-
                 :original_infos,
                 :edition_infos,
+
                 :languages,
+
                 :physical_descriptions,
+
                 :notes,
-
-                :product,
-                :collection,
-                :work,
-                :pages,
-                :page_keys,
-                :image_format,
-
-                :title_page,
 
                 :subjects,
                 :related_items,
@@ -49,36 +46,21 @@ class MetsModsMetadata
                 :record_infos,
 
                 :structype,
-                :dmdid,
-                :logid,
-                :admid,
-
-                :bytitle,
 
                 :right_infos,
+
                 :mods,
-
-                :presentation_image_uris,
-                :thumb_image_uris,
-                :fulltext_uris,
-                :logicalElements,
-                :physicalElements,
-                :phys_first_page_index,
-                :phys_last_page_index,
-
-
-                :fulltexts,
-                :summary,
 
                 :dateindexed,
                 :datemodified
 
 
   def initialize
-    @title_page = 1
 
     @identifiers        = Array.new
     @record_identifiers = Hash.new
+
+    @is_child = true
 
     @catalogues = Array.new
 
@@ -101,24 +83,12 @@ class MetsModsMetadata
 
     #@volumes =Array.new
 
-    @pages         = Array.new
-    @page_keys     = Array.new
     @subjects      = Array.new
     @related_items = Array.new
     @parts         = Array.new
     @record_infos  = Array.new
     @right_infos   = Array.new
 
-    @presentation_image_uris = Array.new
-    @thumb_image_uris        = Array.new
-    @fulltext_uris           = Array.new
-    @logicalElements         = Hash.new
-    @physicalElements        = Hash.new
-
-    @fulltexts = Array.new
-    @summary   = Array.new
-
-    #@image_format = ENV['IMAGE_OUT_FORMAT']
   end
 
   def addIdentifiers=(identifier)
@@ -200,13 +170,6 @@ class MetsModsMetadata
     @notes = note
   end
 
-  def addPage=(page)
-    @pages = page
-  end
-
-  def addPage_key=(page_key)
-    @page_keys = page_key
-  end
 
   #def addVolume=(volume)
   #  @volumes += volume
@@ -232,87 +195,14 @@ class MetsModsMetadata
     @right_infos = rightInfo
   end
 
-  def addPresentationImageUri=(presentationImageUri)
-    @presentation_image_uris = presentationImageUri
-  end
-
-  def addThumbImageUri=(thumbImageUri)
-    @thumb_image_uris += thumbImageUri
-  end
-
-  def addFulltextUri=(fulltextUri)
-    @fulltext_uris = fulltextUri
-  end
-
-
-  # def addLogicalElement=(logicalElement)
-  #   @logicalElements += logicalElement
-  # end
-
-  def addToLogicalElement(logicalElement)
-    @logicalElements[logicalElement.id] = logicalElement
-  end
-
-
-  # def addPhysicalElement=(physicalElement)
-  #   @physicalElements += physicalElement
-  # end
-
-  def addToPhysicalElement(physicalElement)
-    @physicalElements[physicalElement.id] = physicalElement
-  end
-
-  def addFulltext=(fulltext)
-    @fulltexts = fulltext
-  end
-
-  def addSummary=(summary)
-    @summary = summary
-  end
 
   def to_s
     @identifier
   end
 
-  def to_es
-
-  end
-
-  def fulltext_to_solr_string
-
-    docs = Array.new
-
-    if @iswork == true
-
-      if !@fulltexts.empty?
-        @fulltexts.each {|ft|
-
-          h = Hash.new
-
-          h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
-          h.merge! ({:ft => ft.fulltext})
-          h.merge! ({:ft_ref => ft.fulltext_ref})
-          h.merge! ({:ft_of_work => ft.fulltext_of_work})
-          h.merge! ({:ft_page_number => ft.fulltext_page_number})
-          h.merge! ({:doctype => 'fulltext'})
-
-          merge_title_info(h)
-
-          docs << h
-        }
-      end
-
-    end
-
-    return docs
-
-  end
-
-  def doc_to_solr_string
+  def to_solr_string
 
     h = Hash.new
-
-    h.merge!({:image_format => @image_format}) unless @image_format == nil
 
     h.merge! ({:iswork => @iswork}) unless @iswork == nil
     h.merge! ({:isanchor => @isanchor}) unless @isanchor == nil
@@ -323,22 +213,29 @@ class MetsModsMetadata
 
     h.merge! ({:identifier => @identifiers}) unless @identifiers.empty?
 
-    if !@record_identifiers.empty?
+    if !@record_identifiers.empty? && !@is_child
       r_id = @record_identifiers.first
       h.merge! ({:id => r_id[1]})
     end
 
+
     # e.g. http://resolver.sub.uni-goettingen.de/purl?PPN13357363X
     @purl = "http://resolver.sub.uni-goettingen.de/purl?#{@work}" if (@purl == nil) && (@work != nil)
-    h.merge! ({:purl => @purl}) unless @purl == nil
+    if (@purl != nil) && !@is_child
+      h.merge! ({:purl => @purl})
+    end
 
     # e.g. http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=23760034X
-    id          = @work.match(/PPN(\S*)/)[1] unless @work == nil
-    @catalogues += "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
-    h.merge! ({:catalogue => @catalogues})
+    unless @work == nil
 
-    h.merge! ({:access_pattern => @access_pattern}) unless @access_pattern == nil
-    h.merge! ({:baseurl => @baseurl}) unless @baseurl == nil
+      # todo modify to create HANS, ASCH, ... catalogue refs
+      if @work.start_with? 'PPN'
+        id          = @work.match(/PPN(\S*)/)[1]
+        @catalogues += "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
+        h.merge! ({:catalogue => @catalogues}) unless @is_child
+      end
+
+    end
 
     if !@title_infos.empty?
       merge_title_info(h)
@@ -567,7 +464,7 @@ class MetsModsMetadata
 
     if @doctype == "work"
       h.merge! ({:work => @work})
-      h.merge! ({:page => @pages})
+
 
       unless ENV['METS_VIA_OAI'] == 'true'
         mets_path = "mets/#{@product}/#{@work}.mets.xml"
@@ -587,163 +484,6 @@ class MetsModsMetadata
       end
       h.merge! ({:mets_path => mets_path})
     end
-
-
-    # add title page
-
-    # <product_id>:<work_id>:<seiten-bezeichner>
-    unless @product == nil || @work == nil || @pages == nil || @title_page == nil
-      h.merge! ({:title_page => "#{@product}:#{@work}:#{@pages[@title_page - 1]}"})
-    end
-
-
-    # add logical info (e.g. volume info)
-
-    unless is_child
-
-      if !@logicalElements.empty?
-
-        id               = Array.new
-        type             = Array.new
-        label            = Array.new
-        dmdid            = Array.new
-        admid            = Array.new
-        start_page_index = Array.new
-        end_page_index   = Array.new
-        part_product     = Array.new
-        part_work        = Array.new
-        part_key         = Array.new
-        level            = Array.new
-
-
-        arr = Array.new
-        unless @doctype == "collection"
-          @logicalElements.values.each {|el|
-
-            if (el.start_page_index != -1) && (el.end_page_index != -1)
-              arr << el
-            else
-              h.merge! ({:parentdoc_work => el.parentdoc_work})
-              h.merge! ({:parentdoc_label => el.label})
-              h.merge! ({:parentdoc_type => el.type})
-              #h.merge! ({:parentdoc_url => el.urls})
-            end
-          }
-        else
-          arr = @logicalElements.values
-        end
-
-        h.merge! ({:docstrct => arr[0]&.type})
-
-        arr[1..-1].each {|el|
-
-          id << el.id
-          type << el.type
-          label << el.label
-
-          dmdid << el.dmdid
-          admid << el.admid
-          start_page_index << el.start_page_index unless @doctype == "collection"
-          end_page_index << el.end_page_index unless @doctype == "collection"
-          part_product << el.part_product
-          part_work << el.part_work
-          part_key << el.part_key
-          level << el.level
-
-        }
-
-        h.merge! ({:log_id => id})
-        h.merge! ({:log_type => type})
-        h.merge! ({:log_label => label})
-
-        h.merge! ({:log_start_page_index => start_page_index})
-        h.merge! ({:log_end_page_index => end_page_index})
-        h.merge! ({:log_level => level})
-        h.merge! ({:log_part_product => part_product})
-        h.merge! ({:log_part_work => part_work})
-        h.merge! ({:log_part_key => part_key})
-
-      end
-
-    end
-
-    # add logical info as child docs
-
-
-    if !@logicalElements.empty?
-
-      log_child_arr = Array.new
-
-      @logicalElements.values.each {|el|
-
-        child = Hash.new
-
-        # :dmdid, :admid, :dmdsec_mets
-
-        child.merge! ({:id => "#{@work}___#{el.id}"})
-
-        child.merge! ({:log_type => el.type}) unless el.type == nil
-        child.merge! ({:log_label => el.label}) unless el.label == nil
-
-        child.merge! ({:log_order => el.id.match(/LOG_(\d*)/)[1].to_i}) unless el.id == nil
-
-        unless el.dmdid == ' '
-
-          child.merge! ({:log_start_page_index => el.start_page_index}) unless (@doctype == "collection") && (el.start_page_index == nil)
-          child.merge! ({:log_end_page_index => el.end_page_index}) unless (@doctype == "collection") && (el.end_page_index == nil)
-
-          child.merge! ({:log_level => el.level}) unless el.level == nil
-
-          child.merge! ({:log_part_product => el.part_product}) unless el.part_product == nil
-          child.merge! ({:log_part_work => el.part_work}) unless el.part_work == nil
-          child.merge! ({:log_part_key => el.part_key}) unless el.part_key == nil
-
-          child.merge! ({:parentdoc_work => el.parentdoc_work}) unless el.parentdoc_work == nil
-          child.merge! ({:parentdoc_label => el.parentdoc_label}) unless el.parentdoc_label == nil
-          child.merge! ({:parentdoc_type => el.parentdoc_type}) unless el.parentdoc_type == nil
-
-          begin
-
-            child.merge! el.dmdsec_meta.doc_to_solr_string unless el.dmdsec_meta == nil
-
-          rescue Exception => e
-            puts "message: #{e.message} \nbacktrace: #{e.backtrace}"
-          end
-
-        end
-
-        log_child_arr << child
-      }
-
-      h.merge! ({"_childDocuments_" => log_child_arr})
-
-    end
-
-    # add physical info (e.g. ORDER, ORDERLABEL)
-
-
-    if !@physicalElements.empty?
-
-      order      = Array.new
-      orderlabel = Array.new
-
-      @physicalElements.values.each {|el|
-
-        order << el.order.to_i
-        orderlabel << el.orderlabel
-
-      }
-
-      h.merge! ({:phys_order => order})
-      h.merge! ({:phys_orderlabel => orderlabel})
-
-      h.merge! ({:phys_first_page_index => @phys_first_page_index})
-      h.merge! ({:phys_last_page_index => @phys_last_page_index})
-    end
-    # ---
-
-
-    h.merge! ({:page_key => @page_keys})
 
 
     # ---
@@ -821,7 +561,7 @@ class MetsModsMetadata
     # rights_owner, rights_owner_site_url, rights_owner_contact, rights_license,  rights_reference
 
 
-    if !@right_infos.empty?
+    if !right_infos.empty? && !@is_child
 
       h.merge! ({:rights_owner => @right_infos.collect {|rights| rights&.owner}})
       h.merge! ({:rights_owner_site_url => @right_infos.collect {|rights| rights&.ownerSiteURL}})
@@ -832,7 +572,7 @@ class MetsModsMetadata
     end
 
 
-    if !@related_items.empty?
+    unless @related_items.empty?
 
       h.merge! ({:relateditem_id => @related_items.collect {|rel_item| rel_item&.id}})
       h.merge! ({:relateditem_title => @related_items.collect {|rel_item| rel_item&.title}})
@@ -846,7 +586,7 @@ class MetsModsMetadata
 
     # currentno, currentnosort
 
-    if !@parts.empty?
+    unless @parts.empty?
 
       currentnosort = Array.new
       currentno     = Array.new
@@ -863,42 +603,6 @@ class MetsModsMetadata
 
       h.merge! ({:currentnosort => currentnosort})
       h.merge! ({:currentno => currentno})
-
-    end
-
-    if @iswork == true
-
-      fulltext_arr     = Array.new
-      fulltext_ref_arr = Array.new
-
-      summary_name              = Array.new
-      summary_content           = Array.new
-      summary_ref               = Array.new
-      summary_content_with_tags = Array.new
-
-
-      @fulltexts.each {|ft|
-        fulltext_arr << ft.fulltext
-        fulltext_ref_arr << ft.fulltext_ref
-      }
-
-
-      @summary.each {|summary|
-
-        summary_name << summary.summary_name
-        summary_content << summary.summary_content
-        summary_content_with_tags << summary.summary_content_with_tags
-        summary_ref << summary.summary_ref
-
-      }
-
-      h.merge! ({:fulltext => fulltext_arr})
-      h.merge! ({:fulltext_ref => fulltext_ref_arr})
-
-      h.merge! ({:summary_name => summary_name})
-      h.merge! ({:summary_content => summary_content})
-      h.merge! ({:summary_content_with_tags => summary_content_with_tags})
-      h.merge! ({:summary_ref => summary_ref})
 
     end
 
