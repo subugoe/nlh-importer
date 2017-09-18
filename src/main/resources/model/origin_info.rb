@@ -8,50 +8,50 @@ class OriginInfo
   def initialize
     @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
-    @places = Array.new
-    @publishers = Array.new
+    @places            = Array.new
+    @publishers        = Array.new
   end
 
 
-  def check_date(date, source)
+  def check_date(date, id)
 
     match = date.match(/(\d*)-(\d*)-(\d*)/)
 
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (2) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (2) for #{id}")
       return match[1].to_i
     end
 
     match = date.match(/\[(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (1) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (1) for #{id}")
       return match[1].to_i
     end
 
 
     match = date.match(/(s.a.)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (3) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (3) for #{id}")
       return nil
     end
 
     match = date.match(/(\[ca. )(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (4) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (4) for #{id}")
       return match[2].to_i
     end
 
 
     match = date.match(/(\d*)(XX)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (5) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (5) for #{id}")
       value = match[1].to_i
       return {:start => value * 100, :end => value * 100 + 99}
     end
 
     match = date.match(/(\d\d)(\d*)\/(\d*)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (6) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (6) for #{id}")
       value1 = (match[1]+match[2]).to_i
       if match[3].size == 2
         value2 = (match[1]+match[3]).to_i
@@ -63,13 +63,13 @@ class OriginInfo
 
 
     if date.downcase.start_with? 'ppn'
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (8) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (8) for #{id}")
       return nil
     end
 
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (7) for #{source}")
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (7) for #{id}")
       return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
 
@@ -78,8 +78,8 @@ class OriginInfo
 
   end
 
-  def check_and_add_date_issued_start(date_issued_start, source)
-    value = check_date(date_issued_start, source)
+  def check_and_add_date_issued_start(date_issued_start, id)
+    value = check_date(date_issued_start, id)
     if value.class == Hash
       @date_issued_start  = value[:start]
       @date_issued_end    = value[:end]
@@ -89,13 +89,13 @@ class OriginInfo
     end
   end
 
-  def check_and_add_date_issued_end(date_issued_end, source)
-    @date_issued_end = check_date(date_issued_end, source)
+  def check_and_add_date_issued_end(date_issued_end, id)
+    @date_issued_end = check_date(date_issued_end, id)
   end
 
 
-  def check_and_add_date_captured_start(date_captured_start, source)
-    value = check_date(date_captured_start, source)
+  def check_and_add_date_captured_start(date_captured_start, id)
+    value = check_date(date_captured_start, id)
     if value.class == Hash
       @date_captured_start  = value[:start]
       @date_captured_end    = value[:end]
@@ -106,14 +106,14 @@ class OriginInfo
   end
 
 
-  def check_and_add_date_captured_end(date_captured_end, source)
-    @date_captured_end = check_date(date_captured_end, source)
+  def check_and_add_date_captured_end(date_captured_end, id)
+    @date_captured_end = check_date(date_captured_end, id)
   end
 
 
   PUBLISHER = Hash.new
 
-  PLACES    = {
+  PLACES = {
 
       '[Albany]'                            => 'Albany',
 
@@ -252,7 +252,7 @@ class OriginInfo
   def placesFacet_to_s
 
     arr = Array.new
-    @places.each { |el|
+    @places.each {|el|
       switch = PLACES[el]
       if switch == nil
         arr << el
@@ -272,7 +272,7 @@ class OriginInfo
   def publishersFacet_to_s
 
     arr = Array.new
-    @publishers.each { |el|
+    @publishers.each {|el|
       switch = PUBLISHER[el]
       if switch == nil
         arr << el.gsub(/(Printed and sold by )|(Printed by )/, '')
