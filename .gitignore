@@ -4,6 +4,7 @@
 env.sh
 env.yml
 .env
+indexer.env.GC_test
 tmp/*
 target/
 vertx/
