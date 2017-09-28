@@ -57,13 +57,14 @@ VERTICLE_HOME=/usr/verticles
 CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
 LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
 
-SOLR_JAVA_MEM="-Xms512M -Xmx1G"
-SOLR_MEM_LIMIT=1GB
+SOLR_JAVA_MEM="-Xms512M -Xmx4G"
+
 
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<UID>|${myUID}|"                               ./docker/Dockerfile
     sed -i '' "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             ./docker/Dockerfile
+
 
     sed -i '' "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i '' "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
@@ -105,7 +106,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
 
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
-    sed -i '' "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
+
 
     sed -i '' "s|<myIP>|${myIP}|"                               .env
 
@@ -124,6 +125,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
     sed -i "s|<UID>|${myUID}|"                               ./docker/Dockerfile
     sed -i "s|<VERTICLE_HOME>|${VERTICLE_HOME}|"             ./docker/Dockerfile
+
 
     sed -i "s|<solr_core>|${solr_core}|"                     ./docker/solr/Dockerfile
     sed -i "s|<solr_core2>|${solr_core2}|"                   ./docker/solr/Dockerfile
@@ -165,7 +167,7 @@ else
 
 
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"             .env
-    sed -i "s|<solr_mem_limit>|${SOLR_MEM_LIMIT}|"           .env
+
 
     sed -i "s|<myIP>|${myIP}|"                               .env
 
@@ -188,14 +190,14 @@ fi
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
 
-#docker-compose build --force-rm --no-cache importer_converter
+#docker-compose build --force-rm --no-cache importer_converter importer_indexer importer_services
 #docker-compose build --force-rm importer_indexer importer_services redis solr
 docker-compose build --force-rm
 
 
 docker-compose stop
 docker-compose rm -f
-docker-compose up -d
+docker-compose up -d importer_indexer redis solr
 #importer_indexer importer_services redis solr
 
 

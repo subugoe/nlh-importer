@@ -7,9 +7,6 @@ services:
       dockerfile: Dockerfile
     user: "${myUID}"
     working_dir: /usr/verticles
-    env_file:
-      - .env
-
 
   importer_indexer:
     extends: importer_base
@@ -23,11 +20,15 @@ services:
     depends_on:
       - solr
       - redis
-    mem_limit: "$IMPORTER_MEM_LIMIT"
-    environment:
-      - JAVA_OPTS=$IMPORTER_JAVA_OPTS
-      - JVM_ARGS=$IMPORTER_JVM_ARGS
-      - JRUBY_OPTS=$IMPORTER_JRUBY_OPTS
+    mem_limit: 5GB
+    memswap_limit: 10GB
+    #environment:
+    #  - JAVA_OPTS=$IMPORTER_JAVA_OPTS
+    #  - JVM_ARGS=$IMPORTER_JVM_ARGS
+    #  - JRUBY_OPTS=$IMPORTER_JRUBY_OPTS
+    env_file:
+      - ./.env
+      - ./indexer.env
 
   importer_converter:
     extends: importer_base
@@ -41,13 +42,16 @@ services:
     depends_on:
       - solr
       - redis
-    mem_limit: "$CONVERTER_MEM_LIMIT"
-    environment:
-      - JAVA_OPTS=$CONVERTER_JAVA_OPTS
-      - JVM_ARGS=$CONVERTER_JVM_ARGS
-      - JRUBY_OPTS=$CONVERTER_JRUBY_OPTS
-      - MAGICK_MEMORY_LIMIT=$CONVERTER_MAGICK_MEMORY_LIMIT
-      - MAGICK_MAP_LIMIT=$CONVERTER_MAGICK_MAP_LIMIT
+    mem_limit: 4GB
+    #environment:
+    #  - JAVA_OPTS=$CONVERTER_JAVA_OPTS
+    #  - JVM_ARGS=$CONVERTER_JVM_ARGS
+    #  - JRUBY_OPTS=$CONVERTER_JRUBY_OPTS
+    #  - MAGICK_MEMORY_LIMIT=$CONVERTER_MAGICK_MEMORY_LIMIT
+    #  - MAGICK_MAP_LIMIT=$CONVERTER_MAGICK_MAP_LIMIT
+    env_file:
+      - ./.env
+      - ./converter.env
 
   importer_services:
     extends: importer_base
@@ -61,11 +65,14 @@ services:
       - importer_converter
     ports:
       - "$SERVICES_EXTERNAL_PORT:$SERVICES_SOLR_PORT"
-    mem_limit: "$SERVICE_MEM_LIMIT"
-    environment:
-      - JAVA_OPTS=$SERVICE_JAVA_OPTS
-      - JVM_ARGS=$SERVICE_JVM_ARGS
-      - JRUBY_OPTS=$SERVICE_JRUBY_OPTS
+    mem_limit: 1GB
+    #environment:
+    #  - JAVA_OPTS=$SERVICE_JAVA_OPTS
+    #  - JVM_ARGS=$SERVICE_JVM_ARGS
+    #  - JRUBY_OPTS=$SERVICE_JRUBY_OPTS
+    env_file:
+      - ./.env
+      - ./services.env
 
   # https://hub.docker.com/_/solr/
   solr:
@@ -82,9 +89,9 @@ services:
       # the changed config
       - solrdata_core1:/opt/solr/server/solr/mycores/<solr_core>/data/
       - solrdata_core2:/opt/solr/server/solr/mycores/<solr_core2>/data/
-    mem_limit: "$SOLR_MEM_LIMIT"
+    mem_limit: 4GB
     env_file:
-      - .env
+      - ./.env
     environment:
       - SOLR_JAVA_MEM=$SOLR_JAVA_MEM
 
@@ -98,9 +105,9 @@ services:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
       - redisdata/:/data/
-    mem_limit: "$REDIS_MEM_LIMIT"
+    mem_limit: 2GB
     env_file:
-      - .env
+      - ./.env
     environment:
       - JAVA_OPTS=$REDIS_JAVA_OPTS
 
