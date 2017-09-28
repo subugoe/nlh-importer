@@ -16,7 +16,12 @@ class LogicalElement
                 :parentdoc_work,
                 :parentdoc_label,
                 :parentdoc_type,
-                :dmdsec_meta      # :label, :type, :volume_uri
+                :dmdsec_meta,      # :label, :type, :volume_uri
+                :isLog_part
+
+  def initialize
+    @isLog_part = false
+  end
 
   def label=(label)
     l = Mappings.strctype_label(label)
