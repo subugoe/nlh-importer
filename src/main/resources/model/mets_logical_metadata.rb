@@ -1,5 +1,6 @@
 class MetsLogicalMetadata
 
+
   attr_accessor :logicalElements,
                 :doctype,
                 :work,
@@ -13,6 +14,9 @@ class MetsLogicalMetadata
     @logicalElements  = Hash.new
     @title_page       = 1
     @title_page_index = 1
+
+    @logger       = Logger.new(STDOUT)
+    @logger.level = Logger::DEBUG
   end
 
   # def addLogicalElement=(logicalElement)
@@ -133,33 +137,22 @@ class MetsLogicalMetadata
 
         child = Hash.new
 
-        # :dmdid, :admid, :dmdsec_mets
-
         child.merge! ({:id => "#{@work}___#{el.id}"})
-
         child.merge! ({:islog => true})
-
         child.merge! ({:log_id => el.id})
         child.merge! ({:log_type => el.type}) unless el.type == nil
         child.merge! ({:log_label => el.label}) unless el.label == nil
-
         child.merge! ({:log_order => el.id.match(/LOG_(\d*)/)[1].to_i}) unless el.id == nil
-
         child.merge! ({:log_start_page_index => el.start_page_index}) unless @doctype == "collection"
         child.merge! ({:log_end_page_index => el.end_page_index}) unless @doctype == "collection"
-
         child.merge! ({:log_level => el.level}) unless el.level == nil
-
         child.merge! ({:log_part_product => el.part_product}) unless el.part_product == nil
         child.merge! ({:log_part_work => el.part_work}) unless el.part_work == nil
         child.merge! ({:log_part_key => el.part_key}) unless el.part_key == nil
-
         child.merge! ({:parentdoc_work => el.parentdoc_work}) unless el.parentdoc_work == nil
         child.merge! ({:parentdoc_label => el.parentdoc_label}) unless el.parentdoc_label == nil
         child.merge! ({:parentdoc_type => el.parentdoc_type}) unless el.parentdoc_type == nil
-
         child.merge! el.dmdsec_meta.to_solr_string unless el.dmdsec_meta == nil
-
 
         log_child_arr << child
 
