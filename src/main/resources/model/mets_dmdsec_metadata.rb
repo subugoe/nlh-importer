@@ -3,6 +3,7 @@ class MetsDmdsecMetadata
   attr_accessor :is_child,
                 :isnlh,
                 :iswork,
+                :islog,
                 :isanchor,
                 :context,
                 :doctype,
@@ -11,11 +12,12 @@ class MetsDmdsecMetadata
                 :collection,
                 :work,
 
+                :id,
                 :identifiers,
                 :record_identifiers,
                 :purl,
                 :catalogues,
-
+                :dmdid,
                 :idparentdoc,
 
                 :title_infos,
@@ -204,7 +206,10 @@ class MetsDmdsecMetadata
 
     h = Hash.new
 
+    h.merge! ({:dmdid=> @dmdid})
+
     h.merge! ({:iswork => @iswork}) unless @iswork == nil
+    h.merge! ({:islog => @islog}) unless @islog == nil
     h.merge! ({:isanchor => @isanchor}) unless @isanchor == nil
 
     h.merge! ({:context => @context}) unless @context == nil
@@ -213,9 +218,9 @@ class MetsDmdsecMetadata
 
     h.merge! ({:identifier => @identifiers}) unless @identifiers.empty?
 
-    if !@record_identifiers.empty? && !@is_child
+    if !@record_identifiers.empty?
       r_id = @record_identifiers.first
-      h.merge! ({:id => r_id[1]})
+      h.merge! ({:record_identifier => r_id[1]})
     end
 
 
@@ -231,7 +236,7 @@ class MetsDmdsecMetadata
       # todo modify to create HANS, ASCH, ... catalogue refs
       if @work.start_with? 'PPN'
         id          = @work.match(/PPN(\S*)/)[1]
-        @catalogues += "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
+        @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
         h.merge! ({:catalogue => @catalogues}) unless @is_child
       end
 
