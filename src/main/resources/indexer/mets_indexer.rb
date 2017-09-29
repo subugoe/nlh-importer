@@ -1158,7 +1158,7 @@ end
 
 def get_str_doc_from_s3
   resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
-  @str_doc = resp.body.read.gsub('"', "'")
+  @str_doc = resp.body.read
 end
 
 
@@ -1662,7 +1662,6 @@ def parseDoc()
   retrieve_fulltext_data(fulltext_meta) if meta.doctype == "work"
 
 
-
   #@logger.info "[mets_indexer] before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
   # get rights info
   #fulltext_meta = MetsRightsMetadata.new
@@ -1759,7 +1758,7 @@ def process_response(res)
           end
 
           get_str_doc_from_s3()
-
+          get_doc_from_str_doc
         else
           @logger.error "[mets_indexer] Could not process context '#{@context}'"
           next
@@ -1836,7 +1835,7 @@ $vertx.execute_blocking(lambda {|future|
   # future.complete(@doc.to_s)
 
 }) {|res_err, res|
-#
+  #
 }
 
 
