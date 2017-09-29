@@ -206,7 +206,7 @@ class MetsDmdsecMetadata
 
     h = Hash.new
 
-    h.merge! ({:dmdid=> @dmdid})
+    h.merge! ({:dmdid => @dmdid})
 
     h.merge! ({:iswork => @iswork}) unless @iswork == nil
     h.merge! ({:islog => @islog}) unless @islog == nil
@@ -235,7 +235,7 @@ class MetsDmdsecMetadata
 
       # todo modify to create HANS, ASCH, ... catalogue refs
       if @work.start_with? 'PPN'
-        id          = @work.match(/PPN(\S*)/)[1]
+        id = @work.match(/PPN(\S*)/)[1]
         @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
         h.merge! ({:catalogue => @catalogues}) unless @is_child
       end
@@ -388,6 +388,7 @@ class MetsDmdsecMetadata
 
       places      = Array.new
       placesFacet = Array.new
+      editions    = Array.new
 
       publishers      = Array.new
       publishersFacet = Array.new
@@ -400,6 +401,7 @@ class MetsDmdsecMetadata
 
         places << ei.places # _to_s
         placesFacet << ei.placesFacet_to_s
+        editions << ei.edition # _to_s
 
         publishers << ei.publishers # _to_s
         publishersFacet << ei.publishersFacet_to_s
@@ -409,6 +411,8 @@ class MetsDmdsecMetadata
         date_captured_end   = ei.date_captured_end
       }
 
+
+      h.merge! ({:edition_digitization => editions})
       h.merge! ({:place_digitization => places})
       h.merge! ({:facet_place_digitization => placesFacet})
 
@@ -427,6 +431,7 @@ class MetsDmdsecMetadata
 
       places      = Array.new
       placesFacet = Array.new
+      editions    = Array.new
 
       publishers      = Array.new
       publishersFacet = Array.new
@@ -440,6 +445,7 @@ class MetsDmdsecMetadata
 
         places << oi.places # _to_s
         placesFacet << oi.placesFacet_to_s
+        editions << oi.edition # _to_s
 
         publishers << oi.publishers # _to_s
         publishersFacet << oi.publishersFacet_to_s
@@ -449,6 +455,7 @@ class MetsDmdsecMetadata
         date_issued_end    = oi.date_issued_end
       }
 
+      h.merge! ({:edition => editions})
       h.merge! ({:place_publish => places})
       h.merge! ({:facet_place_publish => placesFacet})
 

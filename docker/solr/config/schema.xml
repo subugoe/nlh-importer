@@ -405,6 +405,10 @@
         <field name="dc_authority" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_dc" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="edition" type="string" indexed="true" stored="true"/>
+        <field name="edition_digitization" type="string" indexed="true" stored="true"/>
+
+
         <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
