@@ -44,20 +44,20 @@ cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.pro
 cp docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
 cp docker/solr/config/sub/jetty_orig.xml docker/solr/config/sub/jetty.xml
 
-S3_PROVIDER=${S3_PROVIDER}
-S3_AWS_ACCESS_KEY_ID=${S3_AWS_ACCESS_KEY_ID}
-S3_AWS_SECRET_ACCESS_KEY=${S3_AWS_SECRET_ACCESS_KEY}
-S3_ENDPOINT=${S3_ENDPOINT}
+export S3_PROVIDER=${S3_PROVIDER}
+export S3_AWS_ACCESS_KEY_ID=${S3_AWS_ACCESS_KEY_ID}
+export S3_AWS_SECRET_ACCESS_KEY=${S3_AWS_SECRET_ACCESS_KEY}
+export S3_ENDPOINT=${S3_ENDPOINT}
 
 
-SERVICE_VERTICLE=start_services.rb
-INDEXER_VERTICLE=start_indexer.rb
-CONVERTER_VERTICLE=start_converter.rb
-VERTICLE_HOME=/usr/verticles
-CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
-LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
+export SERVICE_VERTICLE=start_services.rb
+export INDEXER_VERTICLE=start_indexer.rb
+export CONVERTER_VERTICLE=start_converter.rb
+export VERTICLE_HOME=/usr/verticles
+export CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
+export LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
 
-SOLR_JAVA_MEM="-Xms512M -Xmx4G"
+export SOLR_JAVA_MEM='-Xms512M -Xmx4G'
 
 
 
