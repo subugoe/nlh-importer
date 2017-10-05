@@ -1,7 +1,8 @@
 class MetsFulltextMetadata
 
   attr_accessor :fulltexts,
-                :fulltext_uris
+                :fulltext_uris,
+                :work
 
   def initialize
     @fulltext_uris = Array.new
@@ -23,27 +24,28 @@ class MetsFulltextMetadata
 
     docs = Array.new
 
-    if @iswork == true
 
-      if !@fulltexts.empty?
-        @fulltexts.each {|ft|
+    if !@fulltexts.empty?
+      @fulltexts.each {|ft|
 
-          h = Hash.new
+        h = Hash.new
 
-          h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
-          h.merge! ({:ft => ft.fulltext})
-          h.merge! ({:ft_ref => ft.fulltext_ref})
-          h.merge! ({:ft_of_work => ft.fulltext_of_work})
-          h.merge! ({:ft_page_number => ft.fulltext_page_number})
-          h.merge! ({:doctype => 'fulltext'})
+        h.merge! ({:id => "#{ft.fulltext_of_work}_page_#{ft.fulltext_page_number}"})
+        h.merge! ({:ft => ft.fulltext})
+        h.merge! ({:ft_ref => ft.fulltext_ref})
+        h.merge! ({:ft_of_work => ft.fulltext_of_work})
+        h.merge! ({:ft_page_number => ft.fulltext_page_number})
+        h.merge! ({:doctype => 'fulltext'})
 
-          merge_title_info(h)
+        h.merge! ({:work_id => @work})
 
-          docs << h
-        }
-      end
+        #merge_title_info(h)
 
+        docs << h
+      }
     end
+
+
     return docs
 
   end
