@@ -7,13 +7,24 @@ class MetsLogicalMetadata
                 :title_page_index,
                 :title_page,
                 :phys_first_page_index,
-                :phys_last_page_index
+                :phys_last_page_index,
+
+                :facet_creator_personal,
+                :facet_creator_corporate,
+                :facet_person_personal,
+                :facet_person_corporate
 
 
   def initialize
-    @logicalElements  = Hash.new
-    @title_page       = 1
-    @title_page_index = 1
+    @logicalElements = Hash.new
+
+    @facet_creator_personal  = Array.new
+    @facet_creator_corporate = Array.new
+    @facet_person_personal   = Array.new
+    @facet_person_corporate  = Array.new
+
+    @title_page = 1
+    #@title_page_index = 0
 
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
@@ -35,6 +46,7 @@ class MetsLogicalMetadata
     if !@logicalElements.empty?
 
       id               = Array.new
+      work_id          = Array.new
       type             = Array.new
       label            = Array.new
       dmdid            = Array.new
@@ -67,6 +79,7 @@ class MetsLogicalMetadata
       arr[1..-1].each {|el|
 
         id << el.id
+        work_id << @work
         type << el.type
         label << el.label
 
@@ -84,6 +97,7 @@ class MetsLogicalMetadata
       }
 
       h.merge! ({:log_id => id})
+      h.merge! ({:work_id => @work})
       h.merge! ({:log_type => type})
       h.merge! ({:log_label => label})
 
@@ -100,7 +114,7 @@ class MetsLogicalMetadata
 
     h.merge! ({:phys_first_page_index => @phys_first_page_index})
     h.merge! ({:phys_last_page_index => @phys_last_page_index})
-    h.merge! ({:title_page => @title_page}) unless @title_page == nil
+    h.merge! ({:title_page => @title_page}) if (@title_page != nil) && (@doctype != "collection")
 
     return h
 
@@ -138,7 +152,9 @@ class MetsLogicalMetadata
         child = Hash.new
 
         child.merge! ({:id => "#{@work}___#{el.id}"})
+        child.merge! ({:work_id => @work})
         child.merge! ({:islog => true})
+        child.merge! ({:doctype => 'log'})
         child.merge! ({:log_id => el.id})
         child.merge! ({:log_type => el.type}) unless el.type == nil
         child.merge! ({:log_label => el.label}) unless el.label == nil
@@ -152,7 +168,18 @@ class MetsLogicalMetadata
         child.merge! ({:parentdoc_work => el.parentdoc_work}) unless el.parentdoc_work == nil
         child.merge! ({:parentdoc_label => el.parentdoc_label}) unless el.parentdoc_label == nil
         child.merge! ({:parentdoc_type => el.parentdoc_type}) unless el.parentdoc_type == nil
-        child.merge! el.dmdsec_meta.to_solr_string unless el.dmdsec_meta == nil
+
+        unless el.dmdsec_meta == nil
+          el.dmdsec_meta.is_child = true
+          child.merge! el.dmdsec_meta.to_solr_string
+=begin
+          @facet_creator_personal  += el.dmdsec_meta.facet_creator_personal if el.dmdsec_meta.facet_creator_personal != nil
+          @facet_creator_corporate += el.dmdsec_meta.facet_creator_corporate if el.dmdsec_meta.facet_creator_corporate != nil
+          @facet_person_personal   += el.dmdsec_meta.facet_person_personal if el.dmdsec_meta.facet_person_personal != nil
+          @facet_person_corporate  += el.dmdsec_meta.facet_person_corporate if el.dmdsec_meta.facet_person_corporate != nil
+=end
+        end
+
 
         log_child_arr << child
 
