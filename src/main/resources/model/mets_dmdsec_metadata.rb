@@ -26,6 +26,11 @@ class MetsDmdsecMetadata
                 #:personalNames,
                 #:corporateNames,
                 :names,
+                :facet_creator_personal,
+                :facet_creator_corporate,
+                :facet_person_personal,
+                :facet_person_corporate,
+
                 :type_of_resources,
                 :locations,
                 :genres,
@@ -62,14 +67,20 @@ class MetsDmdsecMetadata
     @identifiers        = Array.new
     @record_identifiers = Hash.new
 
-    @is_child = true
+    @is_child = false
 
     @catalogues = Array.new
 
     @title_infos = Array.new
     #@personalNames      = Array.new
     #@corporateNames     = Array.new
-    @names             = Array.new
+    @names                   = Array.new
+    @facet_creator_personal  = Array.new
+    @facet_creator_corporate = Array.new
+    @facet_person_personal   = Array.new
+    @facet_person_corporate  = Array.new
+
+
     @type_of_resources = Array.new
     @locations         = Array.new
     @genres            = Array.new
@@ -248,12 +259,6 @@ class MetsDmdsecMetadata
 
     if !@names.empty?
 
-      facet_creator_personal  = Array.new
-      facet_creator_corporate = Array.new
-
-      facet_person_personal  = Array.new
-      facet_person_corporate = Array.new
-
       creator_displayform        = Array.new
       creator_type               = Array.new
       creator_bycreator          = Array.new
@@ -275,10 +280,14 @@ class MetsDmdsecMetadata
 
         n = ''
         if name.family != ' '
-          n = name.family
-          n += ", " + name.given if name.given != ' '
+          if name.given != ' '
+            n = "#{name.family}, #{name.given}"
+          else
+            n = name.family
+          end
         else
-          n = name.displayform if name.displayform != ' '
+          n = name.namepart if name.namepart != ' '
+          n = name.displayform if n == ''
         end
 
         if (name.roleterm == 'aut') || (name.roleterm == 'cre')
@@ -287,9 +296,9 @@ class MetsDmdsecMetadata
 
           if n != ''
             if name.type == 'personal'
-              facet_creator_personal << n
+              @facet_creator_personal << n
             elsif name.type == 'corporate'
-              facet_creator_corporate << n
+              @facet_creator_corporate << n
             end
 
             creator_bycreator << n
@@ -307,9 +316,9 @@ class MetsDmdsecMetadata
 
           if n != ''
             if name.type == 'personal'
-              facet_person_personal << n
+              @facet_person_personal << n
             elsif name.type == 'corporate'
-              facet_person_corporate << n
+              @facet_person_corporate << n
             end
 
             person_byperson << n
@@ -344,11 +353,11 @@ class MetsDmdsecMetadata
       h.merge! ({:person_roleterm_authority => person_roleterm_authority})
       h.merge! ({:byperson => byp})
 
-      h.merge! ({:facet_creator_personal => facet_creator_personal})
-      h.merge! ({:facet_creator_corporate => facet_creator_corporate})
+      h.merge! ({:facet_creator_personal => @facet_creator_personal})
+      h.merge! ({:facet_creator_corporate => @facet_creator_corporate})
 
-      h.merge! ({:facet_person_personal => facet_person_personal})
-      h.merge! ({:facet_person_corporate => facet_person_corporate})
+      h.merge! ({:facet_person_personal => @facet_person_personal})
+      h.merge! ({:facet_person_corporate => @facet_person_corporate})
 
     end
 
@@ -412,7 +421,7 @@ class MetsDmdsecMetadata
       }
 
 
-      h.merge! ({:edition_digitization => editions})
+      h.merge! ({:edition_digitization => editions.join('; ')})
       h.merge! ({:place_digitization => places})
       h.merge! ({:facet_place_digitization => placesFacet})
 
@@ -455,7 +464,7 @@ class MetsDmdsecMetadata
         date_issued_end    = oi.date_issued_end
       }
 
-      h.merge! ({:edition => editions})
+      h.merge! ({:edition => editions.join('; ')})
       h.merge! ({:place_publish => places})
       h.merge! ({:facet_place_publish => placesFacet})
 
@@ -578,8 +587,10 @@ class MetsDmdsecMetadata
       h.merge! ({:rights_owner => @right_infos.collect {|rights| rights&.owner}})
       h.merge! ({:rights_owner_site_url => @right_infos.collect {|rights| rights&.ownerSiteURL}})
       h.merge! ({:rights_owner_contact => @right_infos.collect {|rights| rights&.ownerContact}})
+      h.merge! ({:rights_owner_logo => @right_infos.collect {|rights| rights&.ownerLogo}})
       h.merge! ({:rights_license => @right_infos.collect {|rights| rights&.license}})
-      h.merge! ({:rights_reference => @right_infos.collect {|rights| rights&.reference}})
+      #h.merge! ({:rights_reference => @right_infos.collect {|rights| rights&.reference}})
+
 
     end
 
