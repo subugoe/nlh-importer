@@ -60,9 +60,9 @@ services:
     volumes:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    depends_on:
-      - importer_indexer
-      - importer_converter
+    #depends_on:
+    #  - importer_indexer
+    #  - importer_converter
     ports:
       - "$SERVICES_EXTERNAL_PORT:$SERVICES_SOLR_PORT"
     mem_limit: 1GB
