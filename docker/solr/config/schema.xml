@@ -267,6 +267,8 @@
         <field name="uid" type="uuid" indexed="true" stored="true" default="NEW"/>
         <!-- Identifiers -->
         <field name="id" type="string" indexed="true" stored="true" required="true"/>
+        <field name="work_id" type="string" indexed="true" stored="true" multiValued="true" />
+
         <field name="record_identifier" type="string" indexed="true" stored="true" />
 
 
@@ -369,6 +371,7 @@
         <field name="rights_owner" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_site_url" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_contact" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_owner_logo" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_license" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_reference" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
@@ -379,9 +382,9 @@
         <field name="note" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <!-- sort fields -->
-        <field name="bytitle" type="text_general" indexed="true" omitNorms="true"/>
-        <field name="bycreator" type="text_general" indexed="true" omitNorms="true"/>
-        <field name="byperson" type="text_general" indexed="true" omitNorms="true"/>
+        <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
+        <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
+        <field name="byperson" type="string" indexed="true" omitNorms="true"/>
         <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
@@ -527,6 +530,8 @@
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
     <copyField source="id" dest="metadata"/>
+    <copyField source="work_id" dest="default"/>
+    <copyField source="ft_of_work" dest="default"/>
     <copyField source="record_identifier" dest="metadata"/>
     <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
@@ -551,6 +556,8 @@
     <copyField source="work" dest="default"/>
     <copyField source="page" dest="default"/>
     <copyField source="id" dest="default"/>
+    <copyField source="work_id" dest="default"/>
+    <copyField source="ft_of_work" dest="default"/>
     <copyField source="record_identifier" dest="default"/>
     <copyField source="note" dest="default"/>
     <copyField source="subject" dest="default"/>
