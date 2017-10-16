@@ -80,9 +80,13 @@ class Indexer
     @file_logger.level = Logger::DEBUG
 
     @queue  = ENV['REDIS_INDEX_QUEUE']
-    @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+    @rredis = Redis.new(
+        :host => ENV['REDIS_HOST'],
+        :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db   => ENV['REDIS_DB'].to_i)
 
-    @solr = RSolr.connect :url => ENV['SOLR_ADR']
+    @solr     = RSolr.connect :url => ENV['SOLR_ADR']
+    @gdz_solr = RSolr.connect :url => ENV['GDZ_SOLR_ADR']
 
     @s3 = Aws::S3::Client.new(
         :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
@@ -1760,6 +1764,25 @@ end
     logical_meta.work     = @id
     first_logical_element = retrieve_logical_structure_data(logical_meta, dmdsec_hsh)
 
+    begin
+      solr_resp = (@gdz_solr.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
+      solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if solr_resp.size == 0
+
+      if solr_resp.size > 0
+
+        datemodified = solr_resp['datemodified']
+        dateindexed = solr_resp['dateindexed']
+        logical_meta.date_modified = datemodified
+        logical_meta.date_indexed  = dateindexed
+
+        puts "datemodified: #{datemodified}, dateindexed: #{dateindexed}"
+
+      end
+    rescue Exception => e
+      @logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
+      @file_logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}\n\t#{e.backtrace}")
+      raise
+    end
 
     meta         = dmdsec_hsh[first_logical_element.dmdid] #.clone
     meta.context = @context
