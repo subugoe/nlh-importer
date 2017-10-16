@@ -39,7 +39,6 @@ require 'indexer/indexer'
 
 $vertx.execute_blocking(lambda {|future|
 
-  @from_s3 = false
   @logger.debug "[mets_indexer] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
 
   begin
