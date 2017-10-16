@@ -12,8 +12,9 @@ class MetsLogicalMetadata
                 :facet_creator_personal,
                 :facet_creator_corporate,
                 :facet_person_personal,
-                :facet_person_corporate
-
+                :facet_person_corporate,
+                :date_modified,
+                :date_indexed
 
   def initialize
     @logicalElements = Hash.new
@@ -183,6 +184,8 @@ class MetsLogicalMetadata
 =end
         end
 
+        child.merge! ({:date_modified => @date_modified})
+        child.merge! ({:date_indexed => @date_indexed})
 
         log_child_arr << child
 
