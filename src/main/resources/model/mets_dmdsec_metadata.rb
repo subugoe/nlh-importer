@@ -1,3 +1,5 @@
+require 'net/http'
+
 class MetsDmdsecMetadata
 
   attr_accessor :is_child,
@@ -244,11 +246,30 @@ class MetsDmdsecMetadata
     # e.g. http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=23760034X
     unless @work == nil
 
+
       # todo modify to create HANS, ASCH, ... catalogue refs
       if @work.start_with? 'PPN'
         id = @work.match(/PPN(\S*)/)[1]
-        @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
-        h.merge! ({:catalogue => @catalogues}) unless @is_child
+
+        unapi_url  = ENV['UNAPI_URI']
+        unapi_path = ENV['UNAPI_PATH'] % id
+
+        response = ''
+        url      = URI(unapi_url)
+
+        puts "url.host: #{url.host}, url.port: #{url.port}"
+
+        Net::HTTP.start(url.host) {|http|
+          response = http.head(unapi_path)
+          response
+        }
+
+        puts "response.code: #{response.code}"
+
+        if response.code.to_i < 400
+          @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
+          h.merge! ({:catalogue => @catalogues}) unless @is_child
+        end
       end
 
     end
