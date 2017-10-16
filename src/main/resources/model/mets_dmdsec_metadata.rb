@@ -257,14 +257,10 @@ class MetsDmdsecMetadata
         response = ''
         url      = URI(unapi_url)
 
-        puts "url.host: #{url.host}, url.port: #{url.port}"
-
         Net::HTTP.start(url.host) {|http|
           response = http.head(unapi_path)
           response
         }
-
-        puts "response.code: #{response.code}"
 
         if response.code.to_i < 400
           @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)

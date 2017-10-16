@@ -196,9 +196,6 @@ class WorkConverter
       pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
-      # todo remove this
-      #puts "log_id: #{log_id}, pages_count: #{pages_count}"
-
       pages.each {|page|
         msg = {
             'context'              => context,

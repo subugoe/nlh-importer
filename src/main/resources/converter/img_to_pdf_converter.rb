@@ -25,10 +25,10 @@ class ImgToPdfConverter
     @pdfoutpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
 
 
-    @logger = Logger.new(STDOUT)
+    @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger = Logger.new(ENV['LOG'] + "/img_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/img_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
 
 
@@ -37,7 +37,7 @@ class ImgToPdfConverter
     @rredis = Redis.new(
         :host => ENV['REDIS_HOST'],
         :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db => ENV['REDIS_DB'].to_i,
+        :db   => ENV['REDIS_DB'].to_i,
         #  :timeout            => 30,
         :reconnect_attempts => 3
     )
@@ -49,8 +49,8 @@ class ImgToPdfConverter
 
     MiniMagick.configure do |config|
       config.validate_on_create = false
-      config.validate_on_write = false
-      config.whiny = false
+      config.validate_on_write  = false
+      config.whiny              = false
     end
 
     #MiniMagick.logger.level = Logger::DEBUG
@@ -84,7 +84,7 @@ class ImgToPdfConverter
 
 
   def push_object_to_s3(path, s3_bucket, s3_key)
-    resp = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
+    resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
     @str_doc = resp.body.read
   end
 
@@ -94,14 +94,14 @@ class ImgToPdfConverter
     solr_resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
-    log_end_page_index = -1
+    log_end_page_index   = -1
 
     if request_logical_part
 
       log_id_index = solr_resp['log_id'].index log_id
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
-      log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
+      log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])-1
 
     end
 
@@ -113,25 +113,25 @@ class ImgToPdfConverter
 
     begin
 
-      context = json['context']
-      id = json['id']
-      work = json['work']
-      log_id = json['log_id']
+      context              = json['context']
+      id                   = json['id']
+      work                 = json['work']
+      log_id               = json['log_id']
       request_logical_part = json['request_logical_part']
-      page = json['page']
-      pages_count = json['pages_count']
+      page                 = json['page']
+      pages_count          = json['pages_count']
 
       # ---
 
       solr_work = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "image_format, product, baseurl"})['response']['docs'].first
 
       image_format = solr_work['image_format']
-      baseurl = solr_work['baseurl']
-      product = solr_work['product']
+      baseurl      = solr_work['baseurl']
+      product      = solr_work['product']
 
-      to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
-      img_url = "#{baseurl}/tiff/#{work}/#{page}.#{image_format}"
-      to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
+      to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
+      img_url          = "#{baseurl}/tiff/#{work}/#{page}.#{image_format}"
+      to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{work}.pdf"
 
@@ -306,31 +306,31 @@ class ImgToPdfConverter
     solr_work = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
 
 
-    disclaimer_info.log_id = solr_work['log_id']
-    disclaimer_info.log_label_arr = solr_work['log_label']
+    disclaimer_info.log_id                   = solr_work['log_id']
+    disclaimer_info.log_label_arr            = solr_work['log_label']
     disclaimer_info.log_start_page_index_arr = solr_work['log_start_page_index']
-    disclaimer_info.log_level_arr = solr_work['log_level']
-    disclaimer_info.log_type_arr = solr_work['log_type']
+    disclaimer_info.log_level_arr            = solr_work['log_level']
+    disclaimer_info.log_type_arr             = solr_work['log_type']
 
-    disclaimer_info.purl = solr_work['purl']
+    disclaimer_info.purl          = solr_work['purl']
     disclaimer_info.catalogue_arr = solr_work['catalogue']
 
-    disclaimer_info.title_arr = solr_work['title']
-    disclaimer_info.subtitle_arr = solr_work['subtitle']
-    disclaimer_info.bycreator = solr_work['bycreator']
-    disclaimer_info.publisher = solr_work['publisher']
-    disclaimer_info.place_publish = solr_work['place_publish']
+    disclaimer_info.title_arr           = solr_work['title']
+    disclaimer_info.subtitle_arr        = solr_work['subtitle']
+    disclaimer_info.bycreator           = solr_work['bycreator']
+    disclaimer_info.publisher           = solr_work['publisher']
+    disclaimer_info.place_publish       = solr_work['place_publish']
     disclaimer_info.year_publish_string = solr_work['year_publish_string']
-    disclaimer_info.genre_arr = solr_work['genre']
-    disclaimer_info.dc_arr = solr_work['dc']
-    disclaimer_info.subject_arr = solr_work['subject']
-    disclaimer_info.year_publisher = solr_work['year_publisher']
-    disclaimer_info.shelfmark_arr = solr_work['shelfmark']
-    disclaimer_info.rights_owner_arr = solr_work['rights_owner']
+    disclaimer_info.genre_arr           = solr_work['genre']
+    disclaimer_info.dc_arr              = solr_work['dc']
+    disclaimer_info.subject_arr         = solr_work['subject']
+    disclaimer_info.year_publisher      = solr_work['year_publisher']
+    disclaimer_info.shelfmark_arr       = solr_work['shelfmark']
+    disclaimer_info.rights_owner_arr    = solr_work['rights_owner']
 
-    disclaimer_info.parentdoc_work = solr_work['parentdoc_work']
+    disclaimer_info.parentdoc_work  = solr_work['parentdoc_work']
     disclaimer_info.parentdoc_label = solr_work['parentdoc_label']
-    disclaimer_info.parentdoc_type = solr_work['parentdoc_type']
+    disclaimer_info.parentdoc_type  = solr_work['parentdoc_type']
 
     solr_work = nil
 
@@ -375,7 +375,7 @@ class ImgToPdfConverter
         log_id_index = solr_resp['log_id'].index log_id
 
         log_start_page_index = solr_resp['log_start_page_index'][log_id_index]
-        log_end_page_index = solr_resp['log_end_page_index'][log_id_index]
+        log_end_page_index   = solr_resp['log_end_page_index'][log_id_index]
 
         (disclaimer_info.log_label_arr[log_start_page_index]..disclaimer_info.log_label_arr[log_end_page_index]).each {|index|
           add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
@@ -416,12 +416,12 @@ class ImgToPdfConverter
   end
 
 
-  def request_catalogue(work)
+  def request_catalogue(id)
 
-    response = ''
-    unapi_url = ENV['UNAPI_URI']
-    unapi_path = ENV['UNAPI_PATH'] % work
-    url = URI(unapi_url)
+    response   = ''
+    unapi_url  = ENV['UNAPI_URI']
+    unapi_path = ENV['UNAPI_PATH'] % id
+    url        = URI(unapi_url)
 
     Net::HTTP.start(url.host, url.port) {|http|
       response = http.head(unapi_path)
@@ -429,6 +429,7 @@ class ImgToPdfConverter
     }
 
     return response
+
   end
 
 
@@ -443,7 +444,7 @@ class ImgToPdfConverter
 
         pdf.font_families.update(
             "OpenSans" => {:normal => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Regular.ttf",
-                           :bold => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
+                           :bold   => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
 
         pdf.image "#{ENV['LOGO_PATH']}", :position => :right
 
@@ -485,17 +486,12 @@ class ImgToPdfConverter
 
         add_label_and_value("PURL", disclaimer_info.purl, pdf) if check_nil_or_empty_string disclaimer_info.purl
 
-        if check_nil_or_empty_string disclaimer_info.catalogue_arr
-          disclaimer_info.catalogue_arr.each {|el|
-            begin
-              url = el.match(/(\S*\W)(\S*)/)[2]
-            rescue Exception => e
-              url = el
-            end
-            puts "work: #{work}, request_catalogue.code: #{request_catalogue(work).code.to_i}"
-            add_label_and_value("OPAC", "#{url}<br>", pdf) if request_catalogue(work).code.to_i < 400
+        if work.start_with? 'PPN'
+          id = work.match(/PPN(\S*)/)[1]
 
-          }
+          if request_catalogue(id).code.to_i < 400
+            add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}", pdf)
+          end
         end
 
         if request_logical_part
@@ -517,12 +513,14 @@ class ImgToPdfConverter
           #add_label_and_value("Title", disclaimer_info.parentdoc_label, pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_label
           add_label_and_value("Work Id", parent_work, pdf) if check_nil_or_empty_string parent_work
           add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?#{disclaimer_info.parentdoc_work.first}", pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_work
-          ppn = disclaimer_info.parentdoc_work.first.match(/PPN(\S*)/)[1]
 
+          parent_work = disclaimer_info.parentdoc_work.first
+          if parent_work.start_with? 'PPN'
+            id = parent_work.match(/PPN(\S*)/)[1]
 
-          puts "parent_work: #{parent_work}, request_catalogue.code: #{request_catalogue(parent_work).code.to_i}"
-          if request_catalogue(parent_work).code.to_i < 400
-            add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{parent_work}", pdf) if check_nil_or_empty_string parent_work
+            if request_catalogue(id).code.to_i < 400
+              add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}", pdf)
+            end
           end
         end
 
@@ -561,14 +559,14 @@ class ImgToPdfConverter
     solr_resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
-    log_end_page_index = -1
+    log_end_page_index   = -1
 
     if request_logical_part
 
       log_id_index = solr_resp['log_id'].index log_id
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
-      log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
+      log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])-1
 
     end
 
@@ -576,7 +574,7 @@ class ImgToPdfConverter
 
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
-    solr_resp = nil
+    solr_resp          = nil
     solr_page_path_arr = nil
 
     log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"

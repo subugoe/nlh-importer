@@ -19,27 +19,3 @@ indexer_options = {
 
 # indexer
 $vertx.deploy_verticle("indexer/indexer_job_builder.rb", indexer_options)
-
-=begin
-      redis.lpush('indexer', [
-          {"s3_key" => 'mets/PPN13357363X.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN237600412.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN23760034X.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/DE_611_BF_5619_1772_1779.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN235181684_0126.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/HANS_DE_7_w042080.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/HANS_DE_7_w042081.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN672522489.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN672255316.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN13357363X.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN237600412.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN23760034X.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/DE_611_BF_5619_1772_1779.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN235181684_0126.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/HANS_DE_7_w042080.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/HANS_DE_7_w042081.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN672522489.xml', "context" => 'gdz'}.to_json,
-          {"s3_key" => 'mets/PPN672255316.xml', "context" => 'gdz'}.to_json
-      ]
-      )
-=end
