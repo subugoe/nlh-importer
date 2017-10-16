@@ -495,7 +495,7 @@ class MetsDmdsecMetadata
 
       h.merge! ({:mets_path => mets_path})
 
-    elsif @doctype == "collection"
+    elsif @doctype == "anchor"
       h.merge! ({:collection => @collection})
 
       unless ENV['METS_VIA_OAI'] == 'true'
@@ -629,6 +629,8 @@ class MetsDmdsecMetadata
 
     end
 
+
+    # ---
 
     h.merge! ({:mods => @mods})
 

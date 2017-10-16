@@ -59,7 +59,7 @@ class MetsLogicalMetadata
       level            = Array.new
 
       arr = Array.new
-      unless @doctype == "collection"
+      unless @doctype == "anchor"
         @logicalElements.values.each {|el|
 
           if (el.start_page_index != -1) && (el.end_page_index != -1)
@@ -86,8 +86,8 @@ class MetsLogicalMetadata
         #dmdid << el.dmdid
         #admid << el.admid
 
-        start_page_index << el.start_page_index unless @doctype == "collection"
-        end_page_index << el.end_page_index unless @doctype == "collection"
+        start_page_index << el.start_page_index unless @doctype == "anchor"
+        end_page_index << el.end_page_index unless @doctype == "anchor"
 
         level << el.level
 
@@ -114,7 +114,10 @@ class MetsLogicalMetadata
 
     h.merge! ({:phys_first_page_index => @phys_first_page_index})
     h.merge! ({:phys_last_page_index => @phys_last_page_index})
-    h.merge! ({:title_page => @title_page}) if (@title_page != nil) && (@doctype != "collection")
+    h.merge! ({:title_page => @title_page}) if (@title_page != nil) && (@doctype != "anchor")
+
+    h.merge! ({:date_modified => @date_modified})
+    h.merge! ({:date_indexed => @date_indexed})
 
     return h
 
@@ -130,7 +133,7 @@ class MetsLogicalMetadata
 
     if !@logicalElements.empty?
 
-      unless @doctype == "collection"
+      unless @doctype == "anchor"
         @logicalElements.values.each {|el|
 
           if (el.start_page_index != -1) && (el.end_page_index != -1)
@@ -159,8 +162,8 @@ class MetsLogicalMetadata
         child.merge! ({:log_type => el.type}) unless el.type == nil
         child.merge! ({:log_label => el.label}) unless el.label == nil
         child.merge! ({:log_order => el.id.match(/LOG_(\d*)/)[1].to_i}) unless el.id == nil
-        child.merge! ({:log_start_page_index => el.start_page_index}) unless @doctype == "collection"
-        child.merge! ({:log_end_page_index => el.end_page_index}) unless @doctype == "collection"
+        child.merge! ({:log_start_page_index => el.start_page_index}) unless @doctype == "anchor"
+        child.merge! ({:log_end_page_index => el.end_page_index}) unless @doctype == "anchor"
         child.merge! ({:log_level => el.level}) unless el.level == nil
         child.merge! ({:log_part_product => el.part_product}) unless el.part_product == nil
         child.merge! ({:log_part_work => el.part_work}) unless el.part_work == nil

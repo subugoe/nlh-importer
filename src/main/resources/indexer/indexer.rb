@@ -1155,7 +1155,7 @@ end
     part_url = div.xpath("mptr[@LOCTYPE='URL']/@href").text
 
     if !part_url.empty?
-      if doctype == "collection"
+      if doctype == "anchor"
 
         hsh = get_info_from_mets_mptrs(part_url)
 
@@ -1730,9 +1730,9 @@ end
       firstmeta = meta if (meta.isLog_part == true) && (firstmeta == '')
     }
 
-    if (logical_meta.doctype == "collection") & (logical_meta.logicalElements.empty?)
-      @logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
-      @file_logger.error("[mets_indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
+    if (logical_meta.doctype == "anchor") & (logical_meta.logicalElements.empty?)
+      @logger.error("[indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
+      @file_logger.error("[indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
     end
 
     return firstmeta
@@ -1753,7 +1753,7 @@ end
     if is_work?
       doctype = "work"
     else
-      doctype = "collection"
+      doctype = "anchor"
     end
 
     @logger.info "[mets_indexer] (#{@id}) before logical-meta -> used: #{GC.stat[:used]}}\n\n"
@@ -1779,7 +1779,7 @@ end
     else
       meta.iswork = false
       # todo is collection the right naming (it is a multivolume work)
-      meta.doctype  = "collection"
+      meta.doctype  = "anchor"
       meta.isanchor = true
       meta.islog    = false
 
