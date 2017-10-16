@@ -19,38 +19,40 @@ class WorkConverter
         'sendTimeout' => 300000
     }
 
-    productin = ENV['IN'] + '/' + ENV['PRODUCT']
-    @imageinpath = productin + ENV['IMAGE_IN_SUB_PATH']
+    productin     = ENV['IN'] + '/' + ENV['PRODUCT']
+    @imageinpath  = productin + ENV['IMAGE_IN_SUB_PATH']
     @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 
-    @image_in_format = ENV['IMAGE_IN_FORMAT']
+    @image_in_format  = ENV['IMAGE_IN_FORMAT']
     @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-    @logger = Logger.new(STDOUT)
+    @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger = Logger.new(ENV['LOG'] + "/converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/converter_#{Time.new.strftime('%y-%m-%d')}.log")
+
     @file_logger.level = Logger::DEBUG
 
 
     @from_s3 = false
     @from_s3 = true if ENV['USE_S3'] == 'true'
 
-    @img_convert_queue = ENV['REDIS_IMG_CONVERT_QUEUE']
+    @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
-    @rredis = Redis.new(
+    @rredis             = Redis.new(
         :host => ENV['REDIS_HOST'],
         :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db => ENV['REDIS_DB'].to_i)
+        :db   => ENV['REDIS_DB'].to_i)
 
     @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
     @s3 = Aws::S3::Client.new(
-        :access_key_id => ENV['S3_AWS_ACCESS_KEY_ID'],
+        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
         :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-        :endpoint => ENV['S3_ENDPOINT'],
-        :force_path_style => true,
-        :region => 'us-west-2')
+        :endpoint          => ENV['S3_ENDPOINT'],
+        :force_path_style  => true,
+        :region            => 'us-west-2')
+
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
@@ -72,11 +74,11 @@ class WorkConverter
 
         # {"s3_key" => key, "context" => context}.to_json
         # s3_obj_key= mets/<id>.xml
-        msg = res[1]
+        msg  = res[1]
         json = JSON.parse msg
 
         context = json['context']
-        id = json['id']
+        id      = json['id']
 
         @s3_bucket = ''
 
@@ -155,9 +157,9 @@ class WorkConverter
 
     if id.include? '___LOG_'
       match = id.match(/(\S*)___(LOG_)([\d]*)/)
-      work = match[1]
+      work  = match[1]
       #log_id_value         = match[3]
-      log_id = match[2]+match[3]
+      log_id               = match[2]+match[3]
       request_logical_part = true
     else
       work = id
@@ -180,18 +182,18 @@ class WorkConverter
       resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
       log_start_page_index = 0
-      log_end_page_index = -1
+      log_end_page_index   = -1
 
       if request_logical_part
 
         log_id_index = resp['log_id'].index log_id
 
         log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
-        log_end_page_index = (resp['log_end_page_index'][log_id_index])-1
+        log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1
 
       end
 
-      pages = resp['page'][log_start_page_index..log_end_page_index]
+      pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
       # todo remove this
@@ -199,13 +201,13 @@ class WorkConverter
 
       pages.each {|page|
         msg = {
-            'context' => context,
-            'id' => id,
-            'work' => work,
-            "log_id" => log_id,
+            'context'              => context,
+            'id'                   => id,
+            'work'                 => work,
+            "log_id"               => log_id,
             "request_logical_part" => request_logical_part,
-            'page' => page,
-            'pages_count' => pages_count
+            'page'                 => page,
+            'pages_count'          => pages_count
         }
 
 

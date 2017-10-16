@@ -313,7 +313,7 @@
         <field name="ismets" type="boolean" indexed="true"/>
         <field name="islog" type="boolean" indexed="true"/>
 
-        <!-- {'fulltext' | 'work' | 'collection' | ...} -->
+        <!-- {'fulltext' | 'work' | 'anchor' | 'log' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>
 
         <!-- {'nlh' | 'gdz' | 'digizeit' | ...} -->

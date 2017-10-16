@@ -103,6 +103,7 @@ class ImgToPdfConverter
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
       log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
 
+
     end
 
     solr_page_path_arr = (solr_resp['page'][log_start_page_index..log_end_page_index]).collect {|el| "#{to_pdf_dir}/#{el}.pdf"}
@@ -120,6 +121,7 @@ class ImgToPdfConverter
       request_logical_part = json['request_logical_part']
       page = json['page']
       pages_count = json['pages_count']
+
 
       # ---
 
@@ -182,6 +184,7 @@ class ImgToPdfConverter
               #remove_dir(to_pdf_dir)
 
               @rredis.del(@unique_queue, id)
+
             end
 
 
@@ -189,6 +192,7 @@ class ImgToPdfConverter
 
           else
             @rredis.del(@unique_queue, id)
+
           end
 
         else
@@ -332,6 +336,7 @@ class ImgToPdfConverter
     disclaimer_info.parentdoc_label = solr_work['parentdoc_label']
     disclaimer_info.parentdoc_type = solr_work['parentdoc_type']
 
+
     solr_work = nil
 
     return disclaimer_info
@@ -432,11 +437,22 @@ class ImgToPdfConverter
   end
 
 
-  # todo check  ---> opac <---
+# todo check  ---> opac <---
+
   def add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
 
     # todo differentiate work and log_parts
     begin
+
+      response = ''
+      unapi_url = ENV['UNAPI_URI']
+      unapi_path = ENV['UNAPI_PATH'] % work
+      url = URI(unapi_url)
+
+      Net::HTTP.start(url.host, url.port) {|http|
+        response = http.head(unapi_path)
+        response
+      }
 
       Prawn::Document.generate("#{to_pdf_dir}/disclaimer.pdf", page_size: [595, 842], page_layout: :portrait) do |pdf|
 
@@ -445,13 +461,14 @@ class ImgToPdfConverter
             "OpenSans" => {:normal => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Regular.ttf",
                            :bold => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
 
+
         pdf.image "#{ENV['LOGO_PATH']}", :position => :right
 
         pdf.move_down 40
         pdf.font_size 9
         pdf.font "OpenSans", :style => :normal
 
-
+=begin
         pdf.text "<font size='12'><b>Work</b></font><br><br>", :inline_format => true
 
         if check_nil_or_empty_string disclaimer_info.title_arr
@@ -492,7 +509,6 @@ class ImgToPdfConverter
             rescue Exception => e
               url = el
             end
-
             puts "work: #{work}, request_catalogue.code: #{request_catalogue(work).code.to_i}"
             add_label_and_value("OPAC", "#{url}<br>", pdf) if request_catalogue(work).code.to_i < 400
 
@@ -529,7 +545,6 @@ class ImgToPdfConverter
 
         pdf.font "OpenSans", :style => :normal
 
-
         pdf.move_down 250
         pdf.text ENV['DISCLAIMER_TEXT'], :inline_format => true
 
@@ -549,9 +564,10 @@ class ImgToPdfConverter
       log_error "Problem with disclaimer creation", e
 
       unless request_logical_part
-        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{to_full_pdf_path}"
-      else
-        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{to_full_pdf_path}"
+            FileUtils.cp("#{to_pdf_dir}/tmp_2.pdf", to_full_pdf_path)
+        else
+        FileUtils.cp("#{to_pdf_dir}/tmp.pdf", to_full_pdf_path)
+
       end
 
     end
@@ -571,7 +587,6 @@ class ImgToPdfConverter
       log_id_index = solr_resp['log_id'].index log_id
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
-      log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
 
     end
 
@@ -579,7 +594,6 @@ class ImgToPdfConverter
 
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
-    solr_resp = nil
     solr_page_path_arr = nil
 
     log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"

@@ -8,7 +8,7 @@ logger.debug "[start_converter] Running in #{Java::JavaLang::Thread.current_thre
 
 
 
-converter_options = {
+job_builder_options = {
     'instances'                  => 1,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
@@ -19,8 +19,8 @@ converter_options = {
 }
 
 
-image_loader_eb_options = {
-    'instances'                  => 20,
+converter_options = {
+    'instances'                  => 5,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,
@@ -41,11 +41,12 @@ pdf_converter_options = {
 
 
 # converter service endpoint
-$vertx.deploy_verticle("converter/image_to_pdf_converter.rb", converter_options)
+$vertx.deploy_verticle("converter/work_converter_job_builder.rb", job_builder_options)
 
 # converter loader eb
-$vertx.deploy_verticle("converter/image_loader_eb.rb", image_loader_eb_options)
+$vertx.deploy_verticle("converter/img_to_pdf_converter_job_builder.rb", converter_options)
+#$vertx.deploy_verticle("converter/img_to_pdf_converter_job_builder.rb", converter_options)
 
 # converter converter eb
-#$vertx.deploy_verticle("converter/pdf_converter.rb", pdf_converter_options)
+#$vertx.deploy_verticle("converter/work_converter.rb", pdf_converter_options)
 

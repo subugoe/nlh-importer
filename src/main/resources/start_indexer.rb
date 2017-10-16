@@ -8,7 +8,7 @@ logger.debug "[start_indexer] Running in #{Java::JavaLang::Thread.current_thread
 
 
 indexer_options = {
-    'instances'                  => 8,
+    'instances'                  => 5,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,
@@ -18,5 +18,5 @@ indexer_options = {
 }
 
 # indexer
-$vertx.deploy_verticle("indexer/mets_indexer.rb", indexer_options)
+$vertx.deploy_verticle("indexer/indexer_job_builder.rb", indexer_options)
 

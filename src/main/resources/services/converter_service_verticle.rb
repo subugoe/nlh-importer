@@ -20,7 +20,7 @@ require 'logger'
 
 # ---
 
-@queue             = ENV['REDIS_CONVERT_QUEUE']
+@queue             = ENV['REDIS_WORK_CONVERT_QUEUE']
 @rredis            = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
 
@@ -37,11 +37,14 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 # POST http://127.0.0.1:8080   /api/converter/jobs
+# {"id": "PPN826737668" , "context": "gdz"}
+# is equivalent to
 # {"id": "PPN826737668___LOG_0000" , "context": "gdz"}
+# or forlogical elements
+# {"id": "PPN826737668___LOG_0001" , "context": "gdz"}
 # or
 # {"id": "mets_emo_farminstructordiaryno2farmcluny19091920___LOG_0001" , "context": "nlh"}
 router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
-
 
   begin
     hsh = routingContext.get_body_as_json
@@ -57,7 +60,6 @@ router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
       @logger.info("[converter_service] Got message: \t#{hsh}")
 
       pushToQueue(@queue, [hsh.to_json])
-
     end
 
   rescue Exception => e
