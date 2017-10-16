@@ -55,7 +55,8 @@ export INDEXER_VERTICLE=start_indexer.rb
 export CONVERTER_VERTICLE=start_converter.rb
 export VERTICLE_HOME=/usr/verticles
 export CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
-export LOGO_PATH=${VERTICLE_HOME}/image/SUBLogo-new_40_pct.png
+export LOGO_PATH=${VERTICLE_HOME}/image/sub-blue_65.jpg
+export FONT_PATH=${VERTICLE_HOME}/font
 
 export SOLR_JAVA_MEM='-Xms512M -Xmx4G'
 
@@ -86,7 +87,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<solr_external_port2>|${solr_external_port2}|g"        .env
 
     sed -i '' "s|<logo_path>|${LOGO_PATH}|g"         .env
-
+    sed -i '' "s|<font_path>|${FONT_PATH}|g"         .env
 
 
     sed -i '' "s|<S3_PROVIDER>|${S3_AWS_ACCESS_KEY_ID}|g"                    .env
@@ -147,7 +148,7 @@ else
     sed -i "s|<solr_external_port2>|${solr_external_port2}|g"        .env
 
     sed -i "s|<logo_path>|${LOGO_PATH}|g"         .env
-
+    sed -i "s|<font_path>|${FONT_PATH}|g"         .env
 
     sed -i "s|<S3_PROVIDER>|${S3_AWS_ACCESS_KEY_ID}|g"                    .env
     sed -i "s|<S3_AWS_ACCESS_KEY_ID>|${S3_AWS_ACCESS_KEY_ID}|g"           .env
@@ -191,13 +192,13 @@ fi
 
 
 #docker-compose build --force-rm --no-cache importer_converter importer_indexer importer_services
-#docker-compose build --force-rm importer_indexer importer_services redis solr
-docker-compose build --force-rm
+#docker-compose build --force-rm redis solr
+docker-compose build --force-rm  importer_indexer importer_converter solr
 
 
 docker-compose stop
 docker-compose rm -f
-docker-compose up -d importer_indexer redis solr
+docker-compose up -d importer_services importer_indexer importer_converter redis solr
 #importer_indexer importer_services redis solr
 
 
