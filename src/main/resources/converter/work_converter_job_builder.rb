@@ -9,7 +9,7 @@ require 'fileutils'
 require 'mini_magick'
 require 'open-uri'
 
-require 'converter/converter'
+require 'converter/work_converter'
 
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
 # process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
@@ -26,7 +26,7 @@ require 'converter/converter'
 
 @logger.debug "[converter_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@queue  = ENV['REDIS_CONVERT_QUEUE']
+@queue  = ENV['REDIS_WORK_CONVERT_QUEUE']
 @rredis = Redis.new(
     :host => ENV['REDIS_HOST'],
     :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
@@ -42,19 +42,16 @@ $vertx.execute_blocking(lambda {|future|
 
     while true do
 
-      res = @rredis.brpop(@queue, :timeout => nil)
+      res = @rredis.brpop(@queue) # , :timeout => nil)
 
-      Benchmark.bm(7) do |x|
-        x.report("Begin benchmark") {
-          converter = Converter.new
-          converter.process_response(res)
-        }
-      end
+      converter = WorkConverter.new
+      converter.process_response(res)
+
     end
 
   rescue Exception => e
-    @logger.error "[converter_job_builder] Processing problem with '#{res[1]}' \t#{e.message}\n\t#{e.backtrace}"
-    @file_logger.error "[converter_job_builder] Processing problem with '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
+    @logger.error "[converter_job_builder] Redis problem \t#{e.message}"
+    @file_logger.error "[converter_job_builder] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
 
     retry
   end
