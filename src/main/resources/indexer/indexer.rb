@@ -1875,7 +1875,7 @@ end
 
 
     # do some data checks
-    if (meta.doctype != 'collection') && (image_meta.pages.size != logical_meta.phys_last_page_index&.to_i)
+    if (meta.doctype != 'anchor') && (image_meta.pages.size != logical_meta.phys_last_page_index&.to_i)
 
       @logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size (#{image_meta.pages.size} vs #{logical_meta.phys_last_page_index&.to_i})")
       @file_logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size")
