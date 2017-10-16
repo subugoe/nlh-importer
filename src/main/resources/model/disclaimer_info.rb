@@ -3,6 +3,7 @@ class DisclaimerInfo
                 :log_label_arr,
                 :log_start_page_index_arr,
                 :log_level_arr,
+                :log_type_arr,
                 :purl, :catalogue_arr,
                 :title_arr,
                 :subtitle_arr,
