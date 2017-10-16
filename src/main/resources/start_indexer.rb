@@ -22,7 +22,7 @@ $vertx.deploy_verticle("indexer/indexer_job_builder.rb", indexer_options)
 
 =begin
       redis.lpush('indexer', [
-          {"s3_key" => 'mets/PPN13357363X.xml', "context" => 'gdz'},
+          {"s3_key" => 'mets/PPN13357363X.xml', "context" => 'gdz'}.to_json,
           {"s3_key" => 'mets/PPN237600412.xml', "context" => 'gdz'}.to_json,
           {"s3_key" => 'mets/PPN23760034X.xml', "context" => 'gdz'}.to_json,
           {"s3_key" => 'mets/DE_611_BF_5619_1772_1779.xml', "context" => 'gdz'}.to_json,

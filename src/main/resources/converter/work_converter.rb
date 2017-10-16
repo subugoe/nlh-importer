@@ -37,6 +37,7 @@ class WorkConverter
     @from_s3 = false
     @from_s3 = true if ENV['USE_S3'] == 'true'
 
+    @unique_queue  = ENV['REDIS_UNIQUE_QUEUE']
     @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
     @rredis             = Redis.new(
@@ -72,8 +73,7 @@ class WorkConverter
 
       if (res != '' && res != nil)
 
-        # {"s3_key" => key, "context" => context}.to_json
-        # s3_obj_key= mets/<id>.xml
+        # {"id" => key, "context" => context}.to_json
         msg  = res[1]
         json = JSON.parse msg
 
@@ -167,7 +167,7 @@ class WorkConverter
       log_id = "LOG_0000"
     end
 
-    solr_resp = @solr.get 'select', :params => {:q => "work:#{work}", :fl => "id doctype"}
+    solr_resp = @solr.get 'select', :params => {:q => "id:#{work}", :fl => "id doctype"}
     if solr_resp['response']['numFound'] == 0
       log_error "Work: '#{work}' for id: '#{id}' could not be found in index, conversion not possible", nil
       return
@@ -179,7 +179,7 @@ class WorkConverter
 
     if doctype == 'work'
 
-      resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+      resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
       log_start_page_index = 0
       log_end_page_index   = -1
@@ -226,6 +226,7 @@ class WorkConverter
 
     else
       log_error "Could not create a PDF for the multivolume work: '#{work}', PDF not created", nil
+      @rredis.hdel(@unique_queue, id)
     end
 
   end

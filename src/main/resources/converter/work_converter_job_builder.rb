@@ -94,6 +94,7 @@ $vertx.execute_blocking(lambda {|future|
       id      = json['id']
 
       exist = @rredis.hget(@unique_queue, id)
+
       unless exist == nil
         @logger.debug "[converter_job_builder] Job for #{id} already started, process next"
         next
