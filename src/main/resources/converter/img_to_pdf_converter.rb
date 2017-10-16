@@ -443,7 +443,7 @@ class ImgToPdfConverter
 
         pdf.font_families.update(
             "OpenSans" => {:normal => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Regular.ttf",
-                            :bold => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
+                           :bold => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
 
         pdf.image "#{ENV['LOGO_PATH']}", :position => :right
 
@@ -451,7 +451,7 @@ class ImgToPdfConverter
         pdf.font_size 9
         pdf.font "OpenSans", :style => :normal
 
-=begin
+
         pdf.text "<font size='12'><b>Work</b></font><br><br>", :inline_format => true
 
         if check_nil_or_empty_string disclaimer_info.title_arr
@@ -534,7 +534,7 @@ class ImgToPdfConverter
 
         pdf.move_down 25
         pdf.text ENV['CONTACT_TEXT'], :inline_format => true, :valign => :bottom
-=end
+
       end
 
       unless request_logical_part
