@@ -37,18 +37,16 @@ require 'model/location'
 require 'model/fulltext'
 require 'model/summary'
 
+
 class Indexer
-
-
-# prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
-
-# prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
   MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
   def initialize
+
+    @from_s3 = false
+    @from_s3 = true if ENV['USE_S3'] == 'true'
+
 
     @dc_hsh = {
         "vd18 digital"   => "vd18.digital",
