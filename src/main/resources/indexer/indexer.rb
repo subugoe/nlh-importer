@@ -1983,23 +1983,23 @@ end
            :summary_meta  => summary_meta}
 =end
 
-          #metsModsMetadata.each_value {|part|
-          #  hsh.merge! part.to_solr_string unless part == nil
-          #}
+            #metsModsMetadata.each_value {|part|
+            #  hsh.merge! part.to_solr_string unless part == nil
+            #}
 
 
-          hsh.merge! metsModsMetadata[:meta].to_solr_string unless metsModsMetadata[:meta] == nil
-          hsh.merge! metsModsMetadata[:logical_meta].to_solr_string unless metsModsMetadata[:logical_meta] == nil
-          hsh.merge! metsModsMetadata[:physical_meta].to_solr_string unless metsModsMetadata[:physical_meta] == nil
-          hsh.merge! metsModsMetadata[:image_meta].to_solr_string unless metsModsMetadata[:image_meta] == nil
-          hsh.merge! metsModsMetadata[:fulltext_meta].to_solr_string unless metsModsMetadata[:fulltext_meta] == nil
-          hsh.merge! metsModsMetadata[:summary_meta].to_solr_string unless metsModsMetadata[:summary_meta] == nil
+            hsh.merge! metsModsMetadata[:meta].to_solr_string unless metsModsMetadata[:meta] == nil
+            hsh.merge! metsModsMetadata[:logical_meta].to_solr_string unless metsModsMetadata[:logical_meta] == nil
+            hsh.merge! metsModsMetadata[:physical_meta].to_solr_string unless metsModsMetadata[:physical_meta] == nil
+            hsh.merge! metsModsMetadata[:image_meta].to_solr_string unless metsModsMetadata[:image_meta] == nil
+            hsh.merge! metsModsMetadata[:fulltext_meta].to_solr_string unless metsModsMetadata[:fulltext_meta] == nil
+            hsh.merge! metsModsMetadata[:summary_meta].to_solr_string unless metsModsMetadata[:summary_meta] == nil
 
 
-          # todo remove the embedded log fields and use the following (externalized) solr logical documents
-          hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string unless metsModsMetadata[:logical_meta] == nil
+            # todo remove the embedded log fields and use the following (externalized) solr logical documents
+            hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string unless metsModsMetadata[:logical_meta] == nil
 
-          addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
+            addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
 
 
 =begin
@@ -2015,19 +2015,24 @@ end
 =end
 
 
-          # todo add fulltexts as child-docs
+            # todo add fulltexts as child-docs
 
-          addDocsToSolr(hsh)
+            addDocsToSolr(hsh)
 
-          @logger.info "[mets_indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-        else
-          @logger.error "[mets_indexer] Could not process #{@id} metadata, object is nil "
-          @file_logger.error "[mets_indexer] Could not process #{@id} metadata, object is nil"
-          next
+            @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          else
+            @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
+            @file_logger.error "[indexer] Could not process #{@id} metadata, object is nil"
+            next
+          end
+
         end
 
       end
 
+    rescue Exception => e
+      @logger.error "[indexer] Processing problem with '#{res[1]}' \t#{e.message}"
+      @file_logger.error "[indexer] Processing problem with '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
     end
 
   end
