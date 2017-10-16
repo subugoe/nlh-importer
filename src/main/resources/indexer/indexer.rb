@@ -1900,71 +1900,78 @@ end
 
   def process_response(res)
 
-    if (res != '' && res != nil)
+    attempts = 0
+
+    begin
+
+      if (res != '' && res != nil)
+
+        # {"s3_key" => key, "context" => context}.to_json
+        # s3_obj_key= mets/<id>.xml
+        msg  = res[1]
+        json = JSON.parse msg
+
+        @context = json['context']
+        @s3_key  = json['s3_key']
 
 
-      # {"s3_key" => key, "context" => context}.to_json
-      # s3_obj_key= mets/<id>.xml
-      msg  = res[1]
-      json = JSON.parse msg
+        @s3_bucket = ''
 
-      @context = json['context']
-      @s3_key  = json['s3_key']
+        case @context
+          when 'nlh'
+            @s3_bucket = @nlh_bucket
+          when 'gdz'
+            @s3_bucket = @gdz_bucket
+        end
 
+        begin
+        @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
+        rescue Exception => e
+          @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
+          @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\n\t#{e.backtrace}"
 
-      @s3_bucket = ''
+          return
+        end
 
-      case @context
-        when 'nlh'
-          @s3_bucket = @nlh_bucket
-        when 'gdz'
-          @s3_bucket = @gdz_bucket
-      end
+        if @from_s3
 
+          if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
 
-      @logger.debug "[mets_indexer] before dmd-get_doc_from_s3 -> used: #{GC.stat[:used]}}\n\n"
+            if attempts == 0
+              @logger.info "[indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            else
+              @logger.info "[indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            end
 
-
-      @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
-
-
-      if @from_s3
-
-        if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
-
-          if attempts == 0
-            @logger.info "[mets_indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            get_str_doc_from_s3()
+            #get_doc_from_str_doc
           else
-            @logger.info "[mets_indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+            @logger.error "[indexer] Could not process context '#{@context}'"
+            next
           end
 
         else
-          @logger.error "[mets_indexer] Could not process context '#{@context}'"
-          next
+
+
+          if (@context.downcase == "gdz")
+            get_str_doc_from_ppn(metsUri())
+            #get_doc_from_str_doc
+          end
+
+
         end
 
-      else
+
+        if (@str_doc != nil)
+
+          # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
+          metsModsMetadata = parseDoc()
 
 
-        if (@context.downcase == "gdz")
-          get_str_doc_from_ppn(metsUri())
-          #get_doc_from_str_doc
-        end
+          if metsModsMetadata != nil
 
-
-      end
-
-
-      if (@str_doc != nil)
-
-        # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
-        metsModsMetadata = parseDoc()
-
-
-        if metsModsMetadata != nil
-
-          hsh = Hash.new
-          hsh.merge! ({:id => @id})
+            hsh = Hash.new
+            hsh.merge! ({:id => @id})
 
 
 =begin
