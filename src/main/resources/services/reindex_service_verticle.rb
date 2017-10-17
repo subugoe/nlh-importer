@@ -125,14 +125,14 @@ def reindex(context)
 
     i += keys.size
 
-=begin
-      while response.next_page? do
-        response = response.next_page
-        keys =  response.contents.map(&:key)
-        process_keys keys, context
-        i += keys.size
-      end
-=end
+
+    while response.next_page? do
+      response = response.next_page
+      keys     = response.contents.map(&:key)
+      process_keys keys, context
+      i += keys.size
+    end
+
 
   rescue Exception => e
     puts "e.message: #{e.message}\n\te.backtrace: #{e.backtrace}"
