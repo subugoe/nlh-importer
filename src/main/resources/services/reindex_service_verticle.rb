@@ -149,8 +149,8 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 
-# POST http://127.0.0.1:8080   /api/reindexer/jobs
-# {"s3_key": "mets/PPN129323659_0031.xml" , "context": "gdz"}
+# POST http://134.76.18.25:8083   /api/reindexer/jobs
+# {"context": "gdz"}
 router.post("/api/reindexer/jobs").blocking_handler(lambda {|routingContext|
 
   begin
@@ -192,7 +192,7 @@ router.post("/api/reindexer/jobs").blocking_handler(lambda {|routingContext|
 }, false)
 
 
-# GET http://127.0.0.1:8080   /api/reindexer/status
+# GET http://134.76.18.25:8083  /api/reindexer/status
 router.get("/api/reindexer/status").blocking_handler(lambda {|routingContext|
 
   size = @rredis.llen(@queue)

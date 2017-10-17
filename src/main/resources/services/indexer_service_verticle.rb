@@ -38,7 +38,7 @@ router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
 
-# POST http://141.5.103.92:8080   /api/indexer/jobs
+# POST http://134.76.18.25:8083  /api/indexer/jobs
 # {"s3_key": "mets/PPN129323659_0031.xml" , "context": "gdz"}
 router.post("/api/indexer/jobs").blocking_handler(lambda { |routingContext|
 
