@@ -46,6 +46,18 @@ class ImgToPdfConverter
 
     @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
+    @s3 = Aws::S3::Client.new(
+        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+        :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+        :endpoint          => ENV['S3_ENDPOINT'],
+        :force_path_style  => true,
+        :region            => 'us-west-2')
+
+    @nlh_bucket = ENV['S3_NLH_BUCKET']
+    @gdz_bucket = ENV['S3_GDZ_BUCKET']
+
+    @s3_pdf_key_pattern = ENV['S3_PDF_KEY_PATTERN']
+    @s3_image_key_pattern = ENV['S3_IMAGE_KEY_PATTERN']
 
     MiniMagick.configure do |config|
       config.validate_on_create = false
@@ -77,15 +89,42 @@ class ImgToPdfConverter
 # ---
 
 
-  def get_object_from_s3(s3_bucket, s3_key)
-    resp = @s3.get_object({bucket: s3_bucket, key: s3_key})
-    resp.body.read
+  def download_from_s3(s3_bucket, s3_key, path)
+
+    begin
+      resp = @s3.get_object(
+          {bucket: s3_bucket, key: s3_key},
+          target: path
+      )
+    rescue Exception => e
+      @logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+
+      return false
+    end
+
+    return true
   end
 
 
-  def push_object_to_s3(path, s3_bucket, s3_key)
-    resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
-    @str_doc = resp.body.read
+  def push_object_to_s3(to_full_pdf_path, s3_bucket, s3_key)
+
+    puts "to_full_pdf_path: #{to_full_pdf_path}, s3_bucket: #{s3_bucket}, s3_key: #{s3_key}"
+
+    begin
+      resp = @s3.put_object(
+          {
+              #acl:    "authenticated-read",
+              body:   to_full_pdf_path,
+              bucket: s3_bucket,
+              key:    s3_key
+          }
+      )
+    rescue Exception => e
+      @logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
+    end
+
   end
 
 
@@ -129,20 +168,39 @@ class ImgToPdfConverter
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
+      base_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}"
       to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
       img_url          = "#{baseurl}/tiff/#{work}/#{page}.#{image_format}"
       to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{work}.pdf"
 
+      FileUtils.mkdir_p(to_pdf_dir)
+
       if request_logical_part
         to_full_pdf_path = "#{to_pdf_dir}/#{work}___#{log_id}.pdf"
       end
 
-      FileUtils.mkdir_p(to_pdf_dir)
+      # s3://gdz/  OR s3://nlh/
+      case context
+        when 'nlh'
+          s3_bucket = @nlh_bucket
+        when 'gdz'
+          s3_bucket = @gdz_bucket
+      end
+
+      s3_image_key = @s3_image_key_pattern % [work, page, image_format]
+
+      if request_logical_part
+        #s3_pdf_key = @s3_pdf_key_pattern % [work, id]
+        s3_pdf_key = @s3_pdf_key_pattern % [work, log_id]
+      else
+        s3_pdf_key = @s3_pdf_key_pattern % [work, work]
+      end
+
 
       # todo remove comment
-      if download(img_url, to_tmp_img)
+      if download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
 
         # todo remove comment
         if convert(to_tmp_img, to_page_pdf_path)
@@ -171,17 +229,12 @@ class ImgToPdfConverter
 
               add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
 
-              # to s3
-              if request_logical_part
-
-              else
-
-              end
+              push_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
 
               # cleanup
-              #remove_dir(to_pdf_dir)
-
+              remove_dir(base_pdf_dir)
               @rredis.del(@unique_queue, id)
+              @logger.info "[img_to_pdf_converter_job_builder] Finish PDF creation for '#{id}'"
             end
 
 
@@ -193,12 +246,15 @@ class ImgToPdfConverter
 
         else
           pushToQueue(id, 'err', "Conversion of #{id} failed")
+          @rredis.del(@unique_queue, id)
         end
       else
         pushToQueue(id, 'err', "Download of #{id} failed")
+        @rredis.del(@unique_queue, id)
       end
 
     rescue Exception => e
+      pushToQueue(id, 'err', "Download of #{id} failed")
 
       @rredis.del(@unique_queue, id)
 
@@ -240,10 +296,6 @@ class ImgToPdfConverter
     end
   end
 
-  def download_via_s3(url, path)
-    return false
-  end
-
   def download_via_http(url, path)
 
     attempts = 0
@@ -266,24 +318,6 @@ class ImgToPdfConverter
 
   def download_via_mount(url, path)
     return false
-  end
-
-
-  def download(url, path)
-
-
-    unless download_via_s3(url, path)
-      unless download_via_http(url, path)
-        unless download_via_mount(url, path)
-          return false
-        end
-      end
-    end
-
-    #log_debug "Download of '#{url}' finished"
-
-    return true
-
   end
 
   def add_info_str(bookmark_str, info_key, info_value)
