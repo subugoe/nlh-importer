@@ -75,8 +75,13 @@ class ImgToPdfConverter
 
 
   def log_error(msg, e)
-    @logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}")
-    @file_logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+    if e == nil
+      @logger.error("[img_to_pdf_converter] #{msg}")
+      @file_logger.error("[img_to_pdf_converter] #{msg}")
+    else
+      @logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}")
+      @file_logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+    end
   end
 
   def log_info(msg)
