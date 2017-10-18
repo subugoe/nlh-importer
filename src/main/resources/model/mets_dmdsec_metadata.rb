@@ -66,7 +66,7 @@ class MetsDmdsecMetadata
 
   def initialize
 
-    @identifiers        = Array.new
+    @identifiers = Array.new
     @record_identifiers = Hash.new
 
     @is_child = false
@@ -76,33 +76,33 @@ class MetsDmdsecMetadata
     @title_infos = Array.new
     #@personalNames      = Array.new
     #@corporateNames     = Array.new
-    @names                   = Array.new
-    @facet_creator_personal  = Array.new
+    @names = Array.new
+    @facet_creator_personal = Array.new
     @facet_creator_corporate = Array.new
-    @facet_person_personal   = Array.new
-    @facet_person_corporate  = Array.new
+    @facet_person_personal = Array.new
+    @facet_person_corporate = Array.new
 
 
     @type_of_resources = Array.new
-    @locations         = Array.new
-    @genres            = Array.new
-    @subject_genres    = Array.new
-    @classifications   = Array.new
-    @sponsors          = Array.new
+    @locations = Array.new
+    @genres = Array.new
+    @subject_genres = Array.new
+    @classifications = Array.new
+    @sponsors = Array.new
 
-    @original_infos        = Array.new
-    @edition_infos         = Array.new
-    @languages             = Array.new
+    @original_infos = Array.new
+    @edition_infos = Array.new
+    @languages = Array.new
     @physical_descriptions = Array.new
-    @notes                 = Array.new
+    @notes = Array.new
 
     #@volumes =Array.new
 
-    @subjects      = Array.new
+    @subjects = Array.new
     @related_items = Array.new
-    @parts         = Array.new
-    @record_infos  = Array.new
-    @right_infos   = Array.new
+    @parts = Array.new
+    @record_infos = Array.new
+    @right_infos = Array.new
 
   end
 
@@ -251,11 +251,11 @@ class MetsDmdsecMetadata
       if @work.start_with? 'PPN'
         id = @work.match(/PPN(\S*)/)[1]
 
-        unapi_url  = ENV['UNAPI_URI']
+        unapi_url = ENV['UNAPI_URI']
         unapi_path = ENV['UNAPI_PATH'] % id
 
         response = ''
-        url      = URI(unapi_url)
+        url = URI(unapi_url)
 
         Net::HTTP.start(url.host) {|http|
           response = http.head(unapi_path)
@@ -276,20 +276,20 @@ class MetsDmdsecMetadata
 
     if !@names.empty?
 
-      creator_displayform        = Array.new
-      creator_type               = Array.new
-      creator_bycreator          = Array.new
-      creator_gndURI             = Array.new
-      creator_gndNumber          = Array.new
-      creator_roleterm           = Array.new
+      creator_displayform = Array.new
+      creator_type = Array.new
+      creator_bycreator = Array.new
+      creator_gndURI = Array.new
+      creator_gndNumber = Array.new
+      creator_roleterm = Array.new
       creator_roleterm_authority = Array.new
 
-      person_displayform        = Array.new
-      person_type               = Array.new
-      person_byperson           = Array.new
-      person_gndURI             = Array.new
-      person_gndNumber          = Array.new
-      person_roleterm           = Array.new
+      person_displayform = Array.new
+      person_type = Array.new
+      person_byperson = Array.new
+      person_gndURI = Array.new
+      person_gndNumber = Array.new
+      person_roleterm = Array.new
       person_roleterm_authority = Array.new
 
 
@@ -392,7 +392,7 @@ class MetsDmdsecMetadata
     # ---
     if !@classifications.empty?
 
-      dc           = Array.new
+      dc = Array.new
       dc_authority = Array.new
 
       @classifications.each {|classification|
@@ -412,16 +412,16 @@ class MetsDmdsecMetadata
 
     if !@edition_infos.empty?
 
-      places      = Array.new
+      places = Array.new
       placesFacet = Array.new
-      editions    = Array.new
+      editions = Array.new
 
-      publishers      = Array.new
+      publishers = Array.new
       publishersFacet = Array.new
 
       date_captured_string = ''
-      date_captured_start  = ''
-      date_captured_end    = ''
+      date_captured_start = ''
+      date_captured_end = ''
 
       @edition_infos.each {|ei|
 
@@ -434,11 +434,11 @@ class MetsDmdsecMetadata
 
         date_captured_string= ei.date_captured_string
         date_captured_start = ei.date_captured_start
-        date_captured_end   = ei.date_captured_end
+        date_captured_end = ei.date_captured_end
       }
 
 
-      h.merge! ({:edition_digitization => editions})
+      h.merge! ({:edition_digitization => (editions&.select{|el| el != ''}).join("; ")})
       h.merge! ({:place_digitization => places})
       h.merge! ({:facet_place_digitization => placesFacet})
 
@@ -455,16 +455,16 @@ class MetsDmdsecMetadata
 
     if !@original_infos.empty?
 
-      places      = Array.new
+      places = Array.new
       placesFacet = Array.new
-      editions    = Array.new
+      editions = Array.new
 
-      publishers      = Array.new
+      publishers = Array.new
       publishersFacet = Array.new
 
       date_issued_string = ''
-      date_issued_start  = ''
-      date_issued_end    = ''
+      date_issued_start = ''
+      date_issued_end = ''
 
 
       @original_infos.each {|oi|
@@ -477,11 +477,13 @@ class MetsDmdsecMetadata
         publishersFacet << oi.publishersFacet_to_s&.join('; ')
 
         date_issued_string = oi.date_issued_string
-        date_issued_start  = oi.date_issued_start
-        date_issued_end    = oi.date_issued_end
+        date_issued_start = oi.date_issued_start
+        date_issued_end = oi.date_issued_end
       }
 
-      h.merge! ({:edition => editions})
+
+
+      h.merge! ({:edition => (editions&.select{|el| el != ''}).join("; ")})
       h.merge! ({:place_publish => places})
       h.merge! ({:facet_place_publish => placesFacet})
 
@@ -528,10 +530,10 @@ class MetsDmdsecMetadata
 
     if !@physical_descriptions.empty?
 
-      form                = Array.new
+      form = Array.new
       reformattingQuality = Array.new
-      extent              = Array.new
-      digitalOrigin       = Array.new
+      extent = Array.new
+      digitalOrigin = Array.new
 
       @physical_descriptions.each {|pd|
 
@@ -552,7 +554,7 @@ class MetsDmdsecMetadata
 
     if !@notes.empty?
 
-      type  = Array.new
+      type = Array.new
       value = Array.new
 
       @notes.each {|n|
@@ -571,9 +573,9 @@ class MetsDmdsecMetadata
 
     if !@subjects.empty?
 
-      type       = Array.new
-      subject    = Array.new
-      topic      = Array.new
+      type = Array.new
+      subject = Array.new
+      topic = Array.new
       geographic = Array.new
 
       @subjects.each {|subj|
@@ -629,7 +631,7 @@ class MetsDmdsecMetadata
     unless @parts.empty?
 
       currentnosort = Array.new
-      currentno     = Array.new
+      currentno = Array.new
 
       @parts.each {|part|
 
@@ -656,8 +658,8 @@ class MetsDmdsecMetadata
 
 
   def merge_title_info(h)
-    title     = Array.new
-    subtitle  = Array.new
+    title = Array.new
+    subtitle = Array.new
     sorttitle = Array.new
 
     @title_infos.each {|ti|
