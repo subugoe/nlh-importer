@@ -53,10 +53,14 @@ class ImgToPdfConverter
         :force_path_style  => true,
         :region            => 'us-west-2')
 
+    @use_s3 = false
+    @use_s3 = true if ENV['USE_S3'] == 'true'
+
+
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
-    @s3_pdf_key_pattern = ENV['S3_PDF_KEY_PATTERN']
+    @s3_pdf_key_pattern   = ENV['S3_PDF_KEY_PATTERN']
     @s3_image_key_pattern = ENV['S3_IMAGE_KEY_PATTERN']
 
     MiniMagick.configure do |config|
@@ -200,7 +204,13 @@ class ImgToPdfConverter
 
 
       # todo remove comment
-      if download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
+      if @use_s3
+        loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
+      else
+        loaded = download_via_http(img_url, to_tmp_img)
+      end
+
+      if loaded
 
         # todo remove comment
         if convert(to_tmp_img, to_page_pdf_path)
@@ -229,13 +239,14 @@ class ImgToPdfConverter
 
               add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
 
-              push_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+              if @use_s3
+                push_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+              end
 
               # cleanup
               remove_dir(base_pdf_dir)
               @rredis.del(@unique_queue, id)
               @logger.info "[img_to_pdf_converter_job_builder] Finish PDF creation for '#{id}'"
-            end
 
 
             #    message.reply("#{img_url} processed")
@@ -243,7 +254,6 @@ class ImgToPdfConverter
           else
             @rredis.del(@unique_queue, id)
           end
-
         else
           pushToQueue(id, 'err', "Conversion of #{id} failed")
           @rredis.del(@unique_queue, id)
