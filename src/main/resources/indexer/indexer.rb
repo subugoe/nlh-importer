@@ -1450,7 +1450,7 @@ end
     # Classification
     begin
       unless mods.xpath('classification').empty?
-        dmdsec_meta.addClassification = getClassification(mods.xpath('classification'))
+        dmdsec_meta.addClassification = getClassification(mods.xpath('classification[@authority="ZVDD" or @authority="zvdd" or @authority="GDZ" or @authority="gdz"]'))
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve classification for #{@id} (#{e.message})")
