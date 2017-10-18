@@ -98,8 +98,8 @@ class ImgToPdfConverter
 # ---
 
 
-  def download_from_s3(s3_bucket, s3_key, path)
-
+  def download_from_webserver(img_url, to_tmp_img)
+    attempts = 0
     begin
       resp = @s3.get_object(
           {bucket: s3_bucket, key: s3_key},
@@ -108,6 +108,53 @@ class ImgToPdfConverter
     rescue Exception => e
       @logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
       @file_logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+
+      return false
+    end
+
+    return true
+  end
+
+
+  def download_via_http(url, path)
+
+    attempts = 0
+
+    begin
+      open(path, 'wb') do |file|
+        file << open(url).read
+      end
+    rescue Exception => e
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
+      log_error "Could not download '#{url}'", e
+      return false
+    end
+
+    return true
+
+  end
+
+  def download_via_mount(url, path)
+    return false
+  end
+
+
+  def download_from_s3(s3_bucket, s3_key, path)
+
+    attempts = 0
+    begin
+      resp = @s3.get_object(
+          {bucket: s3_bucket, key: s3_key},
+          target: path
+      )
+    rescue Exception => e
+      @logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+      attempts = attempts + 1
+      retry if (attempts < MAX_ATTEMPTS)
 
       return false
     end
@@ -121,14 +168,18 @@ class ImgToPdfConverter
     puts "to_full_pdf_path: #{to_full_pdf_path}, s3_bucket: #{s3_bucket}, s3_key: #{s3_key}"
 
     begin
-      resp = @s3.put_object(
-          {
-              #acl:    "authenticated-read",
-              body:   to_full_pdf_path,
-              bucket: s3_bucket,
-              key:    s3_key
-          }
-      )
+
+      File.open(to_full_pdf_path, 'rb') do |file|
+        resp = @s3.put_object(
+            {
+                #acl:    "authenticated-read",
+                body:   file,
+                bucket: s3_bucket,
+                key:    s3_key
+            }
+        )
+      end
+
     rescue Exception => e
       @logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}"
       @file_logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
@@ -177,7 +228,7 @@ class ImgToPdfConverter
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
-      base_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}"
+      #base_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}"
       to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
       img_url          = "#{baseurl}/tiff/#{work}/#{page}.#{image_format}"
       to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
@@ -249,23 +300,26 @@ class ImgToPdfConverter
               end
 
               # cleanup
-              remove_dir(base_pdf_dir)
+              #remove_dir(to_pdf_dir)
               @rredis.del(@unique_queue, id)
               @logger.info "[img_to_pdf_converter_job_builder] Finish PDF creation for '#{id}'"
 
 
-            #    message.reply("#{img_url} processed")
+              #    message.reply("#{img_url} processed")
+
+            else
+              @rredis.del(@unique_queue, id)
+            end
 
           else
+            pushToQueue(id, 'err', "Conversion of #{id} failed")
             @rredis.del(@unique_queue, id)
           end
         else
-          pushToQueue(id, 'err', "Conversion of #{id} failed")
+          pushToQueue(id, 'err', "Download of #{id} failed")
           @rredis.del(@unique_queue, id)
         end
-      else
-        pushToQueue(id, 'err', "Download of #{id} failed")
-        @rredis.del(@unique_queue, id)
+
       end
 
     rescue Exception => e
@@ -306,33 +360,9 @@ class ImgToPdfConverter
     if @rredis.hget(queue, 'err') == nil
       return false
     else
-      log_error "Conversion errors with queue '#{queue}' (#{@rredis.hget(queue, 'err')})", e
+      log_error "Conversion errors with queue '#{queue}' (#{@rredis.hget(queue, 'err')})", nil
       return true
     end
-  end
-
-  def download_via_http(url, path)
-
-    attempts = 0
-
-
-    begin
-      open(path, 'wb') do |file|
-        file << open(url).read
-      end
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      log_error "Could not download '#{url}'", e
-      return false
-    end
-
-    return true
-
-  end
-
-  def download_via_mount(url, path)
-    return false
   end
 
   def add_info_str(bookmark_str, info_key, info_value)
