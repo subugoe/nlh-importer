@@ -460,6 +460,12 @@ end
         issued_start_date = oi.xpath("dateIssued[@keyDate='yes' or @point='start']").text
         issued_end_date   = oi.xpath("dateIssued[@point='end']").text
 
+        # add new fiel for creation date in index and put the following info to this field
+        if issued_start_date == ''
+          issued_start_date = oi.xpath("dateCreated[@keyDate='yes' or @point='start']").text
+          issued_end_date   = oi.xpath("dateCreated[@point='end']").text
+        end
+
         unless issued_start_date == ''
           originInfo.date_issued_string = issued_start_date
           originInfo.check_and_add_date_issued_start(issued_start_date, @id)

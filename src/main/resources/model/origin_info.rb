@@ -41,6 +41,11 @@ class OriginInfo
       return match[2].to_i
     end
 
+    match = date.match(/([\S]*) (\d\d\d\d)/)
+    if match
+      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (9) for #{id}")
+      return match[2].to_i
+    end
 
     match = date.match(/(\d*)(XX)/)
     if match
