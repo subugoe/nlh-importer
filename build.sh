@@ -58,7 +58,7 @@ export CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval
 export LOGO_PATH=${VERTICLE_HOME}/image/sub-blue_65.jpg
 export FONT_PATH=${VERTICLE_HOME}/font
 
-export SOLR_JAVA_MEM='-Xms512M -Xmx4G'
+export SOLR_JAVA_MEM='-Xms512M -Xmx7G'
 
 
 
@@ -196,6 +196,6 @@ docker-compose build --force-rm  importer_services importer_indexer importer_con
 docker-compose stop
 docker-compose rm -f
 #docker-compose up -d importer_services importer_indexer importer_converter redis solr
-
+#docker-compose up -d
 
 

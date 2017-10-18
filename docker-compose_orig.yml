@@ -63,7 +63,7 @@ services:
     volumes:
       - solrdata_core1:/opt/solr/server/solr/mycores/<solr_core>/data/
       - solrdata_core2:/opt/solr/server/solr/mycores/<solr_core2>/data/
-    mem_limit: 5GB
+    mem_limit: 8GB
     env_file:
       - ./.env
     environment:
@@ -79,7 +79,7 @@ services:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
       - redisdata/:/data/
-    mem_limit: 3GB
+    mem_limit: 5GB
     env_file:
       - ./.env
     environment:
