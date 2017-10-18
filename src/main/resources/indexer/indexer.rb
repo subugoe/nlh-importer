@@ -44,8 +44,8 @@ class Indexer
 
   def initialize
 
-    @from_s3 = false
-    @from_s3 = true if ENV['USE_S3'] == 'true'
+    @use_s3 = false
+    @use_s3 = true if ENV['USE_S3'] == 'true'
 
 
     @dc_hsh = {
@@ -908,7 +908,7 @@ end
 
       fulltext.fulltext_page_number = page_number
 
-      if @from_s3
+      if @use_s3
         ftext = get_fulltext_from_s3(page)
       else
         ftext = getFulltext(uri)
@@ -1939,7 +1939,7 @@ end
           return
         end
 
-        if @from_s3
+        if @use_s3
 
           if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
 
