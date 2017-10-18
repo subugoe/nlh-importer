@@ -425,12 +425,12 @@ class MetsDmdsecMetadata
 
       @edition_infos.each {|ei|
 
-        places << ei.places # _to_s
-        placesFacet << ei.placesFacet_to_s
+        places << ei.places&.join('; ') # _to_s
+        placesFacet << ei.placesFacet_to_s&.join('; ')
         editions << ei.edition # _to_s
 
-        publishers << ei.publishers # _to_s
-        publishersFacet << ei.publishersFacet_to_s
+        publishers << ei.publishers&.join('; ') # _to_s
+        publishersFacet << ei.publishersFacet_to_s&.join('; ')
 
         date_captured_string= ei.date_captured_string
         date_captured_start = ei.date_captured_start
@@ -438,7 +438,7 @@ class MetsDmdsecMetadata
       }
 
 
-      h.merge! ({:edition_digitization => editions.join('; ')})
+      h.merge! ({:edition_digitization => editions})
       h.merge! ({:place_digitization => places})
       h.merge! ({:facet_place_digitization => placesFacet})
 
@@ -469,19 +469,19 @@ class MetsDmdsecMetadata
 
       @original_infos.each {|oi|
 
-        places << oi.places # _to_s
-        placesFacet << oi.placesFacet_to_s
+        places << oi.places&.join('; ') # _to_s
+        placesFacet << oi.placesFacet_to_s&.join('; ')
         editions << oi.edition # _to_s
 
-        publishers << oi.publishers # _to_s
-        publishersFacet << oi.publishersFacet_to_s
+        publishers << oi.publishers&.join('; ') # _to_s
+        publishersFacet << oi.publishersFacet_to_s&.join('; ')
 
         date_issued_string = oi.date_issued_string
         date_issued_start  = oi.date_issued_start
         date_issued_end    = oi.date_issued_end
       }
 
-      h.merge! ({:edition => editions.join('; ')})
+      h.merge! ({:edition => editions})
       h.merge! ({:place_publish => places})
       h.merge! ({:facet_place_publish => placesFacet})
 
