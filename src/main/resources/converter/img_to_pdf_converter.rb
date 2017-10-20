@@ -166,25 +166,32 @@ class ImgToPdfConverter
 
   def push_object_to_s3(to_full_pdf_path, s3_bucket, s3_key)
 
-    puts "to_full_pdf_path: #{to_full_pdf_path}, s3_bucket: #{s3_bucket}, s3_key: #{s3_key}"
-
     begin
 
       File.open(to_full_pdf_path, 'rb') do |file|
-        resp = @s3.put_object(
-            {
-                #acl:    "authenticated-read",
-                body:   file,
-                bucket: s3_bucket,
-                key:    s3_key
-            }
-        )
+
+        begin
+          resp = @s3.put_object(
+              {
+                  bucket: s3_bucket,
+                  key: s3_key,
+                  body: file.read
+              }
+          )
+
+          log_debug "Full PDF #{to_full_pdf_path} added to S3"
+        rescue Aws::S3::Errors::ServiceError => e
+          puts "e.message: #{e}"
+        end
+
       end
+
 
     rescue Exception => e
       @logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}"
       @file_logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
     end
+
 
   end
 
@@ -331,7 +338,6 @@ class ImgToPdfConverter
       @logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}"
       @file_logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
     end
-
   end
 
 
