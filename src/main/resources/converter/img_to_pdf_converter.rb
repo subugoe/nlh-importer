@@ -23,6 +23,7 @@ class ImgToPdfConverter
 
 
     @pdfoutpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+    @img_base_url = ENV['GDZ_IMG_BASE_URL']
 
 
     @logger       = Logger.new(STDOUT)
@@ -229,9 +230,9 @@ class ImgToPdfConverter
       product      = solr_work['product']
 
       #base_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}"
-      to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
-      img_url          = "#{baseurl}/tiff/#{work}/#{page}.#{image_format}"
-      to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
+      to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
+      img_url = "#{@img_base_url}/tiff/#{work}/#{page}.#{image_format}"
+      to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{work}.pdf"
 
