@@ -1,4 +1,4 @@
-FROM vertx/vertx3
+FROM vertx/vertx3:latest
 #FROM vertx/vertx3-exec
 
 ENV JRUBY_HOME /opt/jruby
