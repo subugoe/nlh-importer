@@ -677,18 +677,6 @@ class ImgToPdfConverter
       log_error "Problem with image data \njson: '#{json}' \nj: '#{j}'", e
     end
 
-
-=begin
-    begin
-      image      = MiniMagick::Image.new(path)
-      resolution = image.data['resolution']
-      depth      = image.data['depth']
-    rescue Exception => e
-      log_error "Problem with image data", e
-    end
-
-    [depth, resolution]
-=end
   end
 
 
@@ -698,10 +686,7 @@ class ImgToPdfConverter
 
       FileUtils.rm(to_page_pdf_path, :force => true)
 
-=begin
       depth, resolution_arr = get_image_depth_and_resolution (to_tmp_img)
-
-      #if (depth.to_i > 1) && (resolution_arr['x'].to_i > 72)
 
       if (resolution_arr != nil) && (!resolution_arr.empty?) && (resolution_arr['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
         MiniMagick::Tool::Convert.new do |convert|
@@ -712,7 +697,7 @@ class ImgToPdfConverter
           convert << "-resize" << "595x842"
           #convert << "-resize" << "364x598"
           convert << "-density" << "72"
-          #convert << "-quality" << "85"
+          convert << "-quality" << "95"
           convert << "#{to_page_pdf_path}"
         end
       else
@@ -721,23 +706,12 @@ class ImgToPdfConverter
           convert << "#{to_tmp_img}"
           convert << "#{to_page_pdf_path}"
         end
-
       end
-=end
-
-      MiniMagick::Tool::Convert.new do |convert|
-        convert << "-define" << "pdf:use-cropbox=true"
-        convert << "#{to_tmp_img}"
-        convert << "#{to_page_pdf_path}"
-      end
-
 
     rescue Exception => e
       log_error "Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'", e
       return false
     end
-
-    log_debug "Conversion '#{to_tmp_img}' -> '#{to_page_pdf_path}' finished"
 
     return true
   end
