@@ -198,7 +198,7 @@ class ImgToPdfConverter
 
   def get_page_count
 
-    solr_resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+    solr_resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
     log_end_page_index   = -1
@@ -230,13 +230,12 @@ class ImgToPdfConverter
 
       # ---
 
-      solr_work = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "image_format, product, baseurl"})['response']['docs'].first
+      solr_work = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "image_format, product, baseurl"})['response']['docs'].first
 
       image_format = solr_work['image_format']
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
-      #base_pdf_dir       = "#{@pdfoutpath}/#{product}/#{work}"
       to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
       img_url = "#{@img_base_url}/tiff/#{work}/#{page}.#{image_format}"
       to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
@@ -389,7 +388,7 @@ class ImgToPdfConverter
 
     disclaimer_info = DisclaimerInfo.new
 
-    solr_work = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
+    solr_work = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
 
 
     disclaimer_info.log_id                   = solr_work['log_id']
@@ -612,7 +611,6 @@ class ImgToPdfConverter
 
         pdf.font "OpenSans", :style => :normal
 
-
         pdf.move_down 250
         pdf.text ENV['DISCLAIMER_TEXT'], :inline_format => true
 
@@ -642,7 +640,7 @@ class ImgToPdfConverter
 
   def merge_to_full_pdf_pdftk_system(to_pdf_dir, work, log_id, request_logical_part)
 
-    solr_resp = (@solr.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+    solr_resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
     log_end_page_index   = -1
