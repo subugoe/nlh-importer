@@ -1772,9 +1772,12 @@ end
 
     begin
       solr_resp = (@gdz_solr.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
-      solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if solr_resp.size == 0
+      #solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if solr_resp.size == 0
+      #solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if (solr_resp == nil) || (solr_resp&.size == 0)
 
-      if solr_resp.size > 0
+
+      #if solr_resp&.size > 0
+      if (solr_resp != nil) && (solr_resp&.size > 0)
 
         datemodified = solr_resp['datemodified']
         dateindexed = solr_resp['dateindexed']
