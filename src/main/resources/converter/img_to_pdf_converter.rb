@@ -275,7 +275,6 @@ class ImgToPdfConverter
 
       if loaded
 
-        # todo remove comment
         if convert(to_tmp_img, to_page_pdf_path)
 
           pushToQueue(id, page, true)
@@ -286,16 +285,13 @@ class ImgToPdfConverter
 
               removeQueue(id)
 
-              # todo remove comment
               merge_to_full_pdf_pdftk_system(to_pdf_dir, work, log_id, request_logical_part)
 
               disclaimer_info = load_metadata(work)
 
               unless request_logical_part
-                # todo remove comment
                 add_bookmarks_pdftk_system(to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
               end
-
 
               add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
 
@@ -459,7 +455,6 @@ class ImgToPdfConverter
         }
       end
     end
-    #FileUtils.rm(to_full_pdf, :force => true)
 
     open(data_file, 'w') {|f|
       f.puts bookmark_str
@@ -467,7 +462,7 @@ class ImgToPdfConverter
 
     system "pdftk #{to_pdf_dir}/tmp.pdf update_info_utf8 #{data_file} output #{to_pdf_dir}/tmp_2.pdf"
 
-    log_debug "Finish Metadata creation #{to_pdf_dir}/tmp_2.pdf"
+    log_debug "Metadata added to #{to_pdf_dir}/tmp_2.pdf"
   end
 
   def add_label_and_value label, text, pdf_obj
@@ -510,14 +505,11 @@ class ImgToPdfConverter
   end
 
 
-# todo check  ---> opac <---
   def add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
 
-    # todo differentiate work and log_parts
     begin
 
       Prawn::Document.generate("#{to_pdf_dir}/disclaimer.pdf", page_size: [595, 842], page_layout: :portrait) do |pdf|
-
 
         pdf.font_families.update(
             "OpenSans" => {:normal => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Regular.ttf",
@@ -554,8 +546,6 @@ class ImgToPdfConverter
 
         add_label_and_value("Collection", disclaimer_info.dc_arr, pdf) if check_nil_or_empty_string disclaimer_info.dc_arr
         add_label_and_value("Genre", disclaimer_info.genre_arr, pdf) if check_nil_or_empty_string disclaimer_info.genre_arr
-
-        #add_label_and_value("Subject", disclaimer_info.subject_arr, pdf) if check_nil_or_empty_string disclaimer_info.subject_arr
 
         add_label_and_value("Shelfmark", disclaimer_info.shelfmark_arr, pdf) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
         add_label_and_value("Digitized at", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
@@ -628,6 +618,7 @@ class ImgToPdfConverter
 
     end
 
+    log_debug "Disclaimer added to #{to_full_pdf_path}"
   end
 
   def merge_to_full_pdf_pdftk_system(to_pdf_dir, work, log_id, request_logical_part)
@@ -657,7 +648,6 @@ class ImgToPdfConverter
   end
 
   def get_image_depth_and_resolution path
-    #path = "/Users/jpanzer/Documents/projects/test/nlh-importer/tmp/00000012.tif"
     json = MiniMagick::Tool::Convert.new do |convert|
       convert << path
       convert << "json:"
