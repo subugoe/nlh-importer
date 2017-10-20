@@ -280,12 +280,9 @@ class ImgToPdfConverter
 
           pushToQueue(id, page, true)
 
-          #remove_file(to_tmp_img)
-          #log_debug "deletion of #{to_tmp_img} finished"
+          if all_images_converted?(id, pages_count)
 
-          if !conversion_errors?(id)
-
-            if all_images_converted?(id, pages_count)
+            if !conversion_errors?(id)
 
               removeQueue(id)
 
@@ -307,20 +304,15 @@ class ImgToPdfConverter
               end
 
               # cleanup
-              #remove_dir(to_pdf_dir)
+              remove_dir(to_pdf_dir)
               @rredis.del(@unique_queue, id)
               @logger.info "[img_to_pdf_converter_job_builder] Finish PDF creation for '#{id}'"
 
-
-              #    message.reply("#{img_url} processed")
-
             else
+              pushToQueue(id, 'err', "Conversion of #{id} failed")
               @rredis.del(@unique_queue, id)
             end
 
-          else
-            pushToQueue(id, 'err', "Conversion of #{id} failed")
-            @rredis.del(@unique_queue, id)
           end
         else
           pushToQueue(id, 'err', "Download of #{id} failed")
