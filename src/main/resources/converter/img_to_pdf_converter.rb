@@ -25,7 +25,6 @@ class ImgToPdfConverter
     @pdfoutpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
     @img_base_url = ENV['GDZ_IMG_BASE_URL']
 
-
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 

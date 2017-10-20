@@ -38,5 +38,5 @@ docker/solr/Dockerfile
 
 build_l.sh
 
-
+src/main/resources/s3cmd/
 test*.*
