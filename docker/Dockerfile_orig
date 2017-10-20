@@ -16,7 +16,7 @@ ENV PATH $PATH:$JRUBY_HOME/bin
 
 
 RUN apt-get update \
-    && apt-get install -y curl vim libc6-dev --no-install-recommends \
+    && apt-get install -y python-dateutil git curl vim libc6-dev --no-install-recommends \
         imagemagick \
         ghostscript \
         pdftk \
