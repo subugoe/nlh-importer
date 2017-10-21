@@ -97,8 +97,17 @@ POST 134.76.18.25:8083     /api/converter/jobs
 ```
 POST 134.76.18.25:8083     /api/converter/jobs
 {
-	"id": "PPN591416441___LOG_0008",
-	"context": "gdz"
+    "document": "PPN591416441",
+    "log": "PPN591416441",
+    "context": "gdz"
+}
+
+             or
+
+{
+    "document": "PPN591416441",
+    "log": "LOG_0007",
+    "context": "gdz"
 }
 ```
 

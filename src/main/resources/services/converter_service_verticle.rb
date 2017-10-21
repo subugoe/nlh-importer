@@ -36,17 +36,20 @@ end
 router = VertxWeb::Router.router($vertx)
 router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 
-# POST http://134.76.18.25:8083   /api/converter/jobs
+# POST 134.76.18.25:8083     /api/converter/jobs
+# {
+#     "document": "PPN591416441",
+#     "log": "PPN591416441",
+#     "context": "gdz"
+# }
 #
-# for full PDF
-# {"id": "PPN826737668" , "context": "gdz"}
-# is equivalent to
-# {"id": "PPN826737668___LOG_0000" , "context": "gdz"}
-#
-# for logical elements (part PDF)
-# {"id": "PPN826737668___LOG_0001" , "context": "gdz"}
 # or
-# {"id": "mets_emo_farminstructordiaryno2farmcluny19091920___LOG_0001" , "context": "nlh"}
+#
+# {
+#     "document": "PPN591416441",
+#     "log": "LOG_0007",
+#     "context": "gdz"
+# }
 router.post("/api/converter/jobs").blocking_handler(lambda { |routingContext|
 
   begin

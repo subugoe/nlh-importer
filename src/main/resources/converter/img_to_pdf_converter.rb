@@ -221,7 +221,7 @@ class ImgToPdfConverter
 
       context              = json['context']
       id                   = json['id']
-      work                 = json['work']
+      log                  = json['log']
       log_id               = json['log_id']
       request_logical_part = json['request_logical_part']
       page                 = json['page']
@@ -229,22 +229,24 @@ class ImgToPdfConverter
 
       # ---
 
-      solr_work = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "image_format, product, baseurl"})['response']['docs'].first
+      solr_work = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "image_format, product, baseurl"})['response']['docs'].first
 
       image_format = solr_work['image_format']
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
-      to_pdf_dir = "#{@pdfoutpath}/#{product}/#{work}/#{log_id}"
-      img_url = "#{@img_base_url}/tiff/#{work}/#{page}.#{image_format}"
+      to_pdf_dir = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
+      img_url = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
       to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
-      to_full_pdf_path = "#{to_pdf_dir}/#{work}.pdf"
+
 
       FileUtils.mkdir_p(to_pdf_dir)
 
       if request_logical_part
-        to_full_pdf_path = "#{to_pdf_dir}/#{work}___#{log_id}.pdf"
+        to_full_pdf_path = "#{to_pdf_dir}/#{log_id}.pdf"
+      else
+        to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       end
 
       # s3://gdz/  OR s3://nlh/
@@ -255,13 +257,13 @@ class ImgToPdfConverter
           s3_bucket = @gdz_bucket
       end
 
-      s3_image_key = @s3_image_key_pattern % [work, page, image_format]
+      s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
       if request_logical_part
         #s3_pdf_key = @s3_pdf_key_pattern % [work, id]
-        s3_pdf_key = @s3_pdf_key_pattern % [work, log_id]
+        s3_pdf_key = @s3_pdf_key_pattern % [id, log]
       else
-        s3_pdf_key = @s3_pdf_key_pattern % [work, work]
+        s3_pdf_key = @s3_pdf_key_pattern % [id, id]
       end
 
 
@@ -276,53 +278,53 @@ class ImgToPdfConverter
 
         if convert(to_tmp_img, to_page_pdf_path)
 
-          pushToQueue(id, page, true)
+          pushToQueue(log_id, page, true)
 
-          if all_images_converted?(id, pages_count)
+          if all_images_converted?(log_id, pages_count)
 
-            if !conversion_errors?(id)
+            if !conversion_errors?(log_id)
 
-              removeQueue(id)
+              removeQueue(log_id)
 
-              merge_to_full_pdf_pdftk_system(to_pdf_dir, work, log_id, request_logical_part)
+              merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
 
-              disclaimer_info = load_metadata(work)
+              disclaimer_info = load_metadata(id)
 
               unless request_logical_part
-                add_bookmarks_pdftk_system(to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
+                add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
               end
 
-              add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
+              add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
               if @use_s3
-                push_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+                upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
               end
 
               # cleanup
               remove_dir(to_pdf_dir)
-              @rredis.del(@unique_queue, id)
-              @logger.info "[img_to_pdf_converter_job_builder] Finish PDF creation for '#{id}'"
+              @rredis.del(@unique_queue, log_id)
+              @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
 
             else
-              pushToQueue(id, 'err', "Conversion of #{id} failed")
-              @rredis.del(@unique_queue, id)
+              pushToQueue(id, 'err', "Conversion of #{log_id} failed")
+              @rredis.del(@unique_queue, log_id)
             end
 
           end
         else
-          pushToQueue(id, 'err', "Download of #{id} failed")
-          @rredis.del(@unique_queue, id)
+          pushToQueue(log_id, 'err', "Download for #{log_id} failed")
+          @rredis.del(@unique_queue, log_id)
         end
 
       end
 
     rescue Exception => e
-      pushToQueue(id, 'err', "Download of #{id} failed")
+      pushToQueue(id, 'err', "Download for #{log_id} failed")
 
-      @rredis.del(@unique_queue, id)
+      @rredis.del(@unique_queue, log_id)
 
-      @logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_to_pdf_converter] Processing problem with '#{json}' \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
     end
   end
 
@@ -371,11 +373,11 @@ class ImgToPdfConverter
     bookmark_str << "BookmarkPageNumber: #{bm_page_number}\n"
   end
 
-  def load_metadata(work)
+  def load_metadata(id)
 
     disclaimer_info = DisclaimerInfo.new
 
-    solr_work = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
+    solr_work = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
 
 
     disclaimer_info.log_id                   = solr_work['log_id']
@@ -410,7 +412,7 @@ class ImgToPdfConverter
 
   end
 
-  def add_bookmarks_pdftk_system(to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
+  def add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
     data_file = "#{to_pdf_dir}/data.txt"
 
@@ -419,8 +421,8 @@ class ImgToPdfConverter
     add_info_str(bookmark_str, 'PURL', disclaimer_info.purl) if check_nil_or_empty_string disclaimer_info.purl
     add_info_str(bookmark_str, 'Catalogue', disclaimer_info.catalogue_arr.join(' ')) if check_nil_or_empty_string disclaimer_info.catalogue_arr
 
-    add_info_str(bookmark_str, 'Work', work)
-    add_info_str(bookmark_str, 'LOGID', log_id)
+    add_info_str(bookmark_str, 'Work', id)
+    add_info_str(bookmark_str, 'LOGID', log) if id != log
     add_info_str(bookmark_str, 'Title', disclaimer_info.title_arr.join(' ')) if check_nil_or_empty_string disclaimer_info.title_arr
     add_info_str(bookmark_str, 'Subtitle', disclaimer_info.subtitle_arr.join(' ')) if check_nil_or_empty_string disclaimer_info.subtitle_arr
 
@@ -444,7 +446,7 @@ class ImgToPdfConverter
           add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
         }
       else
-        log_id_index = solr_resp['log_id'].index log_id
+        log_id_index = solr_resp['log_id'].index log
 
         log_start_page_index = solr_resp['log_start_page_index'][log_id_index]
         log_end_page_index   = solr_resp['log_end_page_index'][log_id_index]
@@ -487,11 +489,11 @@ class ImgToPdfConverter
   end
 
 
-  def request_catalogue(id)
+  def request_catalogue(ppn)
 
     response   = ''
     unapi_url  = ENV['UNAPI_URI']
-    unapi_path = ENV['UNAPI_PATH'] % id
+    unapi_path = ENV['UNAPI_PATH'] % ppn
     url        = URI(unapi_url)
 
     Net::HTTP.start(url.host, url.port) {|http|
@@ -504,7 +506,7 @@ class ImgToPdfConverter
   end
 
 
-  def add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, work, log_id, request_logical_part, disclaimer_info)
+  def add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
     begin
 
@@ -548,15 +550,15 @@ class ImgToPdfConverter
 
         add_label_and_value("Shelfmark", disclaimer_info.shelfmark_arr, pdf) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
         add_label_and_value("Digitized at", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
-        add_label_and_value("Work Id", work, pdf) unless work == nil
+        add_label_and_value("Work Id", id, pdf) unless id == nil
 
         add_label_and_value("PURL", disclaimer_info.purl, pdf) if check_nil_or_empty_string disclaimer_info.purl
 
-        if work.start_with? 'PPN'
-          id = work.match(/PPN(\S*)/)[1]
+        if id.start_with? 'PPN'
+          ppn = id.match(/PPN(\S*)/)[1]
 
-          if request_catalogue(id).code.to_i < 400
-            add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}", pdf)
+          if request_catalogue(ppn).code.to_i < 400
+            add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{ppn}", pdf)
           end
         end
 
@@ -564,8 +566,8 @@ class ImgToPdfConverter
 
           pdf.move_down 5
 
-          add_label_and_value("LOGID", log_id, pdf)
-          i = disclaimer_info.log_id.index log_id
+          add_label_and_value("LOGID", log, pdf)
+          i = disclaimer_info.log_id.index log
 
           add_label_and_value("LOG Label", disclaimer_info.log_label_arr[i], pdf)
           add_label_and_value("LOG Type", disclaimer_info.log_type_arr[i], pdf)
@@ -582,10 +584,10 @@ class ImgToPdfConverter
 
           parent_work = disclaimer_info.parentdoc_work.first
           if parent_work.start_with? 'PPN'
-            id = parent_work.match(/PPN(\S*)/)[1]
+            ppn = parent_work.match(/PPN(\S*)/)[1]
 
-            if request_catalogue(id).code.to_i < 400
-              add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}", pdf)
+            if request_catalogue(ppn).code.to_i < 400
+              add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{ppn}", pdf)
             end
           end
         end
@@ -620,16 +622,16 @@ class ImgToPdfConverter
     log_debug "Disclaimer added to #{to_full_pdf_path}"
   end
 
-  def merge_to_full_pdf_pdftk_system(to_pdf_dir, work, log_id, request_logical_part)
+  def merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
 
-    solr_resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+    solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
     log_end_page_index   = -1
 
     if request_logical_part
 
-      log_id_index = solr_resp['log_id'].index log_id
+      log_id_index = solr_resp['log_id'].index log
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
       log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])-1

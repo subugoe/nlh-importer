@@ -78,7 +78,9 @@ class WorkConverter
         json = JSON.parse msg
 
         context = json['context']
-        id      = json['id']
+        id = json['document']
+        log = json['log']
+        log_id = "#{id}___#{log}"
 
         @s3_bucket = ''
 
@@ -94,9 +96,9 @@ class WorkConverter
 
           raise "Unknown context '#{context}', use {gdz | nlh}" unless (context.downcase == "nlh") || (context.downcase == "gdz")
 
-          log_info "Convert work id=#{id}"
+          log_info "Convert work #{log_id}"
 
-          build_jobs(id, context)
+          build_jobs(context, id, log, log_id)
 
         else
           raise "No context specified in request, use {gdz | nlh}"
@@ -151,42 +153,36 @@ class WorkConverter
   end
 
 
-  def build_jobs(id, context)
+  def build_jobs(context, id, log, log_id)
 
     request_logical_part = false
-
-    if id.include? '___LOG_'
-      match = id.match(/(\S*)___(LOG_)([\d]*)/)
-      work  = match[1]
-      #log_id_value         = match[3]
-      log_id               = match[2]+match[3]
-      request_logical_part = true
+    if id == log
+      log_id = id
     else
-      work = id
-      #log_id_value = 0
-      log_id = "LOG_0000"
+      request_logical_part = true
     end
 
-    solr_resp = @solr.get 'select', :params => {:q => "id:#{work}", :fl => "id doctype"}
+
+    solr_resp = @solr.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype"}
     if solr_resp['response']['numFound'] == 0
-      log_error "Work: '#{work}' for id: '#{id}' could not be found in index, conversion not possible", nil
+      log_error "Couldn't find #{id} in index, conversion for #{log_id} not possible", nil
       return
     end
 
-    removeQueue(id)
+    removeQueue(log_id)
 
     doctype = solr_resp['response']['docs'].first['doctype']
 
     if doctype == 'work'
 
-      resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+      resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index"})['response']['docs'].first
 
       log_start_page_index = 0
       log_end_page_index   = -1
 
       if request_logical_part
 
-        log_id_index = resp['log_id'].index log_id
+        log_id_index = resp['log_id'].index log
 
         log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
         log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1
@@ -200,7 +196,7 @@ class WorkConverter
         msg = {
             'context'              => context,
             'id'                   => id,
-            'work'                 => work,
+            'log'                  => log,
             "log_id"               => log_id,
             "request_logical_part" => request_logical_part,
             'page'                 => page,
@@ -215,15 +211,15 @@ class WorkConverter
       }
 
       unless request_logical_part
-        log_debug "Generate PDF for work #{work}"
+        log_debug "Generate PDF for work #{id}"
       else
-        log_debug "Generate PDF for logical part #{log_id} of #{work}"
+        log_debug "Generate PDF for logical part #{log_id} of #{id}"
       end
 
 
     else
-      log_error "Could not create a PDF for the multivolume work: '#{work}', PDF not created", nil
-      @rredis.hdel(@unique_queue, id)
+      log_error "Could not create a PDF for the multivolume work: '#{id}', PDF not created", nil
+      @rredis.hdel(@unique_queue, log_id)
     end
 
   end
