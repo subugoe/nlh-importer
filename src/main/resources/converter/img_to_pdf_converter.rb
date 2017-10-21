@@ -94,29 +94,7 @@ class ImgToPdfConverter
     @file_logger.debug("[img_to_pdf_converter] #{msg}")
   end
 
-
 # ---
-
-
-  def download_from_webserver(img_url, to_tmp_img)
-    attempts = 0
-    begin
-      resp = @s3.get_object(
-          {bucket: s3_bucket, key: s3_key},
-          target: path
-      )
-    rescue Exception => e
-      @logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-
-      return false
-    end
-
-    return true
-  end
-
 
   def download_via_http(url, path)
 
@@ -151,8 +129,8 @@ class ImgToPdfConverter
           target: path
       )
     rescue Exception => e
-      @logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter_job_builder] Could not get file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_to_pdf_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
 
@@ -163,7 +141,7 @@ class ImgToPdfConverter
   end
 
 
-  def push_object_to_s3(to_full_pdf_path, s3_bucket, s3_key)
+  def upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_key)
 
     begin
 
@@ -180,15 +158,16 @@ class ImgToPdfConverter
 
           log_debug "Full PDF #{to_full_pdf_path} added to S3"
         rescue Aws::S3::Errors::ServiceError => e
-          puts "e.message: #{e}"
+          @logger.error "[img_to_pdf_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
+          @file_logger.error "[img_to_pdf_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
         end
 
       end
 
 
     rescue Exception => e
-      @logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter_job_builder] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_to_pdf_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
+      @file_logger.error "[img_to_pdf_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
     end
 
 
