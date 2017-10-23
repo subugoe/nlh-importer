@@ -54,6 +54,7 @@ class WorkConverter
         :force_path_style  => true,
         :region            => 'us-west-2')
 
+    @s3_pdf_key_pattern = ENV['S3_PDF_KEY_PATTERN']
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
@@ -152,6 +153,25 @@ class WorkConverter
     @rredis.lpush(queue, arr)
   end
 
+  def s3_object_exist?(id, log)
+
+    s3_key = @s3_pdf_key_pattern % [id, id]
+    s3_bucket = @s3_bucket
+
+    resource = Aws::S3::Resource.new(client: @s3)
+
+    exist = resource.bucket(s3_bucket).object(s3_key).exists?
+
+    if exist
+      # puts "exist"
+      return true
+    else
+      # puts "does not exist"
+      return false
+    end
+
+  end
+
 
   def build_jobs(context, id, log, log_id)
 
@@ -175,6 +195,7 @@ class WorkConverter
 
     if doctype == 'work'
 
+
       resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index"})['response']['docs'].first
 
       log_start_page_index = 0
@@ -189,26 +210,43 @@ class WorkConverter
 
       end
 
-      pages       = resp['page'][log_start_page_index..log_end_page_index]
+
+      if s3_object_exist?(id, log) # (request_logical_part == true) && s3_object_exist?(id, log)
+        # add implementation, cup from full PDF
+        pdf_exist = true
+      else
+        pdf_exist = false
+      end
+
+      pages = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
-      pages.each {|page|
+      if pdf_exist
         msg = {
             'context'              => context,
             'id'                   => id,
             'log'                  => log,
             "log_id"               => log_id,
             "request_logical_part" => request_logical_part,
-            'page'                 => page,
-            'pages_count'          => pages_count
+            "pages_count" => pages_count,
+            "pdf_exist" => pdf_exist
         }
-
-
-        #$vertx.event_bus().send("image.load", msg.to_json, @options)
-
         pushToQueue(@img_convert_queue, [msg.to_json])
-
-      }
+      else
+        pages.each {|page|
+          msg = {
+              "context" => context,
+              "id" => id,
+              "log" => log,
+              "log_id" => log_id,
+              "request_logical_part" => request_logical_part,
+              "page" => page,
+              "pages_count" => pages_count,
+              "pdf_exist" => pdf_exist
+          }
+          pushToQueue(@img_convert_queue, [msg.to_json])
+        }
+      end
 
       unless request_logical_part
         log_debug "Generate PDF for work #{id}"

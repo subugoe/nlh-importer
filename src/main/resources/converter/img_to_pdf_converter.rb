@@ -203,8 +203,12 @@ class ImgToPdfConverter
       log                  = json['log']
       log_id               = json['log_id']
       request_logical_part = json['request_logical_part']
-      page                 = json['page']
-      pages_count          = json['pages_count']
+      pages_count = json['pages_count']
+
+      page = json['page']
+      pdf_exist = json['pdf_exist']
+      log_start_page_index = json['log_start_page_index']
+      log_end_page_index = json['log_end_page_index']
 
       # ---
 
@@ -218,7 +222,7 @@ class ImgToPdfConverter
       img_url = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
       to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
-
+      to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
 
       FileUtils.mkdir_p(to_pdf_dir)
 
@@ -236,8 +240,6 @@ class ImgToPdfConverter
           s3_bucket = @gdz_bucket
       end
 
-      s3_image_key = @s3_image_key_pattern % [id, page, image_format]
-
       if request_logical_part
         #s3_pdf_key = @s3_pdf_key_pattern % [work, id]
         s3_pdf_key = @s3_pdf_key_pattern % [id, log]
@@ -245,56 +247,85 @@ class ImgToPdfConverter
         s3_pdf_key = @s3_pdf_key_pattern % [id, id]
       end
 
+      s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
-      # todo remove comment
-      if @use_s3
-        loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
-      else
-        loaded = download_via_http(img_url, to_tmp_img)
-      end
 
-      if loaded
+      if pdf_exist && request_logical_part
 
-        if convert(to_tmp_img, to_page_pdf_path)
+        download_from_s3(s3_bucket, s3_pdf_key, to_pdf_dir)
 
-          pushToQueue(log_id, page, true)
+        removeQueue(log_id)
 
-          if all_images_converted?(log_id, pages_count)
+        #merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
+        cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
-            if !conversion_errors?(log_id)
+        # todo folow up from here
 
-              removeQueue(log_id)
+        disclaimer_info = load_metadata(id)
 
-              merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
+        add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
-              disclaimer_info = load_metadata(id)
-
-              unless request_logical_part
-                add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
-              end
-
-              add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
-
-              if @use_s3
-                upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
-              end
-
-              # cleanup
-              remove_dir(to_pdf_dir)
-              @rredis.del(@unique_queue, log_id)
-              @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
-
-            else
-              pushToQueue(id, 'err', "Conversion of #{log_id} failed")
-              @rredis.del(@unique_queue, log_id)
-            end
-
-          end
-        else
-          pushToQueue(log_id, 'err', "Download for #{log_id} failed")
-          @rredis.del(@unique_queue, log_id)
+        if @use_s3
+          upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
         end
 
+        # cleanup
+        remove_dir(to_pdf_dir)
+        @rredis.del(@unique_queue, log_id)
+        @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
+
+      else
+
+
+        if @use_s3
+          loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
+        else
+          loaded = download_via_http(img_url, to_tmp_img)
+        end
+
+        if loaded
+
+          if convert(to_tmp_img, to_page_pdf_path)
+
+            pushToQueue(log_id, page, true)
+
+            if all_images_converted?(log_id, pages_count)
+
+              if !conversion_errors?(log_id)
+
+                removeQueue(log_id)
+
+                merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
+
+                disclaimer_info = load_metadata(id)
+
+                unless request_logical_part
+                  add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+                end
+
+                add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+
+                if @use_s3
+                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+                end
+
+                # cleanup
+                remove_dir(to_pdf_dir)
+                @rredis.del(@unique_queue, log_id)
+                @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
+
+              else
+                pushToQueue(id, 'err', "Conversion of #{log_id} failed")
+                @rredis.del(@unique_queue, log_id)
+              end
+
+            end
+          else
+            pushToQueue(log_id, 'err', "Download for #{log_id} failed")
+            @rredis.del(@unique_queue, log_id)
+          end
+
+        end
       end
 
     rescue Exception => e
@@ -601,19 +632,33 @@ class ImgToPdfConverter
     log_debug "Disclaimer added to #{to_full_pdf_path}"
   end
 
+  def cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
+
+    solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
+    first_page = solr_resp['phys_order'][log_start_page_index].to_i
+    last_page = solr_resp['phys_order'][log_end_page_index].to_i
+
+    #  system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
+
+    system "pdftk #{to_full_pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
+
+    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
+
+  end
+
   def merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
 
     solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
-    log_end_page_index   = -1
+    log_end_page_index = -1
 
     if request_logical_part
 
       log_id_index = solr_resp['log_id'].index log
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
-      log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])-1
+      log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
 
     end
 
