@@ -223,6 +223,7 @@ class ImgToPdfConverter
       to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
+      to_log_pdf_path  = "#{to_pdf_dir}/#{log}.pdf"
 
       FileUtils.mkdir_p(to_pdf_dir)
 
@@ -240,19 +241,13 @@ class ImgToPdfConverter
           s3_bucket = @gdz_bucket
       end
 
-      if request_logical_part
-        #s3_pdf_key = @s3_pdf_key_pattern % [work, id]
-        s3_pdf_key = @s3_pdf_key_pattern % [id, log]
-      else
-        s3_pdf_key = @s3_pdf_key_pattern % [id, id]
-      end
-
-      s3_image_key = @s3_image_key_pattern % [id, page, image_format]
-
+      s3_pdf_key     = @s3_pdf_key_pattern % [id, id]
+      s3_log_pdf_key = @s3_pdf_key_pattern % [id, log]
 
       if pdf_exist && request_logical_part
 
-        download_from_s3(s3_bucket, s3_pdf_key, to_pdf_dir)
+
+        download_from_s3(s3_bucket, s3_pdf_key, to_full_pdf_path)
 
         removeQueue(log_id)
 
@@ -263,7 +258,8 @@ class ImgToPdfConverter
 
         disclaimer_info = load_metadata(id)
 
-        add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+        # log pdf instead of to_full_pdf
+        add_disclaimer_pdftk_system(to_log_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
         if @use_s3
           upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
@@ -276,6 +272,7 @@ class ImgToPdfConverter
 
       else
 
+        s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
         if @use_s3
           loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
@@ -300,13 +297,21 @@ class ImgToPdfConverter
                 disclaimer_info = load_metadata(id)
 
                 unless request_logical_part
-                  add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+                  add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
                 end
 
                 add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
                 if @use_s3
-                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+
+
+                  if request_logical_part
+                    upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
+                  else
+                    upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+                  end
+
+
                 end
 
                 # cleanup
@@ -422,7 +427,7 @@ class ImgToPdfConverter
 
   end
 
-  def add_bookmarks_pdftk_system(to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+  def add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
 
     data_file = "#{to_pdf_dir}/data.txt"
 
@@ -451,20 +456,20 @@ class ImgToPdfConverter
 
 
     if disclaimer_info.log_label_arr!= nil
-      unless request_logical_part
-        (0..(disclaimer_info.log_label_arr.size-1)).each {|index|
-          add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
-        }
-      else
-        log_id_index = solr_resp['log_id'].index log
-
-        log_start_page_index = solr_resp['log_start_page_index'][log_id_index]
-        log_end_page_index   = solr_resp['log_end_page_index'][log_id_index]
-
-        (disclaimer_info.log_label_arr[log_start_page_index]..disclaimer_info.log_label_arr[log_end_page_index]).each {|index|
-          add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
-        }
-      end
+      #unless request_logical_part
+      (0..(disclaimer_info.log_label_arr.size-1)).each {|index|
+        add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
+      }
+      # else
+      #   log_id_index = solr_resp['log_id'].index log
+      #
+      #   log_start_page_index = solr_resp['log_start_page_index'][log_id_index]
+      #   log_end_page_index   = solr_resp['log_end_page_index'][log_id_index]
+      #
+      #   (disclaimer_info.log_label_arr[log_start_page_index]..disclaimer_info.log_label_arr[log_end_page_index]).each {|index|
+      #     add_to_bookmark_str(bookmark_str, disclaimer_info.log_label_arr[index], disclaimer_info.log_level_arr[index], disclaimer_info.log_start_page_index_arr[index])
+      #   }
+      #end
     end
 
     open(data_file, 'w') {|f|
@@ -634,15 +639,22 @@ class ImgToPdfConverter
 
   def cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
+    puts "id: #{id}, log_start_page_index: #{log_start_page_index}, log_end_page_index: #{log_end_page_index}"
+
+    #response = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
+    #if response['numFound'] > 0
     solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
+
+    puts "solr_resp: #{solr_resp}"
+
     first_page = solr_resp['phys_order'][log_start_page_index].to_i
-    last_page = solr_resp['phys_order'][log_end_page_index].to_i
+    last_page  = solr_resp['phys_order'][log_end_page_index].to_i
 
     #  system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
-    system "pdftk #{to_full_pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
+    system "pdftk #{to_full_pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp_2.pdf"
 
-    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
+    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp_2.pdf created"
 
   end
 

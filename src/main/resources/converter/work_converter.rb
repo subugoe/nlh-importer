@@ -29,7 +29,7 @@ class WorkConverter
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger = Logger.new(ENV['LOG'] + "/converter_#{Time.new.strftime('%y-%m-%d')}.log")
 
     @file_logger.level = Logger::DEBUG
 
@@ -37,7 +37,7 @@ class WorkConverter
     @from_s3 = false
     @from_s3 = true if ENV['USE_S3'] == 'true'
 
-    @unique_queue  = ENV['REDIS_UNIQUE_QUEUE']
+    @unique_queue       = ENV['REDIS_UNIQUE_QUEUE']
     @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
     @rredis             = Redis.new(
@@ -79,9 +79,9 @@ class WorkConverter
         json = JSON.parse msg
 
         context = json['context']
-        id = json['document']
-        log = json['log']
-        log_id = "#{id}___#{log}"
+        id      = json['document']
+        log     = json['log']
+        log_id  = "#{id}___#{log}"
 
         @s3_bucket = ''
 
@@ -155,7 +155,7 @@ class WorkConverter
 
   def s3_object_exist?(id, log)
 
-    s3_key = @s3_pdf_key_pattern % [id, id]
+    s3_key    = @s3_pdf_key_pattern % [id, id]
     s3_bucket = @s3_bucket
 
     resource = Aws::S3::Resource.new(client: @s3)
@@ -218,7 +218,7 @@ class WorkConverter
         pdf_exist = false
       end
 
-      pages = resp['page'][log_start_page_index..log_end_page_index]
+      pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
       if pdf_exist
@@ -228,21 +228,25 @@ class WorkConverter
             'log'                  => log,
             "log_id"               => log_id,
             "request_logical_part" => request_logical_part,
-            "pages_count" => pages_count,
-            "pdf_exist" => pdf_exist
+            "pages_count"          => pages_count,
+            "pdf_exist"            => pdf_exist,
+            "log_start_page_index" => log_start_page_index,
+            "log_end_page_index"   => log_end_page_index
         }
         pushToQueue(@img_convert_queue, [msg.to_json])
       else
         pages.each {|page|
           msg = {
-              "context" => context,
-              "id" => id,
-              "log" => log,
-              "log_id" => log_id,
+              "context"              => context,
+              "id"                   => id,
+              "log"                  => log,
+              "log_id"               => log_id,
               "request_logical_part" => request_logical_part,
-              "page" => page,
-              "pages_count" => pages_count,
-              "pdf_exist" => pdf_exist
+              "page"                 => page,
+              "pages_count"          => pages_count,
+              "pdf_exist"            => pdf_exist,
+              "log_start_page_index" => log_start_page_index,
+              "log_end_page_index"   => log_end_page_index
           }
           pushToQueue(@img_convert_queue, [msg.to_json])
         }
