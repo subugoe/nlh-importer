@@ -521,7 +521,7 @@ class ImgToPdfConverter
   end
 
 
-  def add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+  def add_disclaimer_pdftk_system(pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
     begin
 
@@ -618,43 +618,41 @@ class ImgToPdfConverter
       end
 
       unless request_logical_part
-        system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{to_full_pdf_path}"
+        system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
       else
-        system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{to_full_pdf_path}"
+        system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{pdf_path}"
       end
 
     rescue Exception => e
       log_error "Problem with disclaimer creation", e
 
       unless request_logical_part
-        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{to_full_pdf_path}"
+        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
       else
-        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{to_full_pdf_path}"
+        system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{pdf_path}"
       end
 
     end
 
-    log_debug "Disclaimer added to #{to_full_pdf_path}"
+    log_debug "Disclaimer added to #{pdf_path}"
   end
 
-  def cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
-
-    puts "id: #{id}, log_start_page_index: #{log_start_page_index}, log_end_page_index: #{log_end_page_index}"
+  def cut_from_full_pdf_pdftk_system(pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
     #response = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
     #if response['numFound'] > 0
     solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
 
-    puts "solr_resp: #{solr_resp}"
 
-    first_page = solr_resp['phys_order'][log_start_page_index].to_i
-    last_page  = solr_resp['phys_order'][log_end_page_index].to_i
+    #first_page = solr_resp['phys_order'][log_start_page_index].to_i
+    #last_page  = solr_resp['phys_order'][log_end_page_index].to_i
 
-    #  system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
+    first_page = (solr_resp['phys_order'][log_start_page_index].to_i)+1
+    last_page  = (solr_resp['phys_order'][log_end_page_index].to_i)+1
 
-    system "pdftk #{to_full_pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp_2.pdf"
+    system "pdftk #{pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
 
-    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp_2.pdf created"
+    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
 
   end
 
@@ -663,23 +661,23 @@ class ImgToPdfConverter
     solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
-    log_end_page_index = -1
+    log_end_page_index   = -1
 
     if request_logical_part
 
       log_id_index = solr_resp['log_id'].index log
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])-1
-      log_end_page_index = (solr_resp['log_end_page_index'][log_id_index])-1
+      log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])-1
+
+      #log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])
+      #log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])
 
     end
 
     solr_page_path_arr = (solr_resp['page'][log_start_page_index..log_end_page_index]).collect {|el| "#{to_pdf_dir}/#{el}.pdf"}
 
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
-
-    solr_resp          = nil
-    solr_page_path_arr = nil
 
     log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
   end
