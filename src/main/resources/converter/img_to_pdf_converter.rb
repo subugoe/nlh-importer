@@ -22,7 +22,7 @@ class ImgToPdfConverter
   def initialize
 
 
-    @pdfoutpath = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
+    @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
     @img_base_url = ENV['GDZ_IMG_BASE_URL']
 
     @logger       = Logger.new(STDOUT)
@@ -35,9 +35,9 @@ class ImgToPdfConverter
     #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     #@work_convert_queue  = ENV['REDIS_CONVERT_QUEUE']
     @rredis = Redis.new(
-        :host => ENV['REDIS_HOST'],
-        :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db => ENV['REDIS_DB'].to_i,
+        :host               => ENV['REDIS_HOST'],
+        :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db                 => ENV['REDIS_DB'].to_i,
         :reconnect_attempts => 3
     #  :timeout            => 30,
     )
@@ -151,8 +151,8 @@ class ImgToPdfConverter
           resp = @s3.put_object(
               {
                   bucket: s3_bucket,
-                  key: s3_key,
-                  body: file.read
+                  key:    s3_key,
+                  body:   file.read
               }
           )
 
@@ -203,12 +203,12 @@ class ImgToPdfConverter
       log                  = json['log']
       log_id               = json['log_id']
       request_logical_part = json['request_logical_part']
-      pages_count = json['pages_count']
+      pages_count          = json['pages_count']
 
-      page = json['page']
-      pdf_exist = json['pdf_exist']
+      page                 = json['page']
+      pdf_exist            = json['pdf_exist']
       log_start_page_index = json['log_start_page_index']
-      log_end_page_index = json['log_end_page_index']
+      log_end_page_index   = json['log_end_page_index']
 
       # ---
 
@@ -218,9 +218,9 @@ class ImgToPdfConverter
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
-      to_pdf_dir = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
-      img_url = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
-      to_tmp_img = "#{to_pdf_dir}/#{page}.#{image_format}"
+      to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
+      img_url          = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
+      to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       to_log_pdf_path  = "#{to_pdf_dir}/#{log}.pdf"
@@ -521,6 +521,13 @@ class ImgToPdfConverter
   end
 
 
+# @param [Object]  pdf_path
+# @param [Object]  to_pdf_dir
+# @param [Object]  id
+# @param [Object]  log
+# @param [Object]  request_logical_part
+# @param [Object]  disclaimer_info
+# @return [Object]
   def add_disclaimer_pdftk_system(pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
     begin

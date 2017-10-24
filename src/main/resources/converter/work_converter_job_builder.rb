@@ -26,8 +26,8 @@ require 'converter/work_converter'
 
 @logger.debug "[converter_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
-@queue  = ENV['REDIS_WORK_CONVERT_QUEUE']
-@unique_queue  = ENV['REDIS_UNIQUE_QUEUE']
+@queue        = ENV['REDIS_WORK_CONVERT_QUEUE']
+@unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
 @rredis = Redis.new(
     :host => ENV['REDIS_HOST'],
@@ -70,7 +70,6 @@ def pushToQueue(queue, field, value)
 end
 
 
-
 def removeQueue(queue)
   keys = @rredis.hkeys(queue)
   unless keys.empty?
@@ -86,24 +85,13 @@ $vertx.execute_blocking(lambda {|future|
 
     while true do
 
-      # {"id":"PPN826737668___LOG_0000","context":"gdz"}
       res = @rredis.brpop(@queue) # , :timeout => nil)
 
-      msg  = res[1]
-      json = JSON.parse msg
-      id = json['document']
-      log = json['log']
+      msg    = res[1]
+      json   = JSON.parse msg
+      id     = json['document']
+      log    = json['log']
       log_id = "#{id}___#{log}"
-      puts "log_id: #{log_id}"
-
-      
-      exist = @rredis.hget(@unique_queue, log_id)
-
-      unless exist == nil
-        @logger.debug "[converter_job_builder] Job for #{log_id} already started, process next"
-        next
-      end
-      @rredis.hset(@unique_queue, id, -1)
 
       converter = WorkConverter.new
       converter.process_response(res)
