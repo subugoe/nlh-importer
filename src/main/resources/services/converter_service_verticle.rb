@@ -4,6 +4,7 @@ require 'vertx-web/body_handler'
 require 'json'
 require 'redis'
 require 'logger'
+require 'rsolr'
 
 
 @options = {
@@ -20,8 +21,10 @@ require 'logger'
 
 # ---
 
-@queue  = ENV['REDIS_WORK_CONVERT_QUEUE']
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']
+@unique_queue = ENV['REDIS_UNIQUE_QUEUE']
+@rredis       = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@solr         = RSolr.connect :url => ENV['SOLR_ADR']
 
 
 def pushToQueue(queue, arr)
@@ -69,65 +72,101 @@ router.post("/api/converter/jobs").blocking_handler(lambda {|routingContext|
 
       # TODO check response codes
 
-      send_status(400, response, {"status" => -1, "msg" => "Requst body missing"})
+      send_status(400, response, {"status" => "-1a", "msg" => "Requst body missing"})
 
     else
       @logger.info("[converter_service] Got message: \t#{hsh}")
 
-      id      = hsh['document']
-      log     = hsh['log']
-      context = hsh['context']
+      id                   = hsh['document']
+      log                  = hsh['log']
+      context              = hsh['context']
+      log_id               = "#{id}___#{log}"
+      request_logical_part = (id != log)
 
-      send_status(400, response, {"status" => -1, "msg" => "Required parameters missed (document, log, context)"}) if (id == nil) || (log == nil) || (context == nil)
 
-      log_id = "#{id}___#{log}"
+      if (id == nil) || (log == nil) || (context == nil)
+        send_status(400, response, {"status" => "-1b", "msg" => "Required parameters missed (document, log, context)"})
+        return
+      else
 
-      exist = @rredis.hget(@unique_queue, log_id)
+        #resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']['docs'].first
 
-      if exist != nil
-        @logger.debug "[converter_job_builder] Job for #{log_id} already started, process next"
+        resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+        puts "resp: #{resp}"
 
-        # conversion error
-        if @rredis.hget(log_id, 'err') != nil
-          @logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
-          @file_logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
+        doc = resp['docs']&.first
+        puts "doc: #{doc}"
 
-          send_status(400, response, {"status" => -1, "msg" => "Conversion errors"})
+        if resp['numFound'] == 0
+          send_status(400, response, {"status" => "-1c", "msg" => "No index entry for #{id}, job not staged"})
+          return
 
+        elsif resp['docs']&.first['doctype'] != 'work'
+          send_status(400, response, {"status" => "-1c", "msg" => "No conversion of doctype != 'work'"})
+          return
         else
 
-          resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']['docs'].first
+          already_in_queue = @rredis.hget(@unique_queue, log_id)
+          puts "already_in_queue: #{already_in_queue}"
+          if already_in_queue != nil
+            @logger.debug "[converter_job_builder] Job for #{log_id} already started, process next"
 
-          # no conversion of doctype != 'work'
-          send_status(400, response, {"status" => -4}) if resp['doctype'] == 'work'
+            # conversion error
+            if @rredis.hget(log_id, 'err') != nil
+              @logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
+              @file_logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
 
-          if request_logical_part
+              send_status(400, response, {"status" => "-1d", "msg" => "Conversion errors"})
+              return
 
-            log_id_index = resp['log_id'].index log
+            else
 
-            log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
-            log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1
 
-            size = log_end_page_index.to_i - log_start_page_index.to_i
+              if request_logical_part
+
+                puts "logical"
+                log_id_index = resp['docs']&.first['log_id'].index log
+
+                log_start_page_index = (resp['docs']&.first['log_start_page_index'][log_id_index])-1
+                log_end_page_index   = (resp['docs']&.first['log_end_page_index'][log_id_index])-1
+
+                size = log_end_page_index.to_i - log_start_page_index.to_i
+
+              else
+
+                size = resp['docs']&.first['page'].size
+                puts "full, size: #{size}"
+              end
+
+              #keys = @rredis.hkeys(log_id)
+
+              puts "to_process: #{to_process}, log_id: #{log_id}, size: #{size}"
+              #converted = keys.size # -1, since the field "0" is not related to a real page, it sets a lock on the id
+
+
+              i = 100 - (to_process * 100 / size)
+              puts "to_process: #{to_process}, size: #{size}, i: #{i}"
+
+              if i <= 0
+                send_status(200, response, {"status" => i, "msg" => "staged"})
+                return
+              elsif i > 0 && i < 100
+                send_status(200, response, {"status" => i, "msg" => "processing"})
+                return
+              elsif i >= 100
+                send_status(200, response, {"status" => i, "msg" => "finished"})
+                return
+              end
+            end
+
 
           else
-            size = resp['page'].size
+            @rredis.hset(@unique_queue, log_id, 0)
+            pushToQueue(@work_queue, [hsh.to_json])
+            #send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
           end
-
-          converted = (@rredis.hkeys(log_id)).size-1 # -1, since the field "0" is not related to a real page, it sets a lock on the id
-
-          i = converted * 100 / size
-
-          send_status(200, response, {"status" => i})
-
         end
-
-      else
-        @rredis.hset(@unique_queue, log_id, 0)
-        pushToQueue(@queue, [hsh.to_json])
-        send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
       end
-
     end
 
   rescue Exception => e
@@ -135,7 +174,8 @@ router.post("/api/converter/jobs").blocking_handler(lambda {|routingContext|
     @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
 
     # any error
-    send_status(400, response, {"status" => -1, "msg" => "Request could not processed"})
+    send_status(400, response, {"status" => "-1e", "msg" => "Request could not processed"})
+    return
   end
 
   #routingContext.response.end

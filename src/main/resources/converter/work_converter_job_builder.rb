@@ -87,12 +87,6 @@ $vertx.execute_blocking(lambda {|future|
 
       res = @rredis.brpop(@queue) # , :timeout => nil)
 
-      msg    = res[1]
-      json   = JSON.parse msg
-      id     = json['document']
-      log    = json['log']
-      log_id = "#{id}___#{log}"
-
       converter = WorkConverter.new
       converter.process_response(res)
 

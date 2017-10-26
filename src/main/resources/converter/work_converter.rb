@@ -83,6 +83,8 @@ class WorkConverter
         log     = json['log']
         log_id  = "#{id}___#{log}"
 
+        puts "id: #{id}, log: #{log}, log_id: #{log_id}, context: #{context}"
+
         @s3_bucket = ''
 
         case context
@@ -221,6 +223,7 @@ class WorkConverter
       pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
+      puts "converter -> pdf_exist: #{pdf_exist} (#{pdf_exist.class})"
       if pdf_exist
         msg = {
             'context'              => context,
