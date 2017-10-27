@@ -1,4 +1,4 @@
-version: '2.0'
+version: '2.2'
 services:
 
   importer_base:
@@ -34,6 +34,7 @@ services:
       - ./src/main/resources:/usr/verticles
     mem_limit: 4GB
     memswap_limit: 8GB
+    cpu_count: 4
     env_file:
       - ./.env
       - ./converter.env

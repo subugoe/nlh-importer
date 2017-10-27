@@ -30,7 +30,7 @@ converter_options = {
 }
 
 pdf_converter_options = {
-    'instances'                  => 5,
+    'instances'                  => 1,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,
