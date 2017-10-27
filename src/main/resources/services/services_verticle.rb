@@ -39,11 +39,11 @@ def check_request(routingContext, route)
           converter = ConverterService.new
           converter.process_response(hsh, response)
         when "indexer"
-          converter = IndexerService.new
-          converter.process_response(hsh, response)
+          indexer = IndexerService.new
+          indexer.process_response(hsh, response)
         when "reindexer"
-          converter = ReindexService.new
-          converter.process_response(hsh, response)
+          reindexer = ReindexService.new
+          reindexer.process_response(hsh, response)
         else
           # TODO
       end

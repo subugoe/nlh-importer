@@ -53,7 +53,6 @@ class ConverterService
         send_status(400, response, {"status" => "-1", "msg" => "Requst body missing"})
 
       else
-        @logger.info("[converter_service] Got message: \t#{hsh}")
 
         id                   = hsh['document']
         log                  = hsh['log']
@@ -149,7 +148,7 @@ class ConverterService
         end
       end
 
-      @logger.error "[converter_service] Conversion started"
+      @logger.info "[converter_service] Conversion started"
       send_error(200, response)
       return
 

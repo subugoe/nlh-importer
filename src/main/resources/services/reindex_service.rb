@@ -137,8 +137,6 @@ class ReindexService
         return
       else
 
-        @logger.info("[reindex_service] Got message: \t#{hsh}")
-
         json = JSON.parse hsh.to_json
 
         context = json['context']
@@ -158,7 +156,7 @@ class ReindexService
 
       end
 
-      @logger.error "[reindex_service] Reindex started"
+      @logger.info "[reindex_service] Reindex started"
       send_status(200, response, {"status" => "0", "msg" => "Reindex started"})
       return
 

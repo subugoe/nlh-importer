@@ -47,11 +47,10 @@ class IndexerService
         send_status(400, response, {"status" => "-1", "msg" => "Expected JSON body missing"})
         return
       else
-        @logger.info("[indexer_service] Got message: \t#{hsh}")
         pushToQueue(@queue, [hsh.to_json])
       end
 
-      @logger.error "[indexer_service] Indexing started"
+      @logger.info "[indexer_service] Indexing started"
       send_status(200, response, {"status" => "0", "msg" => "Indexing started"})
       return
 
