@@ -29,7 +29,8 @@ gem "mini_magick"
 #gem 'pdftk', '~> 0.0.4'
 
 # pdf processing lib for disclaimer creation
-gem 'prawn', '~> 2.2', '>= 2.2.2'
+#gem 'prawn', '~> 2.2', '>= 2.2.2'
+gem 'prawn-svg', '~> 0.25.1'
 
 # S3 library
 gem 'aws-sdk', '~> 3.0', '>= 3.0.1'

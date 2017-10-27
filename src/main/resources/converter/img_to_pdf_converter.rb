@@ -9,7 +9,8 @@ require 'open-uri'
 require 'net/http'
 require 'fileutils'
 require 'mini_magick'
-require "prawn"
+#require "prawn"
+require "prawn-svg"
 #require 'pdftk'
 
 require 'model/disclaimer_info'
@@ -122,7 +123,6 @@ class ImgToPdfConverter
 
   def download_from_s3(s3_bucket, s3_key, path)
 
-    puts "s3_bucket: #{s3_bucket}, s3_key: #{s3_key}, path: #{path}"
     attempts = 0
     begin
       resp = @s3.get_object(
@@ -510,7 +510,7 @@ class ImgToPdfConverter
   def check_nil_or_empty_string obj
 
     if obj.class == Array
-      return false if (obj == nil) || (obj.empty?) || (obj.first == " ")
+      return false if (obj == nil) || (obj.empty?) || (obj.first == " ") || (obj.first == "")
     else
       return false if (obj == nil) || (obj == " ") || (obj == "")
     end
@@ -554,7 +554,7 @@ class ImgToPdfConverter
             "OpenSans" => {:normal => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Regular.ttf",
                            :bold   => "#{ENV['FONT_PATH']}/OpenSans/OpenSans-Bold.ttf"})
 
-        pdf.image "#{ENV['LOGO_PATH']}", :position => :right
+        pdf.svg IO.read(ENV['LOGO_PATH']), at: [200,780]
 
         pdf.move_down 40
         pdf.font_size 9
@@ -724,6 +724,7 @@ class ImgToPdfConverter
       return [data["image"]['depth'], data["image"]['resolution']]
     rescue Exception => e
       log_error "Problem with image data \njson: '#{json}' \nj: '#{j}'", e
+      return [nil, []]
     end
 
   end

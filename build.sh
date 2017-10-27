@@ -55,7 +55,7 @@ export INDEXER_VERTICLE=start_indexer.rb
 export CONVERTER_VERTICLE=start_converter.rb
 export VERTICLE_HOME=/usr/verticles
 export CONVERTER_VERTX_OPTIONS="--workerPoolSize 40 --blockedThreadCheckInterval 3600000 --maxEventLoopExecuteTime 600000000000 --maxWorkerExecuteTime 3400000000000 maxEventLoopExecuteTime 600000000000"
-export LOGO_PATH=${VERTICLE_HOME}/image/sub-blue_65.jpg
+export LOGO_PATH=${VERTICLE_HOME}/image/sub-blue.svg
 export FONT_PATH=${VERTICLE_HOME}/font
 
 export SOLR_JAVA_MEM='-Xms512M -Xmx7G'
