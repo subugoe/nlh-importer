@@ -31,9 +31,10 @@ class IndexerService
   end
 
 
-  def send_error(status_code, response)
-    response.set_status_code(status_code).end
+  def send_status(status_code, response, msg_hsh)
+    response.set_status_code(status_code).end(msg_hsh.to_json)
   end
+
 
 
   def process_response(hsh, response)
@@ -43,7 +44,7 @@ class IndexerService
       if hsh == nil
         @logger.error("[indexer_service] Expected JSON body missing")
         @file_logger.error("[indexer_service]  Expected JSON body missing")
-        send_error(400, response)
+        send_status(400, response, {"status" => "-1", "msg" => "Expected JSON body missing"})
         return
       else
         @logger.info("[indexer_service] Got message: \t#{hsh}")
@@ -51,7 +52,7 @@ class IndexerService
       end
 
       @logger.error "[indexer_service] Indexing started"
-      send_error(200, response)
+      send_status(200, response, {"status" => "0", "msg" => "Indexing started"})
       return
 
     rescue Exception => e
@@ -60,7 +61,7 @@ class IndexerService
 
       # any error
       puts "could not processed"
-      send_status(400, response, {"status" => "-1", "msg" => "Request could not processed"})
+      send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
       return
     end
 

@@ -38,7 +38,8 @@ class ConverterService
   def send_status(status_code, response, msg_hsh)
     response.set_status_code(status_code).end(msg_hsh.to_json)
   end
-  
+
+
   def process_response(hsh, response)
 
     begin
@@ -49,7 +50,7 @@ class ConverterService
 
         # TODO check response codes
 
-        send_status(400, response, {"status" => "-1a", "msg" => "Requst body missing"})
+        send_status(400, response, {"status" => "-1", "msg" => "Requst body missing"})
 
       else
         @logger.info("[converter_service] Got message: \t#{hsh}")
@@ -63,7 +64,7 @@ class ConverterService
 
         if (id == nil) || (log == nil) || (context == nil)
           puts "parameters missed"
-          send_status(400, response, {"status" => "-1b", "msg" => "Required parameters missed (document, log, context)"})
+          send_status(400, response, {"status" => "-1", "msg" => "Required parameters missed (document, log, context)"})
           return
         else
 
@@ -73,12 +74,12 @@ class ConverterService
 
           if resp['numFound'] == 0
             puts "No index entry"
-            send_status(400, response, {"status" => "-1c", "msg" => "No index entry for #{id}, job not staged"})
+            send_status(400, response, {"status" => "-1", "msg" => "No index entry for #{id}, job not staged"})
             return
 
           elsif resp['docs']&.first['doctype'] != 'work'
             puts "wrong doctype"
-            send_status(400, response, {"status" => "-1c", "msg" => "No conversion of doctype != 'work'"})
+            send_status(400, response, {"status" => "-1", "msg" => "No conversion of doctype != 'work'"})
             return
           else
 
@@ -94,7 +95,7 @@ class ConverterService
                 @logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
                 @file_logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
 
-                send_status(400, response, {"status" => "-1d", "msg" => "Conversion errors"})
+                send_status(400, response, {"status" => "-1", "msg" => "Conversion errors"})
                 return
 
               else
@@ -158,7 +159,7 @@ class ConverterService
 
       # any error
       puts "could not processed"
-      send_status(400, response, {"status" => "-1", "msg" => "Request could not processed"})
+      send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
       return
     end
 

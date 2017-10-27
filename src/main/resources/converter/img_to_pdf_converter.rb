@@ -561,7 +561,7 @@ class ImgToPdfConverter
         pdf.font "OpenSans", :style => :normal
 
 
-        pdf.text "<font size='12'><b>Work</b></font><br><br>", :inline_format => true
+        pdf.text "<font size='12'><b>Werk</b></font><br><br>", :inline_format => true
 
         if check_nil_or_empty_string disclaimer_info.title_arr
 
@@ -572,23 +572,23 @@ class ImgToPdfConverter
               title
             end
           }
-          add_label_and_value("Title", title_arr, pdf)
+          add_label_and_value("Titel", title_arr, pdf)
 
         end
 
-        add_label_and_value("Subtitle", disclaimer_info.subtitle_arr, pdf) if check_nil_or_empty_string disclaimer_info.subtitle_arr
+        add_label_and_value("Untertitel", disclaimer_info.subtitle_arr, pdf) if check_nil_or_empty_string disclaimer_info.subtitle_arr
 
-        add_label_and_value("Creator", disclaimer_info.bycreator, pdf) if check_nil_or_empty_string disclaimer_info.bycreator
-        add_label_and_value("Publisher", disclaimer_info.publisher, pdf) if check_nil_or_empty_string disclaimer_info.publisher
-        add_label_and_value("Place", disclaimer_info.place_publish, pdf) if check_nil_or_empty_string disclaimer_info.place_publish
-        add_label_and_value("Year", disclaimer_info.year_publish_string, pdf) if check_nil_or_empty_string disclaimer_info.year_publish_string
+        add_label_and_value("Autor", disclaimer_info.bycreator, pdf) if check_nil_or_empty_string disclaimer_info.bycreator
+        add_label_and_value("Verlag", disclaimer_info.publisher, pdf) if check_nil_or_empty_string disclaimer_info.publisher
+        add_label_and_value("Ort", disclaimer_info.place_publish, pdf) if check_nil_or_empty_string disclaimer_info.place_publish
+        add_label_and_value("Jahr", disclaimer_info.year_publish_string, pdf) if check_nil_or_empty_string disclaimer_info.year_publish_string
 
-        add_label_and_value("Collection", disclaimer_info.dc_arr, pdf) if check_nil_or_empty_string disclaimer_info.dc_arr
-        add_label_and_value("Genre", disclaimer_info.genre_arr, pdf) if check_nil_or_empty_string disclaimer_info.genre_arr
+        add_label_and_value("Kollektion", disclaimer_info.dc_arr, pdf) if check_nil_or_empty_string disclaimer_info.dc_arr
+        add_label_and_value("Gattung", disclaimer_info.genre_arr, pdf) if check_nil_or_empty_string disclaimer_info.genre_arr
 
-        add_label_and_value("Shelfmark", disclaimer_info.shelfmark_arr, pdf) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
-        add_label_and_value("Digitized at", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
-        add_label_and_value("Work Id", id, pdf) unless id == nil
+        add_label_and_value("Signatur", disclaimer_info.shelfmark_arr, pdf) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
+        add_label_and_value("Digitalisiert", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
+        add_label_and_value("Werk Id", id, pdf) unless id == nil
 
         add_label_and_value("PURL", disclaimer_info.purl, pdf) if check_nil_or_empty_string disclaimer_info.purl
 
@@ -604,20 +604,20 @@ class ImgToPdfConverter
 
           pdf.move_down 5
 
-          add_label_and_value("LOGID", log, pdf)
+          add_label_and_value("LOG Id", log, pdf)
           i = disclaimer_info.log_id.index log
 
-          add_label_and_value("LOG Label", disclaimer_info.log_label_arr[i], pdf)
-          add_label_and_value("LOG Type", disclaimer_info.log_type_arr[i], pdf)
+          add_label_and_value("LOG Titel", disclaimer_info.log_label_arr[i], pdf)
+          add_label_and_value("LOG Typ", disclaimer_info.log_type_arr[i], pdf)
         end
 
         if check_nil_or_empty_string disclaimer_info.parentdoc_work
           pdf.move_down 10
-          pdf.text("<font size='12'><b>Parent Work</b></font><br><br>", :inline_format => true)
+          pdf.text("<font size='12'><b>Übergeordnetes Werk</b></font><br><br>", :inline_format => true)
 
           parent_work = disclaimer_info.parentdoc_work
           #add_label_and_value("Title", disclaimer_info.parentdoc_label, pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_label
-          add_label_and_value("Work Id", parent_work, pdf) if check_nil_or_empty_string parent_work
+          add_label_and_value("Werk Id", parent_work, pdf) if check_nil_or_empty_string parent_work
           add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?#{disclaimer_info.parentdoc_work.first}", pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_work
 
           parent_work = disclaimer_info.parentdoc_work.first
@@ -703,6 +703,7 @@ class ImgToPdfConverter
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
     log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
+
   end
 
   def get_image_depth_and_resolution path
