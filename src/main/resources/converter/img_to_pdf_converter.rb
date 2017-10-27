@@ -211,7 +211,6 @@ class ImgToPdfConverter
       log_start_page_index = json['log_start_page_index']
       log_end_page_index   = json['log_end_page_index']
 
-      puts "page: #{page}"
 
       # ---
 
@@ -247,12 +246,8 @@ class ImgToPdfConverter
       s3_pdf_key     = @s3_pdf_key_pattern % [id, id]
       s3_log_pdf_key = @s3_pdf_key_pattern % [id, log]
 
-      puts "img_to_pdf_converter -> pdf_exist: #{pdf_exist} (#{pdf_exist.class}), request_logical_part: #{request_logical_part}"
 
       if pdf_exist && request_logical_part
-
-        puts "img_to_pdf_converter -> pdf_exist: #{pdf_exist} (#{pdf_exist.class}), request_logical_part: #{request_logical_part}"
-        puts "id: #{id}, page: #{page}, image_format: #{image_format}"
 
         download_from_s3(s3_bucket, s3_pdf_key, to_full_pdf_path)
 
@@ -278,9 +273,6 @@ class ImgToPdfConverter
         @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
 
       elsif !pdf_exist
-
-        puts "elsif ... img_to_pdf_converter -> pdf_exist: #{pdf_exist} (#{pdf_exist.class}), request_logical_part: #{request_logical_part}"
-        puts "id: #{id}, page: #{page}, image_format: #{image_format}"
 
         #S3_PDF_KEY_PATTERN=pdf/%s/%s.pdf
         #S3_IMAGE_KEY_PATTERN=orig/%s/%s.%s
@@ -345,8 +337,7 @@ class ImgToPdfConverter
 
         end
       else
-        puts "else ... img_to_pdf_converter -> pdf_exist: #{pdf_exist} (#{pdf_exist.class}), request_logical_part: #{request_logical_part}"
-        puts "id: #{id}, page: #{page}, image_format: #{image_format}"
+        # nothing to do
       end
 
     rescue Exception => e
