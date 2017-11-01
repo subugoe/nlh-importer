@@ -21,10 +21,8 @@ require 'converter/work_converter'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/work_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
-
-@logger.debug "[converter_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 @queue        = ENV['REDIS_WORK_CONVERT_QUEUE']
 @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
@@ -79,7 +77,8 @@ end
 
 $vertx.execute_blocking(lambda {|future|
 
-  @logger.debug "[converter_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
+  GC.start
+  @logger.debug "[work_converter_job_builder] Start verticle (#{Java::JavaLang::Thread.current_thread().get_name()},  max: #{GC.stat[:max]})"
 
   begin
 
@@ -93,8 +92,8 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    @logger.error "[converter_job_builder] Redis problem \t#{e.message}"
-    @file_logger.error "[converter_job_builder] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
+    @logger.error "[work_converter_job_builder] Redis problem \t#{e.message}"
+    @file_logger.error "[work_converter_job_builder] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
 
     retry
   end

@@ -29,7 +29,7 @@ class ImgToPdfConverter
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/img_to_pdf_converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/img_converter_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
 
 
@@ -77,22 +77,22 @@ class ImgToPdfConverter
 
   def log_error(msg, e)
     if e == nil
-      @logger.error("[img_to_pdf_converter] #{msg}")
-      @file_logger.error("[img_to_pdf_converter] #{msg}")
+      @logger.error("[img_converter] #{msg}")
+      @file_logger.error("[img_converter] #{msg}")
     else
-      @logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}")
-      @file_logger.error("[img_to_pdf_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[img_converter] #{msg} \t#{e.message}")
+      @file_logger.error("[img_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
     end
   end
 
   def log_info(msg)
-    @logger.info("[img_to_pdf_converter] #{msg}")
-    @file_logger.info("[img_to_pdf_converter] #{msg}")
+    @logger.info("[img_converter] #{msg}")
+    @file_logger.info("[img_converter] #{msg}")
   end
 
   def log_debug(msg)
-    @logger.debug("[img_to_pdf_converter] #{msg}")
-    @file_logger.debug("[img_to_pdf_converter] #{msg}")
+    @logger.debug("[img_converter] #{msg}")
+    @file_logger.debug("[img_converter] #{msg}")
   end
 
 # ---
@@ -130,8 +130,8 @@ class ImgToPdfConverter
           target: path
       )
     rescue Exception => e
-      @logger.error "[img_to_pdf_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @file_logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
 
@@ -159,16 +159,16 @@ class ImgToPdfConverter
 
           log_debug "Full PDF #{to_full_pdf_path} added to S3"
         rescue Aws::S3::Errors::ServiceError => e
-          @logger.error "[img_to_pdf_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
-          @file_logger.error "[img_to_pdf_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
+          @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
+          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
         end
 
       end
 
 
     rescue Exception => e
-      @logger.error "[img_to_pdf_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
+      @file_logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
     end
 
 
@@ -210,6 +210,9 @@ class ImgToPdfConverter
       pdf_exist            = json['pdf_exist']
       log_start_page_index = json['log_start_page_index']
       log_end_page_index   = json['log_end_page_index']
+
+
+      @logger.info "[img_converter] start conversion #{log_id} -> #{page} (mem used: #{GC.stat[:used]}}, #{Java::JavaLang::Thread.current_thread().get_name()}) "
 
 
       # ---
@@ -270,7 +273,7 @@ class ImgToPdfConverter
         # cleanup
         remove_dir(to_pdf_dir)
         @rredis.del(@unique_queue, log_id)
-        @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
+        @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
 
       elsif !pdf_exist
 
@@ -322,7 +325,7 @@ class ImgToPdfConverter
                 # cleanup
                 remove_dir(to_pdf_dir)
                 @rredis.del(@unique_queue, log_id)
-                @logger.info "[img_to_pdf_converter] Finish PDF creation for '#{log_id}'"
+                @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
 
               else
                 pushToQueue(id, 'err', "Conversion of #{log_id} failed")
@@ -338,6 +341,8 @@ class ImgToPdfConverter
         end
       else
         # nothing to do
+        @logger.info "[img_converter] PDF for '#{log_id}'  already exist (do nothing)"
+        @rredis.del(@unique_queue, log_id)
       end
 
     rescue Exception => e
@@ -345,8 +350,8 @@ class ImgToPdfConverter
 
       @rredis.del(@unique_queue, log_id)
 
-      @logger.error "[img_to_pdf_converter] Processing problem with '#{json}' \t#{e.message}"
-      @file_logger.error "[img_to_pdf_converter] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Processing problem with '#{json}' \t#{e.message}"
+      @file_logger.error "[img_converter] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
     end
   end
 

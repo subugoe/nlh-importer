@@ -29,7 +29,7 @@ class WorkConverter
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger = Logger.new(ENV['LOG'] + "/converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger = Logger.new(ENV['LOG'] + "/work_converter_#{Time.new.strftime('%y-%m-%d')}.log")
 
     @file_logger.level = Logger::DEBUG
 
@@ -59,9 +59,6 @@ class WorkConverter
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
-
-    @logger.debug "[converter] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
   end
 
   def get_s3_key(id)
@@ -82,6 +79,8 @@ class WorkConverter
         id      = json['document']
         log     = json['log']
         log_id  = "#{id}___#{log}"
+
+        @logger.info "[work_converter] Start processing for '#{log_id}'"
 
         @s3_bucket = ''
 
@@ -110,8 +109,8 @@ class WorkConverter
       end
 
     rescue Exception => e
-      @logger.error "[converter] Processing problem with '#{res}' \t#{e.message}"
-      @file_logger.error "[converter] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}"
+      @file_logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
     end
 
   end
@@ -121,24 +120,24 @@ class WorkConverter
   def log_error(msg, e)
 
     unless e == nil
-      @logger.error("[converter] #{msg} \t#{e.message}")
-      @file_logger.error("[converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[work_converter] #{msg} \t#{e.message}")
+      @file_logger.error("[work_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
     else
-      @logger.error("[converter] #{msg}")
-      @file_logger.error("[converter] #{msg}")
+      @logger.error("[work_converter] #{msg}")
+      @file_logger.error("[work_converter] #{msg}")
     end
 
   end
 
 
   def log_info(msg)
-    @logger.info("[converter] #{msg}")
-    @file_logger.info("[converter] #{msg}")
+    @logger.info("[work_converter] #{msg}")
+    @file_logger.info("[work_converter] #{msg}")
   end
 
   def log_debug(msg)
-    @logger.debug("[converter] #{msg}")
-    @file_logger.debug("[converter] #{msg}")
+    @logger.debug("[work_converter] #{msg}")
+    @file_logger.debug("[work_converter] #{msg}")
   end
 
   def removeQueue(queue)

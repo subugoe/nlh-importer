@@ -20,17 +20,7 @@ job_builder_options = {
 
 
 converter_options = {
-    'instances'                  => 5,
-    'worker'                     => true,
-    'blockedThreadCheckInterval' => 3600000,
-    'warningExceptionTime'       => 3600000,
-    'maxWorkerExecuteTime'       => 3400000000000,
-    'maxEventLoopExecuteTime'    => 600000000000,
-    'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
-}
-
-pdf_converter_options = {
-    'instances'                  => 1,
+    'instances'                  => 4,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,
@@ -45,8 +35,4 @@ $vertx.deploy_verticle("converter/work_converter_job_builder.rb", job_builder_op
 
 # converter loader eb
 $vertx.deploy_verticle("converter/img_to_pdf_converter_job_builder.rb", converter_options)
-#$vertx.deploy_verticle("converter/img_to_pdf_converter_job_builder.rb", converter_options)
-
-# converter converter eb
-#$vertx.deploy_verticle("converter/work_converter.rb", pdf_converter_options)
 

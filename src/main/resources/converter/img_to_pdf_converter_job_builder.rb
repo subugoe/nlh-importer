@@ -11,10 +11,8 @@ require 'converter/img_to_pdf_converter'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/img_to_pdf_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/img_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
-
-#@logger.debug "[img_to_pdf_converter_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 @queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
 @rredis = Redis.new(
@@ -26,7 +24,8 @@ require 'converter/img_to_pdf_converter'
 
 $vertx.execute_blocking(lambda {|future|
 
-  @logger.debug "[img_to_pdf_converter_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
+  GC.start
+  @logger.debug "[img_converter_job_builder] Start verticle (#{Java::JavaLang::Thread.current_thread().get_name()},  max: #{GC.stat[:max]})"
 
   begin
 
@@ -43,8 +42,8 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    @logger.error "[img_to_pdf_converter_job_builder] Redis problem \t#{e.message}"
-    @file_logger.error "[img_to_pdf_converter_job_builder] Redis problem '#{res}' \t#{e.message}\n\t#{e.backtrace}"
+    @logger.error "[img_converter_job_builder] Redis problem \t#{e.message}"
+    @file_logger.error "[img_converter_job_builder] Redis problem '#{res}' \t#{e.message}\n\t#{e.backtrace}"
 
     retry
   end
@@ -58,7 +57,7 @@ $vertx.execute_blocking(lambda {|future|
 =begin
 $vertx.event_bus().consumer("image.load") {|message|
 
-  @logger.debug "[img_to_pdf_converter_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
+  @logger.debug "[img_converter_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
 
   begin
     body = message.body()
@@ -77,8 +76,8 @@ $vertx.event_bus().consumer("image.load") {|message|
       raise "Could not process empty string or nil"
     end
   rescue Exception => e
-    @logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
-    @file_logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+    @logger.error "[img_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+    @file_logger.error "[img_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
   end
 }
 =end
