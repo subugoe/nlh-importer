@@ -40,3 +40,4 @@ build_l.sh
 
 src/main/resources/s3cmd/
 test*.*
+src/main/resources/tmp/
