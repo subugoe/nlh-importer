@@ -33,10 +33,6 @@ class WorkConverter
 
     @file_logger.level = Logger::DEBUG
 
-
-    @from_s3 = false
-    @from_s3 = true if ENV['USE_S3'] == 'true'
-
     @unique_queue       = ENV['REDIS_UNIQUE_QUEUE']
     @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
@@ -47,13 +43,17 @@ class WorkConverter
 
     @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
-    @s3 = Aws::S3::Client.new(
-        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-        :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-        :endpoint          => ENV['S3_ENDPOINT'],
-        :force_path_style  => true,
-        :region            => 'us-west-2')
+    @use_s3 = false
+    @use_s3 = true if ENV['USE_S3'] == 'true'
 
+    if @use_s3
+      @s3 = Aws::S3::Client.new(
+          :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+          :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+          :endpoint          => ENV['S3_ENDPOINT'],
+          :force_path_style  => true,
+          :region            => 'us-west-2')
+    end
     @s3_pdf_key_pattern = ENV['S3_PDF_KEY_PATTERN']
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
@@ -210,7 +210,7 @@ class WorkConverter
       end
 
 
-      if s3_object_exist?(id, log) # (request_logical_part == true) && s3_object_exist?(id, log)
+      if @use_s3 && s3_object_exist?(id, log) # (request_logical_part == true) && s3_object_exist?(id, log)
         # add implementation, cup from full PDF
         pdf_exist = true
       else
