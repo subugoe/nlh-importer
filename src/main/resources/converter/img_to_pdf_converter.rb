@@ -47,16 +47,17 @@ class ImgToPdfConverter
 
     @solr = RSolr.connect :url => ENV['SOLR_ADR']
 
-    @s3 = Aws::S3::Client.new(
-        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-        :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-        :endpoint          => ENV['S3_ENDPOINT'],
-        :force_path_style  => true,
-        :region            => 'us-west-2')
-
     @use_s3 = false
     @use_s3 = true if ENV['USE_S3'] == 'true'
 
+    if @use_s3
+      @s3 = Aws::S3::Client.new(
+          :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+          :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+          :endpoint          => ENV['S3_ENDPOINT'],
+          :force_path_style  => true,
+          :region            => 'us-west-2')
+    end
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
@@ -250,7 +251,7 @@ class ImgToPdfConverter
       s3_log_pdf_key = @s3_pdf_key_pattern % [id, log]
 
 
-      if pdf_exist && request_logical_part
+      if pdf_exist && request_logical_part && @use_s3
 
         download_from_s3(s3_bucket, s3_pdf_key, to_full_pdf_path)
 
@@ -266,9 +267,7 @@ class ImgToPdfConverter
         # log pdf instead of to_full_pdf
         add_disclaimer_pdftk_system(to_log_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
-        if @use_s3
-          upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
-        end
+        upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
 
         # cleanup
         remove_dir(to_pdf_dir)
@@ -312,13 +311,11 @@ class ImgToPdfConverter
 
                 if @use_s3
 
-
                   if request_logical_part
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
                   else
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
                   end
-
 
                 end
 
@@ -779,3 +776,4 @@ end
 
 # {"id":"PPN669170356" , "context": "gdz"}
 # {"s3_key": "mets/PPN669170356.xml" , "context": "gdz"}
+
