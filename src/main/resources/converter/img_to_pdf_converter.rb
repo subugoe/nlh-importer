@@ -68,7 +68,7 @@ class ImgToPdfConverter
     MiniMagick.configure do |config|
       config.validate_on_create = false
       config.validate_on_write  = false
-      config.whiny              = false
+      #config.whiny              = false
     end
 
     #MiniMagick.logger.level = Logger::DEBUG
