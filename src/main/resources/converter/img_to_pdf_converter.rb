@@ -224,6 +224,7 @@ class ImgToPdfConverter
       baseurl      = solr_work['baseurl']
       product      = solr_work['product']
 
+      pdf_dir          = "#{@pdfoutpath}/#{product}/#{id}"
       to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
       img_url          = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
       to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
@@ -267,10 +268,12 @@ class ImgToPdfConverter
         # log pdf instead of to_full_pdf
         add_disclaimer_pdftk_system(to_log_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
-        upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
+        if @use_s3
+          upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
+        end
 
         # cleanup
-        remove_dir(to_pdf_dir)
+        remove_dir(pdf_dir)
         @rredis.del(@unique_queue, log_id)
         @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
 
@@ -311,16 +314,18 @@ class ImgToPdfConverter
 
                 if @use_s3
 
+
                   if request_logical_part
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
                   else
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
                   end
 
+
                 end
 
                 # cleanup
-                remove_dir(to_pdf_dir)
+                remove_dir(pdf_dir)
                 @rredis.del(@unique_queue, log_id)
                 @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
 
@@ -700,6 +705,7 @@ class ImgToPdfConverter
   end
 
   def get_image_depth_and_resolution path
+
     json = MiniMagick::Tool::Convert.new do |convert|
       convert << path
       convert << "json:"
@@ -776,4 +782,3 @@ end
 
 # {"id":"PPN669170356" , "context": "gdz"}
 # {"s3_key": "mets/PPN669170356.xml" , "context": "gdz"}
-
