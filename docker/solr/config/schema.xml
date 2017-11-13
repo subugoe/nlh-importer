@@ -267,7 +267,7 @@
         <field name="uid" type="uuid" indexed="true" stored="true" default="NEW"/>
         <!-- Identifiers -->
         <field name="id" type="string" indexed="true" stored="true" required="true"/>
-        <field name="work_id" type="string" indexed="true" stored="true" multiValued="true" />
+        <field name="work_id" type="string" indexed="true" stored="true" multiValued="false" />
 
         <field name="record_identifier" type="string" indexed="true" stored="true" />
 
