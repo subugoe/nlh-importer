@@ -719,11 +719,22 @@ class ImgToPdfConverter
     j = json.encode!('UTF-8', :invalid => :replace, :undef => :replace, replace: '')
 
     begin
-      data = JSON.parse(j)
-      return [data["image"]['depth'], data["image"]['resolution']]
+
+      image = JSON.parse(j)['image']
+
+      #log_info "JSON.parse(j).first: #{JSON.parse(j).first}"
+      #log_info "JSON.parse(j).first['image']: #{JSON.parse(j).first['image']}"
+      #log_info "JSON.parse(j).first['image']['resolution']: #{JSON.parse(j).first['image']['resolution']}"
+
+      if image != nil
+        return [image['depth'], image['resolution']]
+      else
+        #log_info "json: #{j}"
+        return [nil, {}]
+      end
     rescue Exception => e
-      log_error "Problem with image data \njson: '#{json}' \nj: '#{j}'", e
-      return [nil, []]
+      log_error "Problem with image data \n\njson: #{json} \n\nj: #{j}", e
+      return [nil, {}]
     end
 
   end
@@ -731,13 +742,17 @@ class ImgToPdfConverter
 
   def convert(to_tmp_img, to_page_pdf_path)
 
+
     begin
 
       FileUtils.rm(to_page_pdf_path, :force => true)
 
-      depth, resolution_arr = get_image_depth_and_resolution (to_tmp_img)
+      depth, resolution_hsh = get_image_depth_and_resolution (to_tmp_img)
 
-      if (resolution_arr != nil) && (!resolution_arr.empty?) && (resolution_arr['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
+      #log_info "depth: #{depth} (#{depth.class}), resolution: #{resolution_hsh} (#{resolution_hsh.class})"
+
+      if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
+        log_info "special conversion"
         MiniMagick::Tool::Convert.new do |convert|
           convert << "-define" << "pdf:use-cropbox=true"
           convert << "#{to_tmp_img}"
@@ -758,7 +773,7 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      log_error "Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'", e
+      log_error "Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' (depth: #{depth}, resolution: #{resolution_hsh})", e
       return false
     end
 
