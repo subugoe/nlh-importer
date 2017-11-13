@@ -158,18 +158,18 @@ class ImgToPdfConverter
               }
           )
 
-          log_debug "File #{to_full_pdf_path} added to S3 (#{s3_bucket}/#{s3_key})"
+          log_debug "Full PDF #{to_full_pdf_path} added to S3"
         rescue Aws::S3::Errors::ServiceError => e
-          @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 (#{s3_bucket}/#{s3_key}) \t#{e.message}"
-          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 (#{s3_bucket}/#{s3_key}) \t#{e.message}\n\t#{e.backtrace}"
+          @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
+          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
         end
 
       end
 
 
     rescue Exception => e
-      @logger.error "[img_converter] Could not push file to S3 (#{s3_bucket}/#{s3_key}) \t#{e.message}"
-      @file_logger.error "[img_converter] Could not push file to S3 (#{s3_bucket}/#{s3_key}) \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
+      @file_logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
     end
 
 
