@@ -1333,7 +1333,7 @@ end
     attempts = 0
 
     begin
-      @str_doc = open(uri)
+      @str_doc = open(uri).read
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
@@ -1788,8 +1788,6 @@ end
         dateindexed                = solr_resp['dateindexed']
         logical_meta.date_modified = datemodified
         logical_meta.date_indexed  = dateindexed
-
-        puts "datemodified: #{datemodified}, dateindexed: #{dateindexed}"
 
       end
     rescue Exception => e
