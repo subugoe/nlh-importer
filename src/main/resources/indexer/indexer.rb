@@ -89,12 +89,14 @@ class Indexer
     @solr     = RSolr.connect :url => ENV['SOLR_ADR']
     @gdz_solr = RSolr.connect :url => ENV['GDZ_SOLR_ADR']
 
-    @s3 = Aws::S3::Client.new(
-        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-        :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-        :endpoint          => ENV['S3_ENDPOINT'],
-        :force_path_style  => true,
-        :region            => 'us-west-2')
+    if @use_s3
+      @s3 = Aws::S3::Client.new(
+          :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+          :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+          :endpoint          => ENV['S3_ENDPOINT'],
+          :force_path_style  => true,
+          :region            => 'us-west-2')
+    end
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
@@ -1782,8 +1784,8 @@ end
       #if solr_resp&.size > 0
       if (solr_resp != nil) && (solr_resp&.size > 0)
 
-        datemodified = solr_resp['datemodified']
-        dateindexed = solr_resp['dateindexed']
+        datemodified               = solr_resp['datemodified']
+        dateindexed                = solr_resp['dateindexed']
         logical_meta.date_modified = datemodified
         logical_meta.date_indexed  = dateindexed
 
@@ -1937,7 +1939,7 @@ end
         end
 
         begin
-        @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
+          @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
         rescue Exception => e
           @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
           @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\n\t#{e.backtrace}"
