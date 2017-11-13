@@ -252,7 +252,7 @@ class ImgToPdfConverter
       s3_log_pdf_key = @s3_pdf_key_pattern % [id, log]
 
 
-      if pdf_exist && request_logical_part && @use_s3
+      if pdf_exist && request_logical_part
 
         download_from_s3(s3_bucket, s3_pdf_key, to_full_pdf_path)
 
