@@ -8,6 +8,7 @@ require 'open-uri'
 require 'redis'
 require 'json'
 require 'set'
+require 'cgi'
 
 require 'aws-sdk'
 
@@ -919,8 +920,10 @@ end
         fulltext.fulltext_ref = uri
       else
         ftxt = ftext.root.text.gsub(/\s+/, " ").strip
-        ftxt.gsub!(/</, "&lt;")
-        ftxt.gsub!(/>/, "&gt;")
+        #ftxt.gsub!(/</, "&lt;")
+        #ftxt.gsub!(/>/, "&gt;")
+        ftxt = CGI.escapeHTML(ftxt)
+
         fulltext.fulltext     = ftxt
         fulltext.fulltext_ref = uri
       end
