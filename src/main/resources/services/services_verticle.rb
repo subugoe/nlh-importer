@@ -102,7 +102,11 @@ router.post("/api/converter/jobs").blocking_handler(lambda {|routingContext|
 
 
 # POST http://134.76.18.25:8083  /api/indexer/jobs
-# {"s3_key": "mets/PPN129323659_0031.xml" , "context": "gdz"}
+# Request
+# {
+#     "document": "PPN591416441",
+#     "context": "gdz"
+# }
 router.post("/api/indexer/jobs").blocking_handler(lambda {|routingContext|
 
   check_request(routingContext, "indexer")
@@ -114,7 +118,10 @@ router.post("/api/indexer/jobs").blocking_handler(lambda {|routingContext|
 
 
 # POST http://134.76.18.25:8083   /api/reindexer/jobs
-# {"context": "gdz"}
+# Request
+# {
+#     "context": "gdz"
+# }
 router.post("/api/reindexer/jobs").blocking_handler(lambda {|routingContext|
 
   check_request(routingContext, "reindexer")

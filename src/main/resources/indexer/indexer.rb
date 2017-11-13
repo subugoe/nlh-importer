@@ -1876,7 +1876,6 @@ end
       logical_meta.title_page = "#{meta.product}:#{meta.work}:#{image_meta.pages[0]}"
     end
 
-
     #@logger.info "[indexer] before mods-meta -> used: #{GC.stat[:used]}}\n\n"
     #
     # add MODS
@@ -1925,8 +1924,10 @@ end
         msg  = res[1]
         json = JSON.parse msg
 
-        @context = json['context']
-        @s3_key  = json['s3_key']
+        @context  = json['context']
+        document = json['document']
+
+        @s3_key = "mets/#{document}.xml"
 
 
         @s3_bucket = ''

@@ -61,8 +61,8 @@ Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you
 ```
 POST 134.76.18.25:8083     /api/indexer/jobs
 { 
-    "id": "PPN591416441_1 ", 
-    "context": "gdz" 
+    "document": "PPN591416441",
+    "context": "gdz"
 }
 ```
 
@@ -75,24 +75,7 @@ POST 134.76.18.25:8083     /api/reindexer/jobs
 }
 ```
 
-##### Get the number of Documents to Re-Index 
-Not implemented yet
-
-```
-GET 134.76.18.25:8083     /api/reindexer/status
-```
-
 ##### Convert a document
-
-```
-POST 134.76.18.25:8083     /api/converter/jobs
-{
-	"id": "PPN591416441",
-	"context": "gdz"
-}
-```
-
-##### Convert a structural part of a document
 
 ```
 POST 134.76.18.25:8083     /api/converter/jobs
@@ -101,22 +84,16 @@ POST 134.76.18.25:8083     /api/converter/jobs
     "log": "PPN591416441",
     "context": "gdz"
 }
+```
 
-             or
+##### Convert a structural document part 
 
+```
 {
     "document": "PPN591416441",
     "log": "LOG_0007",
     "context": "gdz"
 }
-```
-
-##### Get the conversion status  
-Not implemented yet
-
-
-```
-GET 134.76.18.25:8083     /api/converter/status/id
 ```
 
 
