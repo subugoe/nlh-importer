@@ -1922,10 +1922,10 @@ end
         msg  = res[1]
         json = JSON.parse msg
 
-        @context  = json['context']
-        document = json['document']
+        @context = json['context']
+        @id = json['document']
 
-        @s3_key = "mets/#{document}.xml"
+        @s3_key = "mets/#{@id}.xml"
 
 
         @s3_bucket = ''
@@ -1937,14 +1937,14 @@ end
             @s3_bucket = @gdz_bucket
         end
 
-        begin
-          @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
-        rescue Exception => e
-          @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
-          @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\n\t#{e.backtrace}"
-
-          return
-        end
+        # begin
+        #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
+        # rescue Exception => e
+        #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
+        #   @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\n\t#{e.backtrace}"
+        #
+        #   return
+        # end
 
         if @use_s3
 
