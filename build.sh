@@ -190,12 +190,13 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
-docker-compose build --force-rm  importer_services importer_indexer importer_converter solr
+docker-compose build --force-rm  # importer_services importer_indexer importer_converter solr
 
 
 docker-compose stop
 docker-compose rm -f
-#docker-compose up -d importer_services importer_indexer importer_converter redis solr
-#docker-compose up -d
+#docker-compose up -d importer_converter importer_indexer importer_converter
+#docker-compose up -d --no-deps --no-recreate --no-build
+#docker-compose up -d --scale importer_converter=2
 
 
