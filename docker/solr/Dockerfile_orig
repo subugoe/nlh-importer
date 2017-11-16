@@ -1,4 +1,4 @@
-FROM    solr:6.5.1
+FROM    solr:6.6.2
 MAINTAINER  Jörg Panzer, SUB (based on https://github.com/docker-solr/docker-solr/blob/2e1ccd64970c65e7dacfe33203963b315f665cc3/5.5/Dockerfile)
 
 

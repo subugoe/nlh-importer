@@ -19,7 +19,6 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
 @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr   = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

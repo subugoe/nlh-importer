@@ -10,6 +10,7 @@ require 'json'
 require 'set'
 require 'cgi'
 
+require 'rest-client'
 require 'aws-sdk'
 
 require 'model/mets_dmdsec_metadata'
@@ -80,14 +81,18 @@ class Indexer
     @file_logger       = Logger.new(ENV['LOG'] + "/indexer_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
 
+    @services_adr = ENV['SERVICES_ADR']
+
     @queue  = ENV['REDIS_INDEX_QUEUE']
     @rredis = Redis.new(
         :host => ENV['REDIS_HOST'],
         :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
         :db   => ENV['REDIS_DB'].to_i)
 
-    @solr     = RSolr.connect :url => ENV['SOLR_ADR']
-    @gdz_solr = RSolr.connect :url => ENV['GDZ_SOLR_ADR']
+    @solr_gdz_tmp = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
+    @solr_gdz     = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
+#@solr_gdz_legacy = RSolr.connect :url => ENV['SOLR_GDZ_LEGACY_ADR']
+
 
     if @use_s3
       @s3 = Aws::S3::Client.new(
@@ -137,12 +142,22 @@ class Indexer
 
     attempts = 0
     begin
-      if document.class == Array
-        @solr.add document # , :add_attributes => {:commitWithin => 10}
+
+      if !@reindex
+        if document.class == Array
+          @solr_gdz.add document # , :add_attributes => {:commitWithin => 10}
+        else
+          @solr_gdz.add [document] # , :add_attributes => {:commitWithin => 10}
+        end
+        @solr_gdz.commit
       else
-        @solr.add [document] # , :add_attributes => {:commitWithin => 10}
+        if document.class == Array
+          @solr_gdz_tmp.add document # , :add_attributes => {:commitWithin => 10}
+        else
+          @solr_gdz_tmp.add [document] # , :add_attributes => {:commitWithin => 10}
+        end
+        @solr_gdz_tmp.commit
       end
-      @solr.commit
 
     rescue Exception => e
       attempts = attempts + 1
@@ -1776,18 +1791,19 @@ end
     first_logical_element = retrieve_logical_structure_data(logical_meta, dmdsec_hsh)
 
     begin
-      solr_resp = (@gdz_solr.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
-      #solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if solr_resp.size == 0
-      #solr_resp = (@solr.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first if (solr_resp == nil) || (solr_resp&.size == 0)
+
+      #todo switch to new gdz solr
+      #solr_resp = (@solr_gdz_legacy.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
+      solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
 
 
       #if solr_resp&.size > 0
       if (solr_resp != nil) && (solr_resp&.size > 0)
 
-        datemodified               = solr_resp['datemodified']
-        dateindexed                = solr_resp['dateindexed']
-        logical_meta.date_modified = datemodified
-        logical_meta.date_indexed  = dateindexed
+        date_modified               = solr_resp['date_modified']
+        date_indexed                = solr_resp['date_indexed']
+        logical_meta.date_modified = date_modified
+        logical_meta.date_indexed  = date_indexed
 
       end
     rescue Exception => e
@@ -1923,7 +1939,8 @@ end
         json = JSON.parse msg
 
         @context = json['context']
-        @id = json['document']
+        @id      = json['document']
+        @reindex = json['reindex']
 
         @s3_key = "mets/#{@id}.xml"
 
@@ -2032,6 +2049,11 @@ end
 
             addDocsToSolr(hsh)
 
+            if !@reindex
+              create_pdf_conversion(@id, @context)
+            end
+
+
             @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
             @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
@@ -2050,5 +2072,18 @@ end
 
   end
 
-end
+  def create_pdf_conversion(id, context)
 
+    begin
+
+      url = ENV['SERVICES_ADR'] + ENV['CONVERTER_CTX_PATH']
+      RestClient.post url, {"document" => id, "log" => id, "context" => context}.to_json, {content_type: :json, accept: :json}
+
+    rescue Exception => e
+      @logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
+      @file_logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}\n\t#{e.backtrace}")
+    end
+
+  end
+
+end

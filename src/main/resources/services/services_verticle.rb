@@ -11,15 +11,16 @@ require 'services/reindex_service'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
-@logger.debug "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 @file_logger       = Logger.new(ENV['LOG'] + "/services_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
+@logger.debug "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+
+
 def send_status(status_code, response, msg_hsh)
   response.set_status_code(status_code).end(msg_hsh.to_json)
 end
-
 
 def check_request(routingContext, route)
 
@@ -59,7 +60,6 @@ def check_request(routingContext, route)
     send_status(400, response, {"status" => "-1", "msg" => "Could not process request"})
   end
 
-
 end
 
 
@@ -91,7 +91,7 @@ router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 # {
 #     "status":"<percentage> | -1>"
 # }
-router.post("/api/converter/jobs").blocking_handler(lambda {|routingContext|
+router.post(ENV['CONVERTER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 
   check_request(routingContext, "converter")
 
@@ -107,7 +107,7 @@ router.post("/api/converter/jobs").blocking_handler(lambda {|routingContext|
 #     "document": "PPN591416441",
 #     "context": "gdz"
 # }
-router.post("/api/indexer/jobs").blocking_handler(lambda {|routingContext|
+router.post(ENV['INDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 
   check_request(routingContext, "indexer")
 
@@ -122,7 +122,7 @@ router.post("/api/indexer/jobs").blocking_handler(lambda {|routingContext|
 # {
 #     "context": "gdz"
 # }
-router.post("/api/reindexer/jobs").blocking_handler(lambda {|routingContext|
+router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 
   check_request(routingContext, "reindexer")
 

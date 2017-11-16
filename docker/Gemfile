@@ -32,6 +32,9 @@ gem "mini_magick"
 #gem 'prawn', '~> 2.2', '>= 2.2.2'
 gem 'prawn-svg', '~> 0.25.1'
 
+# Rest Client API
+gem 'rest-client', '~> 2.0', '>= 2.0.2'
+
 # S3 library
 gem 'aws-sdk', '~> 3.0', '>= 3.0.1'
 

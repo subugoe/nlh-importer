@@ -45,7 +45,7 @@ class ImgToPdfConverter
 
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
-    @solr = RSolr.connect :url => ENV['SOLR_ADR']
+    @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
     @use_s3 = false
     @use_s3 = true if ENV['USE_S3'] == 'true'
@@ -178,7 +178,7 @@ class ImgToPdfConverter
 
   def get_page_count
 
-    solr_resp = (@solr.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+    solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
     log_end_page_index   = -1
@@ -212,13 +212,9 @@ class ImgToPdfConverter
       log_start_page_index = json['log_start_page_index']
       log_end_page_index   = json['log_end_page_index']
 
-
-      @logger.info "[img_converter] start conversion #{log_id} -> #{page} (mem used: #{GC.stat[:used]}}, #{Java::JavaLang::Thread.current_thread().get_name()}) "
-
-
       # ---
 
-      solr_work = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "image_format, product, baseurl"})['response']['docs'].first
+      solr_work = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "image_format, product, baseurl"})['response']['docs'].first
 
       image_format = solr_work['image_format']
       baseurl      = solr_work['baseurl']
@@ -406,7 +402,7 @@ class ImgToPdfConverter
 
     disclaimer_info = DisclaimerInfo.new
 
-    solr_work = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
+    solr_work = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
 
 
     disclaimer_info.log_id                   = solr_work['log_id']
@@ -660,9 +656,9 @@ class ImgToPdfConverter
 
   def cut_from_full_pdf_pdftk_system(pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
-    #response = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
+    #response = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
     #if response['numFound'] > 0
-    solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
+    solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
 
 
     #first_page = solr_resp['phys_order'][log_start_page_index].to_i
@@ -679,7 +675,7 @@ class ImgToPdfConverter
 
   def merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
 
-    solr_resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
+    solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
 
     log_start_page_index = 0
     log_end_page_index   = -1
@@ -752,7 +748,6 @@ class ImgToPdfConverter
       #log_info "depth: #{depth} (#{depth.class}), resolution: #{resolution_hsh} (#{resolution_hsh.class})"
 
       if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
-        log_info "special conversion"
         MiniMagick::Tool::Convert.new do |convert|
           convert << "-define" << "pdf:use-cropbox=true"
           convert << "#{to_tmp_img}"
@@ -773,7 +768,7 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      log_error "Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' (depth: #{depth}, resolution: #{resolution_hsh})", e
+      log_error "[GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' (depth: #{depth}, resolution: #{resolution_hsh})", e
       return false
     end
 

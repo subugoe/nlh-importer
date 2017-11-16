@@ -41,7 +41,7 @@ class WorkConverter
         :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
         :db   => ENV['REDIS_DB'].to_i)
 
-    @solr = RSolr.connect :url => ENV['SOLR_ADR']
+    @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
     @use_s3 = false
     @use_s3 = true if ENV['USE_S3'] == 'true'
@@ -182,7 +182,7 @@ class WorkConverter
     end
 
 
-    solr_resp = @solr.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype"}
+    solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype"}
     if solr_resp['response']['numFound'] == 0
       log_error "Couldn't find #{id} in index, conversion for #{log_id} not possible", nil
       return
@@ -195,7 +195,7 @@ class WorkConverter
     if doctype == 'work'
 
 
-      resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index"})['response']['docs'].first
+      resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index"})['response']['docs'].first
 
       log_start_page_index = 0
       log_end_page_index   = -1

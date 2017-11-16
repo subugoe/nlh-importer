@@ -12,14 +12,8 @@ class ConverterService
 
   def initialize
 
-    @options = {
-        'sendTimeout' => 300000
-    }
-
-
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
-    @logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
     @file_logger       = Logger.new(ENV['LOG'] + "/converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
@@ -27,7 +21,10 @@ class ConverterService
     @work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
     @rredis       = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-    @solr         = RSolr.connect :url => ENV['SOLR_ADR']
+
+    @solr_gdz         = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
+
+    @logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
   end
 
@@ -67,7 +64,7 @@ class ConverterService
           return
         else
 
-          resp = (@solr.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+          resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
 
           doc = resp['docs']&.first
 

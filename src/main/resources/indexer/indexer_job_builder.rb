@@ -20,14 +20,11 @@ require 'indexer/indexer'
 @file_logger       = Logger.new(ENV['LOG'] + "/indexer_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
 @file_logger.level = Logger::DEBUG
 
-@logger.debug "[indexer_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
 @queue  = ENV['REDIS_INDEX_QUEUE']
-@rredis = Redis.new(
-    :host => ENV['REDIS_HOST'],
-    :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db   => ENV['REDIS_DB'].to_i
-)
+@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db   => ENV['REDIS_DB'].to_i)
+
+
+@logger.debug "[indexer_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 $vertx.execute_blocking(lambda {|future|

@@ -2,7 +2,6 @@ require 'vertx/vertx'
 require 'vertx-web/router'
 require 'vertx-web/body_handler'
 
-require 'rsolr'
 require 'json'
 require 'redis'
 require 'logger'
@@ -16,11 +15,6 @@ class ReindexService
   MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
   def initialize
-    oai_endpoint = ENV['GDZ_OAI_ENDPOINT']
-    productin    = ENV['IN'] + '/' + ENV['PRODUCT']
-    @inpath      = productin + ENV['METS_IN_SUB_PATH']
-    @queue       = ENV['REDIS_INDEX_QUEUE']
-
 
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
@@ -29,9 +23,7 @@ class ReindexService
     @file_logger.level = Logger::DEBUG
 
     @rredis     = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-    @oai_client = OAI::Client.new oai_endpoint
-
-    @gdzsolr = RSolr.connect :url => ENV['GDZ_SOLR_ADR']
+    @queue       = ENV['REDIS_INDEX_QUEUE']
 
     @s3_client = Aws::S3::Client.new(
         :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
@@ -75,11 +67,12 @@ class ReindexService
 
   def process_keys keys, context
 
-    puts "keys.size: #{keys.size}"
-
     arr = Array.new
     keys.each {|key|
-      arr << {"s3_key" => key, "context" => context}.to_json
+      id = key.match(/mets\/(\S*).xml/)[1]
+      # {"document":"PPN876605080",  "log":"PPN876605080",  "context": "gdz", "reindex":true}
+      # {"document"=>"PPN234688475", "log"=>"PPN234688475", "context"=>"gdz", "reindex"=>true}
+      arr << {"document" => id, "context" => context, "reindex" => true}.to_json
     }
 
     pushToQueue(@queue, arr)
@@ -146,7 +139,7 @@ class ReindexService
           reindex "gdz"
 
         elsif (context != nil) && (context.downcase == "nlh")
-          reindex ":nlh"
+          reindex "nlh"
 
         else
           @logger.error "[reindex_service] Could not process context '#{context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"

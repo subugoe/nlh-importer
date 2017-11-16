@@ -15,7 +15,6 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
 @rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-@solr        = RSolr.connect :url => ENV['SOLR_ADR']
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
