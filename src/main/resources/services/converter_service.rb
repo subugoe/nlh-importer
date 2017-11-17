@@ -154,8 +154,8 @@ class ConverterService
       @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
 
       # any error
-      puts "could not processed"
-      send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
+      puts "not processed"
+      send_status(400, response, {"status" => "-1", "msg" => "Could not process request"})
       return
     end
 
