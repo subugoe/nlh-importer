@@ -71,6 +71,8 @@ services:
     volumes:
       - solrdata_core1:/opt/solr/server/solr/mycores/<solr_core>/data/
       - solrdata_core2:/opt/solr/server/solr/mycores/<solr_core2>/data/
+      - ./docker/solr/config/sub/core.properties:/opt/solr/server/solr/mycores/<solr_core>/core.properties
+      - ./docker/solr/config/sub/core2.properties:/opt/solr/server/solr/mycores/<solr_core2>/core.properties
     mem_limit: 8GB
     env_file:
       - ./.env

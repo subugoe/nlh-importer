@@ -21,7 +21,6 @@ COPY  config/sub/jetty.xml      $SOLR_SERVER_BASE/etc/jetty.xml
 # core 1
 
 RUN mkdir -p $SOLR_CORE/data/
-COPY  config/sub/core.properties                        $SOLR_CORE/core.properties
 
 COPY  config/sub/currency.xml                           $SOLR_CORE/conf/currency.xml
 COPY  config/sub/mapping-FoldToASCII.txt                $SOLR_CORE/conf/mapping-FoldToASCII.txt
@@ -41,12 +40,10 @@ COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE/conf/admin-ex
 COPY  config/admin-extra.menu-top.html                  $SOLR_CORE/conf/admin-extra.menu-top.html
 COPY  config/admin-extra.html                           $SOLR_CORE/conf/admin-extra.html
 
-RUN chown 777 $SOLR_CORE/core.properties
 
 # core 2
 
 RUN mkdir -p $SOLR_CORE2/data/
-COPY  config/sub/core2.properties                       $SOLR_CORE2/core.properties
 
 COPY  config/sub/currency.xml                           $SOLR_CORE2/conf/currency.xml
 COPY  config/sub/mapping-FoldToASCII.txt                $SOLR_CORE2/conf/mapping-FoldToASCII.txt
@@ -65,8 +62,6 @@ COPY  config/_schema_analysis_synonyms_english.json     $SOLR_CORE2/conf/_schema
 COPY  config/admin-extra.menu-bottom.html               $SOLR_CORE2/conf/admin-extra.menu-bottom.html
 COPY  config/admin-extra.menu-top.html                  $SOLR_CORE2/conf/admin-extra.menu-top.html
 COPY  config/admin-extra.html                           $SOLR_CORE2/conf/admin-extra.html
-
-RUN chown 777 $SOLR_CORE2/core.properties
 
 
 RUN chown -R $SOLR_USER:$SOLR_USER $SOLR_BASE

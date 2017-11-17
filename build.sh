@@ -39,8 +39,6 @@ cp docker/Dockerfile_orig  docker/Dockerfile
 cp .env_orig .env
 
 cp docker/solr/Dockerfile_orig  docker/solr/Dockerfile
-cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core.properties
-cp docker/solr/config/sub/core.properties_orig  docker/solr/config/sub/core2.properties
 cp docker/solr/config/solr.in.sh_orig ./docker/solr/config/solr.in.sh
 cp docker/solr/config/sub/jetty_orig.xml docker/solr/config/sub/jetty.xml
 
