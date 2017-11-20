@@ -141,6 +141,7 @@ class WorkConverter
   end
 
   def removeQueue(queue)
+
     keys = @rredis.hkeys(queue)
     unless keys.empty?
       @rredis.hdel(queue, keys)

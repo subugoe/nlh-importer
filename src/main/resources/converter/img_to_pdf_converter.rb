@@ -268,33 +268,29 @@ class ImgToPdfConverter
           upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
         end
 
-        # cleanup
         remove_dir(pdf_dir)
         @rredis.del(@unique_queue, log_id)
         @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
 
       elsif !pdf_exist
 
-        #S3_PDF_KEY_PATTERN=pdf/%s/%s.pdf
-        #S3_IMAGE_KEY_PATTERN=orig/%s/%s.%s
+        if @rredis.hget(log_id, 'err') == nil
 
-        s3_image_key = @s3_image_key_pattern % [id, page, image_format]
+          s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
-        if @use_s3
-          loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
-        else
-          loaded = download_via_http(img_url, to_tmp_img)
-        end
+          if @use_s3
+            loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
+          else
+            loaded = download_via_http(img_url, to_tmp_img)
+          end
 
-        if loaded
+          if loaded
 
-          if convert(to_tmp_img, to_page_pdf_path)
+            if convert(to_tmp_img, to_page_pdf_path)
 
-            pushToQueue(log_id, page, true)
+              pushToQueue(log_id, page, true)
 
-            if all_images_converted?(log_id, pages_count)
-
-              if !conversion_errors?(log_id)
+              if all_images_converted?(log_id, pages_count)
 
                 removeQueue(log_id)
 
@@ -309,34 +305,29 @@ class ImgToPdfConverter
                 add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
 
                 if @use_s3
-
-
                   if request_logical_part
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
                   else
                     upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
                   end
-
-
                 end
 
-                # cleanup
                 remove_dir(pdf_dir)
                 @rredis.del(@unique_queue, log_id)
-                @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
-
-              else
-                pushToQueue(id, 'err', "Conversion of #{log_id} failed")
-                @rredis.del(@unique_queue, log_id)
+                @logger.info "[img_converter] Finish PDF creation for #{log_id}"
               end
-
+            else
+              pushToQueue(log_id, 'err', "Conversion for #{log_id} failed")
             end
+
           else
             pushToQueue(log_id, 'err', "Download for #{log_id} failed")
-            @rredis.del(@unique_queue, log_id)
           end
 
+        else
+          remove_dir(pdf_dir)
         end
+
       else
         # nothing to do
         @logger.info "[img_converter] PDF for '#{log_id}'  already exist (do nothing)"
@@ -344,7 +335,8 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      pushToQueue(id, 'err', "Download for #{log_id} failed")
+
+      remove_dir(pdf_dir)
 
       @rredis.del(@unique_queue, log_id)
 
@@ -359,6 +351,7 @@ class ImgToPdfConverter
   end
 
   def remove_dir(path)
+    sleep 30
     FileUtils.remove_dir(path, force = true)
   end
 
@@ -374,16 +367,6 @@ class ImgToPdfConverter
     end
   end
 
-
-  def conversion_errors?(queue)
-
-    if @rredis.hget(queue, 'err') == nil
-      return false
-    else
-      log_error "Conversion errors with queue '#{queue}' (#{@rredis.hget(queue, 'err')})", nil
-      return true
-    end
-  end
 
   def add_info_str(bookmark_str, info_key, info_value)
     bookmark_str << "InfoBegin\n"
@@ -738,7 +721,6 @@ class ImgToPdfConverter
 
   def convert(to_tmp_img, to_page_pdf_path)
 
-
     begin
 
       FileUtils.rm(to_page_pdf_path, :force => true)
@@ -780,11 +762,16 @@ class ImgToPdfConverter
 
     keys = @rredis.hkeys(queue)
 
-    if keys.size < pages_count
-      false
+    if @rredis.hget(queue, 'err') == nil
+      if keys.size < pages_count
+        false
+      else
+        true
+      end
     else
-      true
+      raise 'Conversion error exist'
     end
+
   end
 
 
