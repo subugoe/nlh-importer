@@ -9,9 +9,8 @@ require 'open-uri'
 require 'net/http'
 require 'fileutils'
 require 'mini_magick'
-#require "prawn"
+require 'vips'
 require "prawn-svg"
-#require 'pdftk'
 
 require 'model/disclaimer_info'
 
@@ -224,6 +223,7 @@ class ImgToPdfConverter
       to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
       img_url          = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
       to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
+      to_tmp_jpg       = "#{to_pdf_dir}/#{page}.jpg"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
       to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       to_log_pdf_path  = "#{to_pdf_dir}/#{log}.pdf"
@@ -286,7 +286,7 @@ class ImgToPdfConverter
 
           if loaded
 
-            if convert(to_tmp_img, to_page_pdf_path)
+            if convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
 
               pushToQueue(log_id, page, true)
 
@@ -719,38 +719,24 @@ class ImgToPdfConverter
   end
 
 
-  def convert(to_tmp_img, to_page_pdf_path)
+  def convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
 
     begin
 
       FileUtils.rm(to_page_pdf_path, :force => true)
 
-      depth, resolution_hsh = get_image_depth_and_resolution (to_tmp_img)
+      Vips::Image.tiffload(to_tmp_img).jpegsave(to_tmp_jpg)
 
-      #log_info "depth: #{depth} (#{depth.class}), resolution: #{resolution_hsh} (#{resolution_hsh.class})"
-
-      if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
-        MiniMagick::Tool::Convert.new do |convert|
-          convert << "-define" << "pdf:use-cropbox=true"
-          convert << "#{to_tmp_img}"
-          #convert << "-filter" << "Gaussian"
-          #convert << "-units" << "PixelsPerInch"
-          convert << "-resize" << "595x842"
-          #convert << "-resize" << "364x598"
-          convert << "-density" << "72"
-          convert << "-quality" << "95"
-          convert << "#{to_page_pdf_path}"
-        end
-      else
-        MiniMagick::Tool::Convert.new do |convert|
-          convert << "-define" << "pdf:use-cropbox=true"
-          convert << "#{to_tmp_img}"
-          convert << "#{to_page_pdf_path}"
-        end
+      MiniMagick::Tool::Convert.new do |convert|
+        convert << "-define" << "pdf:use-cropbox=true"
+        convert << "#{to_tmp_jpg}"
+        #convert << "-quality" << "100"
+        #convert << "-compress" << "JPEG"
+        convert << "#{to_page_pdf_path}"
       end
 
     rescue Exception => e
-      log_error "[GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' (depth: #{depth}, resolution: #{resolution_hsh})", e
+      log_error "[GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'", e
       return false
     end
 

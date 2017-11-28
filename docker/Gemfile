@@ -24,6 +24,7 @@ gem 'orchard', '~> 0.2' # cdlib pairtree implementation
 # gem 'rmagick', '~> 2.16'
 gem "mini_magick"
 
+gem 'ruby-vips', '~> 2.0', '>= 2.0.7'
 
 # pdf processing lib
 #gem 'pdftk', '~> 0.0.4'
