@@ -727,13 +727,21 @@ class ImgToPdfConverter
 
       FileUtils.rm(to_page_pdf_path, :force => true)
 
-      Vips::Image.tiffload(to_tmp_img).jpegsave(to_tmp_jpg)
+      depth, resolution_hsh = get_image_depth_and_resolution (to_tmp_img)
+
+      if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
+        Vips::Image.tiffload(to_tmp_img).jpegsave(to_tmp_jpg)
+      end
 
       MiniMagick::Tool::Convert.new do |convert|
         convert << "-define" << "pdf:use-cropbox=true"
-        convert << "#{to_tmp_jpg}"
-        #convert << "-quality" << "100"
-        #convert << "-compress" << "JPEG"
+
+        if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
+          convert << "#{to_tmp_jpg}"
+        else
+          convert << "#{to_tmp_img}"
+        end
+
         convert << "#{to_page_pdf_path}"
       end
 
