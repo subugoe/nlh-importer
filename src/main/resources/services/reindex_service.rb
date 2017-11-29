@@ -65,6 +65,7 @@ class ReindexService
 
   end
 
+
   def process_keys keys, context
 
     arr = Array.new

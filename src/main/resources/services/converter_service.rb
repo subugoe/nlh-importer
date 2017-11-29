@@ -83,7 +83,7 @@ class ConverterService
 
             if already_in_queue != nil
               puts "already started"
-              @logger.debug "[converter_job_builder] Job for #{log_id} already started, process next"
+              @logger.debug "[converter_service] Job for #{log_id} already started, process next"
 
               # conversion error
               if @rredis.hget(log_id, 'err') != nil
