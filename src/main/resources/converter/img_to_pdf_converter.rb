@@ -1,4 +1,5 @@
 # encoding: UTF-8
+require 'rubygems'
 
 require 'logger'
 require 'aws-sdk'
@@ -313,6 +314,7 @@ class ImgToPdfConverter
                 end
 
                 remove_dir(pdf_dir)
+                GC.start
                 @rredis.del(@unique_queue, log_id)
                 @logger.info "[img_converter] Finish PDF creation for #{log_id}"
               end
@@ -337,7 +339,7 @@ class ImgToPdfConverter
     rescue Exception => e
 
       remove_dir(pdf_dir)
-
+      GC.start
       @rredis.del(@unique_queue, log_id)
 
       @logger.error "[img_converter] Processing problem with '#{json}' \t#{e.message}"
