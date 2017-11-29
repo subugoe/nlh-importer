@@ -26,16 +26,18 @@ services:
   importer_converter:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
-#    restart: always
+    restart: always
     volumes:
     #  - $INPATH/:$IN:ro
     #  - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
+    depends_on:
+      - redis
     #ports:
     #  - "9010:9010"
-    mem_limit: 8GB
-    memswap_limit: 10GB
+#    mem_limit: 7GB
+#    memswap_limit: 12GB
       #cpu_count: 6
       #cpu_percent: 50
       #cpus: 0.5
@@ -89,7 +91,7 @@ services:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
     volumes:
       - redisdata/:/data/
-    mem_limit: 5GB
+    mem_limit: 6GB
     env_file:
       - ./.env
     environment:
