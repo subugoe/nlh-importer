@@ -56,7 +56,6 @@ def check_request(routingContext, route)
     @file_logger.error("[services_verticle] Problem with request body \t#{e.message}")
 
     # any error
-    puts "could not processed"
     send_status(400, response, {"status" => "-1", "msg" => "Could not process request"})
   end
 
