@@ -37,7 +37,7 @@ services:
   importer_services:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$SERVICE_VERTICLE"]
-   restart: always
+    restart: always
     volumes:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles

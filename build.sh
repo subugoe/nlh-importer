@@ -88,7 +88,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<font_path>|${FONT_PATH}|g"         .env
 
 
-    sed -i '' "s|<S3_PROVIDER>|${S3_PROVIDER}|g"                    .env
+    sed -i '' "s|<S3_PROVIDER>|${S3_PROVIDER}|g"                             .env
     sed -i '' "s|<S3_AWS_ACCESS_KEY_ID>|${S3_AWS_ACCESS_KEY_ID}|g"           .env
     sed -i '' "s|<S3_AWS_SECRET_ACCESS_KEY>|${S3_AWS_SECRET_ACCESS_KEY}|g"   .env
     sed -i '' "s|<S3_ENDPOINT>|${S3_ENDPOINT}|g"                             .env
