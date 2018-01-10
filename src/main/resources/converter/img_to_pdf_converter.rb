@@ -109,7 +109,8 @@ class ImgToPdfConverter
     rescue Exception => e
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
-      log_error "Could not download '#{url}'", e
+      @logger.error("[img_converter] Could not download '#{url}' \t#{e.message}")
+      @file_logger.error("[img_converter] Could not download '#{url}' \t#{e.message}\n\t#{e.backtrace}")
       return false
     end
 
@@ -157,8 +158,8 @@ class ImgToPdfConverter
                   body:   file.read
               }
           )
-
-          log_debug "Full PDF #{to_full_pdf_path} added to S3"
+          @logger.debug("[img_converter] Full PDF #{to_full_pdf_path} added to S3")
+          @file_logger.debug("[img_converter] Full PDF #{to_full_pdf_path} added to S3")
         rescue Aws::S3::Errors::ServiceError => e
           @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
           @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
@@ -271,7 +272,8 @@ class ImgToPdfConverter
 
         remove_dir(pdf_dir)
         @rredis.del(@unique_queue, log_id)
-        @logger.info "[img_converter] Finish PDF creation for '#{log_id}'"
+        @logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
+        @file_logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
 
       elsif !pdf_exist
 
@@ -316,7 +318,8 @@ class ImgToPdfConverter
                 remove_dir(pdf_dir)
                 GC.start
                 @rredis.del(@unique_queue, log_id)
-                @logger.info "[img_converter] Finish PDF creation for #{log_id}"
+                @logger.info("[img_converter] Finish PDF creation for #{log_id}")
+                @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
               end
             else
               pushToQueue(log_id, 'err', "Conversion for #{log_id} failed")
@@ -332,7 +335,8 @@ class ImgToPdfConverter
 
       else
         # nothing to do
-        @logger.info "[img_converter] PDF for '#{log_id}'  already exist (do nothing)"
+        @logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
+        @file_logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
         @rredis.del(@unique_queue, log_id)
       end
 
@@ -342,8 +346,8 @@ class ImgToPdfConverter
       GC.start
       @rredis.del(@unique_queue, log_id)
 
-      @logger.error "[img_converter] Processing problem with '#{json}' \t#{e.message}"
-      @file_logger.error "[img_converter] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
+      @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}\n\t#{e.backtrace}"
     end
   end
 
@@ -473,7 +477,8 @@ class ImgToPdfConverter
 
     system "pdftk #{to_pdf_dir}/tmp.pdf update_info_utf8 #{data_file} output #{to_pdf_dir}/tmp_2.pdf"
 
-    log_debug "Metadata added to #{to_pdf_dir}/tmp_2.pdf"
+    @logger.debug("[img_converter] Metadata added to #{to_pdf_dir}/tmp_2.pdf")
+    @file_logger.debug("[img_converter] Metadata added to #{to_pdf_dir}/tmp_2.pdf")
   end
 
   def add_label_and_value label, text, pdf_obj
@@ -626,7 +631,8 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      log_error "Problem with disclaimer creation", e
+      @logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}")
+      @file_logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}\n\t#{e.backtrace}")
 
       unless request_logical_part
         system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
@@ -636,7 +642,8 @@ class ImgToPdfConverter
 
     end
 
-    log_debug "Disclaimer added to #{pdf_path}"
+    @logger.debug("[img_converter] Disclaimer added to #{pdf_path}")
+    @file_logger.debug("[img_converter] Disclaimer added to #{pdf_path}")
   end
 
   def cut_from_full_pdf_pdftk_system(pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
@@ -654,7 +661,8 @@ class ImgToPdfConverter
 
     system "pdftk #{pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
 
-    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
+    @logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
+    @file_logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
 
   end
 
@@ -681,7 +689,8 @@ class ImgToPdfConverter
 
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
-    log_debug "Temporary Full PDF #{to_pdf_dir}/tmp.pdf created"
+    @logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
+    @file_logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
 
   end
 
@@ -703,18 +712,14 @@ class ImgToPdfConverter
 
       image = JSON.parse(j)['image']
 
-      #log_info "JSON.parse(j).first: #{JSON.parse(j).first}"
-      #log_info "JSON.parse(j).first['image']: #{JSON.parse(j).first['image']}"
-      #log_info "JSON.parse(j).first['image']['resolution']: #{JSON.parse(j).first['image']['resolution']}"
-
       if image != nil
         return [image['depth'], image['resolution']]
       else
-        #log_info "json: #{j}"
         return [nil, {}]
       end
     rescue Exception => e
-      log_error "Problem with image data \n\njson: #{json} \n\nj: #{j}", e
+      @logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}")
+      @file_logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}\n\t#{e.backtrace}")
       return [nil, {}]
     end
 
@@ -746,7 +751,8 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      log_error "[GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'", e
+      @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
+      @file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
       return false
     end
 
