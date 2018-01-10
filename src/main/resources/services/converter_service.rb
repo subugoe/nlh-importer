@@ -59,8 +59,8 @@ class ConverterService
 
 
         if (id == nil) || (log == nil) || (context == nil)
-          puts "parameters missed"
-          send_status(400, response, {"status" => "-1", "msg" => "Required parameters missed (document, log, context)"})
+          @logger.error "[converter_service] Required parameters (document, log, context) missed"
+          send_status(400, response, {"status" => "-1", "msg" => "Required parameters (document, log, context) missed"})
           return
         else
 
@@ -69,66 +69,50 @@ class ConverterService
           doc = resp['docs']&.first
 
           if resp['numFound'] == 0
-            puts "No index entry"
-            send_status(400, response, {"status" => "-1", "msg" => "No index entry for #{id}, job not staged"})
+            @logger.error "[converter_service] No index entry found for #{id}, job not staged"
+            send_status(400, response, {"status" => "-1", "msg" => "No index entry found for #{id}, job not staged"})
             return
 
-          elsif resp['docs']&.first['doctype'] != 'work'
-            puts "wrong doctype"
-            send_status(400, response, {"status" => "-1", "msg" => "No conversion of doctype != 'work'"})
+          elsif doc['doctype'] != 'work'
+            @logger.error "[converter_service] No conversion defined for doctype (#{doc['doctype']}) of #{id}, job not staged"
+            send_status(400, response, {"status" => "-1", "msg" => "No conversion defined for doctype (#{doc['doctype']}) of #{id}, job not staged"})
             return
           else
 
             already_in_queue = @rredis.hget(@unique_queue, log_id)
 
             if already_in_queue != nil
-              puts "already started"
-              @logger.debug "[converter_service] Job for #{log_id} already started, process next"
 
               # conversion error
               if @rredis.hget(log_id, 'err') != nil
-                puts "conversion errors"
                 @logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
                 @file_logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
-
                 send_status(400, response, {"status" => "-1", "msg" => "Conversion errors"})
                 return
-
               else
-
                 if request_logical_part
-
-                  puts "request log part"
                   log_id_index = resp['docs']&.first['log_id'].index log
-
                   log_start_page_index = (resp['docs']&.first['log_start_page_index'][log_id_index])-1
                   log_end_page_index   = (resp['docs']&.first['log_end_page_index'][log_id_index])-1
-
                   size = log_end_page_index.to_i - log_start_page_index.to_i
-
                 else
-                  puts "request full pdf"
                   size = resp['docs']&.first['page'].size
                 end
 
                 keys = @rredis.hkeys(log_id)
-
                 to_process = keys.size # -1, since the field "0" is not related to a real page, it sets a lock on the id
-
                 i = to_process * 100 / size
 
-                puts "converted: #{to_process}, should: #{size}, percentage: #{i}"
-
                 if i <= 0
-                  puts "staged"
+                  @logger.info "[converter_service] Processing for #{log_id} has started"
                   send_status(200, response, {"status" => i, "msg" => "staged"})
                   return
                 elsif i > 0 && i < 100
-                  puts "percentage"
+                  @logger.info "[converter_service] Processing for #{log_id} in work (#{i}% done)"
                   send_status(200, response, {"status" => i, "msg" => "processing"})
                   return
                 elsif i >= 100
-                  puts "finished"
+                  @logger.info "[converter_service] Processing for #{log_id} has finished"
                   send_status(200, response, {"status" => i, "msg" => "finished"})
                   return
                 end
@@ -154,8 +138,7 @@ class ConverterService
       @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
 
       # any error
-      puts "not processed"
-      send_status(400, response, {"status" => "-1", "msg" => "Could not process request"})
+      send_status(400, response, {"status" => "-1", "msg" => "Problem with request body "})
       return
     end
 
