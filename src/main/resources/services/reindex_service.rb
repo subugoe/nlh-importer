@@ -22,8 +22,8 @@ class ReindexService
     @file_logger       = Logger.new(ENV['LOG'] + "/reindex_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
     @file_logger.level = Logger::DEBUG
 
-    @rredis     = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
-    @queue       = ENV['REDIS_INDEX_QUEUE']
+    @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+    @queue  = ENV['REDIS_INDEX_QUEUE']
 
     @s3_client = Aws::S3::Client.new(
         :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
@@ -70,7 +70,13 @@ class ReindexService
 
     arr = Array.new
     keys.each {|key|
-      id = key.match(/mets\/(\S*).xml/)[1]
+      begin
+        id = key.match(/mets\/(\S*).xml/)[1]
+      rescue Exception => e
+        @logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}")
+        @file_logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}\n\te.backtrace: #{e.backtrace}")
+        next
+      end
       # {"document":"PPN876605080",  "log":"PPN876605080",  "context": "gdz", "reindex":true}
       # {"document"=>"PPN234688475", "log"=>"PPN234688475", "context"=>"gdz", "reindex"=>true}
       arr << {"document" => id, "context" => context, "reindex" => true}.to_json
@@ -81,9 +87,10 @@ class ReindexService
 
   def reindex(context)
 
-    @rredis.del @queue
-
+    i      = 0
     bucket = ''
+
+    @rredis.del @queue
 
     case context
       when "nlh"
@@ -93,7 +100,6 @@ class ReindexService
     end
 
 
-    i = 0
     begin
 
       response = @s3_client.list_objects(bucket: bucket, prefix: 'mets')
@@ -103,7 +109,6 @@ class ReindexService
 
       i += keys.size
 
-
       while response.next_page? do
         response = response.next_page
         keys     = response.contents.map(&:key)
@@ -111,9 +116,10 @@ class ReindexService
         i += keys.size
       end
 
-
     rescue Exception => e
       puts "e.message: #{e.message}\n\te.backtrace: #{e.backtrace}"
+      @logger.error("[reindex_service] #{e.message}\n\te.backtrace: #{e.backtrace}")
+      @file_logger.error("[reindex_service] #{e.message}\n\te.backtrace: #{e.backtrace}")
     end
 
     @logger.debug("[reindex_service] sum=#{i}")
@@ -166,5 +172,6 @@ class ReindexService
   end
 
 end
+
 
 
