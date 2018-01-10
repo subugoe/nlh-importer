@@ -196,6 +196,6 @@ docker-compose rm -f
 #docker-compose up -d importer_converter importer_services importer_converter
 #docker-compose up -d --no-deps --no-recreate --no-build
 #docker-compose up -d --scale importer_converter=1
-#docker-compose up -d
+docker-compose up -d
 #docker-compose up -d --scale importer_converter=3 redis importer_converter
-
+#docker-compose up -d --scale  importer_indexer=2 importer_converter importer_indexer

@@ -11,10 +11,8 @@ services:
   importer_indexer:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$INDEXER_VERTICLE"]
-#    restart: always
+    restart: always
     volumes:
-      #- $INPATH/:$IN:ro
-      #- $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
     mem_limit: 6GB
@@ -28,22 +26,10 @@ services:
     command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
     restart: always
     volumes:
-    #  - $INPATH/:$IN:ro
-    #  - $OUTPATH/:$OUT
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    depends_on:
-      - redis
-    #ports:
-    #  - "9010:9010"
-#    mem_limit: 7GB
-#    memswap_limit: 12GB
-      #cpu_count: 6
-      #cpu_percent: 50
-      #cpus: 0.5
-      #cpu_shares: 73
-      #cpu_quota: 50000
-      #cpuset: 0,1
+    mem_limit: 12GB
+    memswap_limit: 12GB
     env_file:
       - ./.env
       - ./converter.env
@@ -51,7 +37,7 @@ services:
   importer_services:
     extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$SERVICE_VERTICLE"]
-#   restart: always
+   restart: always
     volumes:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
