@@ -75,7 +75,10 @@ class MetsLogicalMetadata
         arr = @logicalElements.values
       end
 
-      h.merge! ({:docstrct => arr[0]&.type})
+      docstrct = arr[0]&.type
+      docstrct = 'volume' if (@doctype == 'work') && (docstrct == 'map')
+
+      h.merge! ({:docstrct => docstrct})
 
       arr[1..-1].each {|el|
 
@@ -149,7 +152,11 @@ class MetsLogicalMetadata
         arr = @logicalElements.values
       end
 
-      hsh.merge! ({:docstrct => arr[0]&.type})
+      docstrct = arr[0]&.type
+      docstrct = 'volume' if (@doctype == 'work') && (docstrct == 'map')
+
+      hsh.merge! ({:docstrct => docstrct})
+
 
       arr[1..-1].each {|el|
 
