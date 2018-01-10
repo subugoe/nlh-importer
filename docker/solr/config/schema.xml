@@ -312,6 +312,7 @@
         <field name="isanchor" type="boolean" indexed="true"/>
         <field name="ismets" type="boolean" indexed="true"/>
         <field name="islog" type="boolean" indexed="true"/>
+        <field name="isparent" type="boolean" indexed="true" stored="true"/>
 
         <!-- {'fulltext' | 'work' | 'anchor' | 'log' | ...} -->
         <field name="doctype" type="string" indexed="true" stored="true"/>

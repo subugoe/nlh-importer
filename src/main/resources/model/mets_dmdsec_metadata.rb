@@ -228,6 +228,7 @@ class MetsDmdsecMetadata
     h.merge! ({:context => @context}) unless @context == nil
     h.merge! ({:doctype => @doctype}) unless @doctype == nil
 
+    h.merge! ({:isparent => true}) if (@doctype == "work") || (@doctype == "anchor")
 
     h.merge! ({:identifier => @identifiers}) unless @identifiers.empty?
 
