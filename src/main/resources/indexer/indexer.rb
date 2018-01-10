@@ -519,11 +519,8 @@ end
     while modsLanguageElements.count > 0
 
       l = modsLanguageElements.shift
-
       lang = LanguageTerm.new
-
-      lang.languageterm = l.xpath('languageTerm').text
-
+      lang.languageterm  = l.xpath("languageTerm[@type='code']").text
       langArr << lang
 
     end
