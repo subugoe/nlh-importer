@@ -75,27 +75,6 @@ class ImgToPdfConverter
 
   end
 
-
-  def log_error(msg, e)
-    if e == nil
-      @logger.error("[img_converter] #{msg}")
-      @file_logger.error("[img_converter] #{msg}")
-    else
-      @logger.error("[img_converter] #{msg} \t#{e.message}")
-      @file_logger.error("[img_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
-    end
-  end
-
-  def log_info(msg)
-    @logger.info("[img_converter] #{msg}")
-    @file_logger.info("[img_converter] #{msg}")
-  end
-
-  def log_debug(msg)
-    @logger.debug("[img_converter] #{msg}")
-    @file_logger.debug("[img_converter] #{msg}")
-  end
-
 # ---
 
   def download_via_http(url, path)
@@ -778,6 +757,3 @@ class ImgToPdfConverter
 
 
 end
-
-# {"id":"PPN669170356" , "context": "gdz"}
-# {"s3_key": "mets/PPN669170356.xml" , "context": "gdz"}
