@@ -75,10 +75,11 @@ class WorkConverter
         msg  = res[1]
         json = JSON.parse msg
 
-        context = json['context']
-        id      = json['document']
-        log     = json['log']
-        log_id  = "#{id}___#{log}"
+        context   = json['context']
+        #overwrite = json['overwrite']
+        id        = json['document']
+        log       = json['log']
+        log_id    = "#{id}___#{log}"
 
         @logger.info "[work_converter] Start processing for '#{log_id}'"
 
@@ -210,6 +211,10 @@ class WorkConverter
 
       end
 
+
+      # TODO add if overwrite == true
+      # if overwrite == true
+      #  pdf_exist = false
 
       if @use_s3 && s3_object_exist?(id, log) # (request_logical_part == true) && s3_object_exist?(id, log)
         # add implementation, cup from full PDF
