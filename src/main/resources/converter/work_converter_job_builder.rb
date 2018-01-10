@@ -33,36 +33,6 @@ require 'converter/work_converter'
     :db   => ENV['REDIS_DB'].to_i
 )
 
-
-=begin
-$vertx.event_bus().consumer("image.load") {|message|
-
-  @logger.debug "[img_to_pdf_converter_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
-
-  begin
-    body = message.body()
-
-    if (body != '' && body != nil)
-
-      json = JSON.parse body
-
-      Benchmark.bm(7) do |x|
-        x.report("Begin benchmark") {
-          converter = WorkConverter.new
-          converter.process_response(res)
-        }
-      end
-    else
-      raise "Could not process empty string or nil"
-    end
-  rescue Exception => e
-    @logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
-    @file_logger.error "[img_to_pdf_converter_job_builder] Processing problem with '#{json}' \t#{e.message}\n\t#{e.backtrace}"
-  end
-}
-=end
-
-
 def pushToQueue(queue, field, value)
   @rredis.hset(queue, field, value)
 end
