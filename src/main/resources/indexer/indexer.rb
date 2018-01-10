@@ -1797,8 +1797,8 @@ end
       #if solr_resp&.size > 0
       if (solr_resp != nil) && (solr_resp&.size > 0)
 
-        date_modified               = solr_resp['date_modified']
-        date_indexed                = solr_resp['date_indexed']
+        date_modified              = solr_resp['date_modified']
+        date_indexed               = solr_resp['date_indexed']
         logical_meta.date_modified = date_modified
         logical_meta.date_indexed  = date_indexed
 
@@ -1898,7 +1898,6 @@ end
     #endNo regex match for GDZ/IIIF image URI
 
 
-    # do some data checks
     if (meta.doctype != 'anchor') && (image_meta.pages.size != logical_meta.phys_last_page_index&.to_i)
 
       @logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size (#{image_meta.pages.size} vs #{logical_meta.phys_last_page_index&.to_i})")
@@ -2084,3 +2083,4 @@ end
   end
 
 end
+
