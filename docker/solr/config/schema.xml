@@ -275,7 +275,7 @@
         <field name="logid" type="string" indexed="true" stored="true" required="false"/>
         <field name="dmdid" type="string" indexed="true" stored="true"/>
         <field name="mods" type="string" indexed="true" stored="true"/>
-        <field name="identifier" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="identifier" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
         <field name="issn" type="string" indexed="true" stored="true"/>
         <field name="zdb" type="string" indexed="true" stored="true"/>
@@ -534,6 +534,7 @@
     <copyField source="work_id" dest="default"/>
     <copyField source="ft_of_work" dest="default"/>
     <copyField source="record_identifier" dest="metadata"/>
+    <copyField source="identifier" dest="metadata"/>
     <copyField source="note" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
     <copyField source="summary_name" dest="metadata"/>
@@ -561,6 +562,7 @@
     <copyField source="work_id" dest="default"/>
     <copyField source="ft_of_work" dest="default"/>
     <copyField source="record_identifier" dest="default"/>
+    <copyField source="identifier" dest="default"/>
     <copyField source="note" dest="default"/>
     <copyField source="subject" dest="default"/>
     <copyField source="purl" dest="default"/>
