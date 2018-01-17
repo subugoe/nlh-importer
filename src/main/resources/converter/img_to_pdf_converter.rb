@@ -29,7 +29,7 @@ class ImgToPdfConverter
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/img_converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/img_converter_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
     @file_logger.level = Logger::DEBUG
 
 

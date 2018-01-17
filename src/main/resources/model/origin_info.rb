@@ -6,7 +6,7 @@ class OriginInfo
 
 
   def initialize
-    @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
     @file_logger.level = Logger::DEBUG
     @places            = Array.new
     @publishers        = Array.new

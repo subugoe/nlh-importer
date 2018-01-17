@@ -15,7 +15,7 @@ class ConverterService
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger       = Logger.new(ENV['LOG'] + "/converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
     @file_logger.level = Logger::DEBUG
 
     @work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']

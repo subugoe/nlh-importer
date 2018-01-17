@@ -21,7 +21,7 @@ require 'converter/work_converter'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/work_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/work_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
 @file_logger.level = Logger::DEBUG
 
 @queue        = ENV['REDIS_WORK_CONVERT_QUEUE']

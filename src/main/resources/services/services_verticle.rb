@@ -12,7 +12,7 @@ require 'services/reindex_service'
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG
 
-@file_logger       = Logger.new(ENV['LOG'] + "/services_verticle_#{Time.new.strftime('%y-%m-%d')}.log")
+@file_logger       = Logger.new(ENV['LOG'] + "/services_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
 @file_logger.level = Logger::DEBUG
 
 @logger.debug "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"

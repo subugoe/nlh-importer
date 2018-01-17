@@ -29,13 +29,14 @@ class WorkConverter
     @logger       = Logger.new(STDOUT)
     @logger.level = Logger::DEBUG
 
-    @file_logger = Logger.new(ENV['LOG'] + "/work_converter_#{Time.new.strftime('%y-%m-%d')}.log")
+    @file_logger = Logger.new(ENV['LOG'] + "/work_converter_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
 
     @file_logger.level = Logger::DEBUG
 
     @unique_queue       = ENV['REDIS_UNIQUE_QUEUE']
     @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
+
     @rredis             = Redis.new(
         :host => ENV['REDIS_HOST'],
         :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
