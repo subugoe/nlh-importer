@@ -74,7 +74,7 @@ class ReindexService
         id = key.match(/mets\/(\S*).xml/)[1]
       rescue Exception => e
         @logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}")
-        @file_logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}\n\te.backtrace: #{e.backtrace}")
+        @file_logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}")
         next
       end
       # {"document":"PPN876605080",  "log":"PPN876605080",  "context": "gdz", "reindex":true}
@@ -117,9 +117,8 @@ class ReindexService
       end
 
     rescue Exception => e
-      puts "e.message: #{e.message}\n\te.backtrace: #{e.backtrace}"
-      @logger.error("[reindex_service] #{e.message}\n\te.backtrace: #{e.backtrace}")
-      @file_logger.error("[reindex_service] #{e.message}\n\te.backtrace: #{e.backtrace}")
+      @logger.error("[reindex_service] #{e.message}")
+      @file_logger.error("[reindex_service] #{e.message}")
     end
 
     @logger.debug("[reindex_service] sum=#{i}")
@@ -132,7 +131,6 @@ class ReindexService
 
       if hsh == nil
         @logger.error("[reindex_service] Expected JSON body missing")
-        @file_logger.error("[reindex_service]  Expected JSON body missing")
         send_status(400, response, {"status" => "-1", "msg" => "Expected JSON body missing"})
         return
       else
@@ -149,7 +147,7 @@ class ReindexService
           reindex "nlh"
 
         else
-          @logger.error "[reindex_service] Could not process context '#{context}',\t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+          @logger.error "[reindex_service] Could not process context '#{context}'"
           send_error(400, response)
           return
         end
@@ -161,11 +159,7 @@ class ReindexService
       return
 
     rescue Exception => e
-      @logger.error("[reindex_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
-      @file_logger.error("[reindex_service] Problem with request body \t#{e.message}")
-
-      # any error
-      puts "could not processed"
+      @logger.error("[reindex_service] Problem with request body \t#{e.message}")
       send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
     end
 

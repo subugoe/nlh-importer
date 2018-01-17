@@ -43,7 +43,6 @@ class ConverterService
 
       if hsh == nil
         @logger.error("[converter_service] Expected JSON body missing")
-        @file_logger.error("[converter_service]  Expected JSON body missing")
 
         # TODO check response codes
 
@@ -125,9 +124,7 @@ class ConverterService
                 end
               end
 
-
             else
-
 
               @rredis.hset(@unique_queue, log_id, 0)
               pushToQueue(@work_queue, [hsh.to_json])
@@ -145,7 +142,7 @@ class ConverterService
 
     rescue Exception => e
       @logger.error("[converter_service] Problem with request body \t#{e.message}")
-      @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[converter_service] Problem with request body \t#{e.message}")
 
       # any error
       send_status(400, response, {"status" => "-1", "msg" => "Problem with request body"})

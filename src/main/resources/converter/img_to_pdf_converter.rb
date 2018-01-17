@@ -91,7 +91,7 @@ class ImgToPdfConverter
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
       @logger.error("[img_converter] Could not download '#{url}' \t#{e.message}")
-      @file_logger.error("[img_converter] Could not download '#{url}' \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[img_converter] Could not download '#{url}' \t#{e.message}")
       return false
     end
 
@@ -114,7 +114,7 @@ class ImgToPdfConverter
       )
     rescue Exception => e
       @logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}\n\t#{e.backtrace}"
+      @file_logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
 
@@ -143,7 +143,7 @@ class ImgToPdfConverter
           @file_logger.debug("[img_converter] Full PDF #{to_full_pdf_path} added to S3")
         rescue Aws::S3::Errors::ServiceError => e
           @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
-          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}\n\t#{e.backtrace}"
+          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
         end
 
       end
@@ -151,7 +151,7 @@ class ImgToPdfConverter
 
     rescue Exception => e
       @logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
-      @file_logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}\n\t#{e.backtrace}"
+      @file_logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
     end
 
 
@@ -325,7 +325,7 @@ class ImgToPdfConverter
       @rredis.del(@unique_queue, log_id)
 
       @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
-      @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+      @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
     end
   end
 
@@ -497,7 +497,7 @@ class ImgToPdfConverter
     return response
 
   end
-  
+
 
 # @param [Object]  pdf_path
 # @param [Object]  to_pdf_dir
@@ -610,7 +610,7 @@ class ImgToPdfConverter
 
     rescue Exception => e
       @logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}")
-      @file_logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}")
 
       unless request_logical_part
         system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
@@ -697,7 +697,7 @@ class ImgToPdfConverter
       end
     rescue Exception => e
       @logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}")
-      @file_logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}")
       return [nil, {}]
     end
 
@@ -729,7 +729,7 @@ class ImgToPdfConverter
     rescue Exception => e
       FileUtils.cp("templates/error_page_2.pdf", to_page_pdf_path, :force => true)
       #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
-      #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
+      #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
     end
   end
 

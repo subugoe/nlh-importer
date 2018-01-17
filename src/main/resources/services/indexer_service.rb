@@ -43,7 +43,6 @@ class IndexerService
 
       if hsh == nil
         @logger.error("[indexer_service] Expected JSON body missing")
-        @file_logger.error("[indexer_service]  Expected JSON body missing")
         send_status(400, response, {"status" => "-1", "msg" => "Expected JSON body missing"})
         return
       else
@@ -57,11 +56,7 @@ class IndexerService
       return
 
     rescue Exception => e
-      @logger.error("[indexer_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
-      @file_logger.error("[indexer_service] Problem with request body \t#{e.message}")
-
-      # any error
-      puts "could not processed"
+      @logger.error("[indexer_service] Problem with request body \t#{e.message}")
       send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
       return
     end

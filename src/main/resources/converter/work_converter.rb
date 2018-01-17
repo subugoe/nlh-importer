@@ -112,7 +112,7 @@ class WorkConverter
 
     rescue Exception => e
       @logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}"
-      @file_logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
+      @file_logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}"
     end
 
   end
@@ -123,7 +123,7 @@ class WorkConverter
 
     unless e == nil
       @logger.error("[work_converter] #{msg} \t#{e.message}")
-      @file_logger.error("[work_converter] #{msg} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[work_converter] #{msg} \t#{e.message}")
     else
       @logger.error("[work_converter] #{msg}")
       @file_logger.error("[work_converter] #{msg}")

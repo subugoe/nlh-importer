@@ -30,7 +30,6 @@ def check_request(routingContext, route)
 
     if hsh == nil
       @logger.error("[services_verticle] Expected JSON body missing")
-      @file_logger.error("[services_verticle]  Expected JSON body missing")
       send_error(400, response)
     else
       @logger.info("[services_verticle] Got message: \t#{hsh}")
@@ -52,7 +51,7 @@ def check_request(routingContext, route)
     end
 
   rescue Exception => e
-    @logger.error("[services_verticle] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
+    @logger.error("[services_verticle] Problem with request body \t#{e.message}")
     @file_logger.error("[services_verticle] Problem with request body \t#{e.message}")
 
     # any error

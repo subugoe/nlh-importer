@@ -113,13 +113,13 @@ class Indexer
   def fileNotFound(type, e)
     if e.message.start_with? "redirection forbidden"
       @logger.error("[indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}")
-      @file_logger.error("[indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}")
     elsif e.message.start_with? "Failed to open TCP connection"
       @logger.error("[indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}")
-      @file_logger.error("[indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}")
     else
       @logger.error("[indexer] Could not open #{type} #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not open #{type} #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not open #{type} #{@id} \t#{e.message}")
     end
   end
 
@@ -163,7 +163,7 @@ class Indexer
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
       @logger.error("[indexer] Could not add doc to solr \t#{e.message}")
-      @file_logger.error("[indexer] Could not add doc to solr \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not add doc to solr \t#{e.message}")
     end
   end
 
@@ -204,7 +204,7 @@ class Indexer
 
     rescue Exception => e
       @logger.error("[indexer] Could not retrieve an identifier for #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not retrieve an identifier for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not retrieve an identifier for #{@id} \t#{e.message}")
     end
 
     return ids
@@ -244,7 +244,7 @@ class Indexer
 
     rescue Exception => e
       @logger.error("[indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}")
     end
 
     return ids
@@ -710,7 +710,7 @@ end
         work    = match[4]
       rescue Exception => e
         @logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -730,7 +730,7 @@ end
         image_format = match[4]
       rescue Exception => e
         @logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -758,7 +758,7 @@ end
         end
       rescue Exception => e
         @logger.error("[indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
         raise
       end
 
@@ -872,7 +872,7 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
-      @file_logger.error("[indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
       raise
     end
 
@@ -896,7 +896,7 @@ end
         end
       rescue Exception => e
         @logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
         fulltext.fulltext             = "ERROR"
         fulltext.fulltext_ref         = "ERROR"
         fulltext.fulltext_of_work     = "ERROR"
@@ -1116,7 +1116,7 @@ end
         work    = match[3]
       rescue Exception => e
         @logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
         raise
       end
 
@@ -1148,7 +1148,7 @@ end
           retry
         end
         @logger.error("[indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}\n\t#{e.backtrace}")
+        @file_logger.error("[indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}")
         raise
       end
     end
@@ -1363,7 +1363,7 @@ end
       @doc = Nokogiri::XML(@str_doc)
     rescue Exception => e
       @logger.error("[indexer] Could not build DOM for #{@id}\t#{e.message}")
-      @file_logger.error("[indexer] Could not build DOM for #{@id}\t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not build DOM for #{@id}\t#{e.message}")
       return nil
     end
   end
@@ -1374,7 +1374,7 @@ end
       doc = Nokogiri::XML(xml_str)
     rescue Exception => e
       @logger.error("[indexer] Could not parse part XML String for #{@id}\t#{e.message}")
-      @file_logger.error("[indexer] Could not parse part XML String for #{@id}\t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Could not parse part XML String for #{@id}\t#{e.message}")
       return nil
     end
 
@@ -1419,7 +1419,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve titleInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve titleInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve titleInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1430,7 +1430,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve originInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve originInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve originInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1441,7 +1441,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve name for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve name for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve name for #{@id} \t#{e.message}")
     end
 
 
@@ -1452,7 +1452,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve location for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve location for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve location for #{@id} \t#{e.message}")
     end
 
 
@@ -1466,7 +1466,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve genre for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve genre for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve genre for #{@id} \t#{e.message}")
     end
 
 
@@ -1477,7 +1477,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve classification for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve classification for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve classification for #{@id} \t#{e.message}")
     end
 
 
@@ -1488,7 +1488,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve language for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve language for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve language for #{@id} \t#{e.message}")
     end
 
 
@@ -1499,7 +1499,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve physicalDescription for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve physicalDescription for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve physicalDescription for #{@id} \t#{e.message}")
     end
 
 
@@ -1510,7 +1510,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve note for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve note for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve note for #{@id} \t#{e.message}")
     end
 
 
@@ -1521,7 +1521,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} \t#{e.message}")
     end
 
 
@@ -1532,7 +1532,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve subject for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve subject for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve subject for #{@id} \t#{e.message}")
     end
 
 
@@ -1543,7 +1543,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve relatedItem for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve relatedItem for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve relatedItem for #{@id} \t#{e.message}")
     end
 
 
@@ -1553,8 +1553,8 @@ end
         dmdsec_meta.addPart = getPart(mods.xpath('part'))
       end
     rescue Exception => e
-      @logger.error("[indexer] Problems to resolve part for #{@id} (#{e.message})\n#{e.backtrace}")
-      @file_logger.error("[indexer] Problems to resolve part for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[indexer] Problems to resolve part for #{@id} (#{e.message})")
+      @file_logger.error("[indexer] Problems to resolve part for #{@id} \t#{e.message}")
     end
 
 
@@ -1565,7 +1565,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve recordInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve recordInfo for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve recordInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1600,7 +1600,7 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve rights info for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve rights info for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve rights info for #{@id} \t#{e.message}")
     end
 
 
@@ -1663,7 +1663,7 @@ end
         begin
           meta = metadata_for_dmdsec(id, mods)
         rescue Exception => e
-          @logger.error("[indexer] Problems ??? (#{e.message})\n\t#{e.backtrace}")
+          @logger.error("[indexer] Problems ??? (#{e.message})")
         end
         meta.id = "#{@id}___#{id}"
 
@@ -1682,7 +1682,7 @@ end
       processFulltexts(fulltext_meta)
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve full texts for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve full texts for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve full texts for #{@id} \t#{e.message}")
     end
   end
 
@@ -1692,7 +1692,7 @@ end
       summary_meta.addSummary = [processSummary(@summary_hsh[@id])]
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve summary texts for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve summary texts for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problems to resolve summary texts for #{@id} \t#{e.message}")
     end
   end
 
@@ -1805,7 +1805,7 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
-      @file_logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
       raise
     end
 
@@ -1838,7 +1838,7 @@ end
           meta.product    = match[3]
         rescue Exception => e
           @logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}")
-          @file_logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}\n\t#{e.backtrace}")
+          @file_logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}")
           raise
         end
 
@@ -1894,7 +1894,7 @@ end
     #  meta.mods = @doc.xpath('//mods')[0].to_xml
     #rescue Exception => e
     #  @logger.error "[indexer] Could not get MODS XML for #{@id} \t#{e.message}"
-    #  @file_logger.error("[indexer] Could not get MODS XML for #{@id} \t#{e.message}\n\t#{e.backtrace}")
+    #  @file_logger.error("[indexer] Could not get MODS XML for #{@id} \t#{e.message}")
     #endNo regex match for GDZ/IIIF image URI
 
 
@@ -1954,7 +1954,7 @@ end
         #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
         # rescue Exception => e
         #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
-        #   @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\n\t#{e.backtrace}"
+        #   @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})"
         #
         #   return
         # end
@@ -2063,7 +2063,7 @@ end
 
     rescue Exception => e
       @logger.error "[indexer] Processing problem with '#{res[1]}' \t#{e.message}"
-      @file_logger.error "[indexer] Processing problem with '#{res[1]}'  \t#{e.message}\n\t#{e.backtrace}"
+      @file_logger.error "[indexer] Processing problem with '#{res[1]}'  \t#{e.message}"
     end
 
   end
@@ -2077,7 +2077,7 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
-      @file_logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}\n\t#{e.backtrace}")
+      @file_logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
     end
 
   end

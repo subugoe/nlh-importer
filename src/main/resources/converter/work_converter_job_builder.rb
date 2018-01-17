@@ -56,7 +56,7 @@ $vertx.execute_blocking(lambda {|future|
 
   rescue Exception => e
     @logger.error "[work_converter_job_builder] Redis problem \t#{e.message}"
-    @file_logger.error "[work_converter_job_builder] Processing problem with '#{res}' \t#{e.message}\n\t#{e.backtrace}"
+    @file_logger.error "[work_converter_job_builder] Processing problem with '#{res}' \t#{e.message}"
 
     retry
   end
