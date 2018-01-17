@@ -38,13 +38,6 @@ def pushToQueue(queue, field, value)
 end
 
 
-def removeQueue(queue)
-  keys = @rredis.hkeys(queue)
-  unless keys.empty?
-    @rredis.hdel(queue, keys)
-  end
-end
-
 $vertx.execute_blocking(lambda {|future|
 
   GC.start

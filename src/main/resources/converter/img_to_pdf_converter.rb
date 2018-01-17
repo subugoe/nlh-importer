@@ -18,7 +18,9 @@ require 'model/disclaimer_info'
 class ImgToPdfConverter
 
 
-  MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
+  MAX_ATTEMPTS     = ENV['MAX_ATTEMPTS'].to_i
+  CONVERSION_ERROR = 1
+  DOWNLOAD_ERROR   = 1
 
   def initialize
 
@@ -261,52 +263,49 @@ class ImgToPdfConverter
           s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
           if @use_s3
-            loaded = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
+            load_succeed = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
           else
-            loaded = download_via_http(img_url, to_tmp_img)
+            load_succeed = download_via_http(img_url, to_tmp_img)
           end
 
-          if loaded
+          if load_succeed
+            convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
+          else
+            FileUtils.cp("templates/error_page_1.pdf", to_page_pdf_path, :force => true)
+          end
 
-            if convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
+            pushToQueue(log_id, page, true)
 
-              pushToQueue(log_id, page, true)
+            if all_images_converted?(log_id, pages_count)
 
-              if all_images_converted?(log_id, pages_count)
+              removeQueue(log_id)
 
-                removeQueue(log_id)
+              merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
 
-                merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
+              disclaimer_info = load_metadata(id)
 
-                disclaimer_info = load_metadata(id)
-
-                unless request_logical_part
-                  add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
-                end
-
-                add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
-
-                if @use_s3
-                  if request_logical_part
-                    upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
-                  else
-                    upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
-                  end
-                end
-
-                remove_dir(pdf_dir)
-                GC.start
-                @rredis.del(@unique_queue, log_id)
-                @logger.info("[img_converter] Finish PDF creation for #{log_id}")
-                @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
+              unless request_logical_part
+                add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
               end
-            else
-              pushToQueue(log_id, 'err', "Conversion for #{log_id} failed")
+
+              add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+
+              if @use_s3
+                if request_logical_part
+                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
+                else
+                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+                end
+              end
+
+              remove_dir(pdf_dir)
+              GC.start
+              @rredis.del(@unique_queue, log_id)
+              @logger.info("[img_converter] Finish PDF creation for #{log_id}")
+              @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
             end
 
-          else
-            pushToQueue(log_id, 'err', "Download for #{log_id} failed")
-          end
+
 
         else
           remove_dir(pdf_dir)
@@ -498,7 +497,7 @@ class ImgToPdfConverter
     return response
 
   end
-
+  
 
 # @param [Object]  pdf_path
 # @param [Object]  to_pdf_dir
@@ -708,7 +707,6 @@ class ImgToPdfConverter
   def convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
 
     begin
-
       FileUtils.rm(to_page_pdf_path, :force => true)
 
       depth, resolution_hsh = get_image_depth_and_resolution (to_tmp_img)
@@ -725,17 +723,14 @@ class ImgToPdfConverter
         else
           convert << "#{to_tmp_img}"
         end
-
         convert << "#{to_page_pdf_path}"
       end
 
     rescue Exception => e
-      @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
-      @file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
-      return false
+      FileUtils.cp("templates/error_page_2.pdf", to_page_pdf_path, :force => true)
+      #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
+      #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
     end
-
-    return true
   end
 
 

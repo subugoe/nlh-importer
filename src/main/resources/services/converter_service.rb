@@ -100,7 +100,7 @@ class ConverterService
                 end
 
                 keys = @rredis.hkeys(log_id)
-                to_process = keys.size # -1, since the field "0" is not related to a real page, it sets a lock on the id
+                to_process = keys.size
                 i = to_process * 100 / size
 
                 if i <= 0
@@ -120,9 +120,12 @@ class ConverterService
 
 
             else
+
+
               @rredis.hset(@unique_queue, log_id, 0)
               pushToQueue(@work_queue, [hsh.to_json])
               send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
+
               return
             end
           end
@@ -138,7 +141,7 @@ class ConverterService
       @file_logger.error("[converter_service] Problem with request body \t#{e.message}\n\t#{e.backtrace}")
 
       # any error
-      send_status(400, response, {"status" => "-1", "msg" => "Problem with request body "})
+      send_status(400, response, {"status" => "-1", "msg" => "Problem with request body"})
       return
     end
 

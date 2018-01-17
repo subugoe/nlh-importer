@@ -76,11 +76,11 @@ class WorkConverter
         msg  = res[1]
         json = JSON.parse msg
 
-        context   = json['context']
+        context = json['context']
         #overwrite = json['overwrite']
-        id        = json['document']
-        log       = json['log']
-        log_id    = "#{id}___#{log}"
+        id     = json['document']
+        log    = json['log']
+        log_id = "#{id}___#{log}"
 
         @logger.info "[work_converter] Start processing for '#{log_id}'"
 
@@ -205,7 +205,14 @@ class WorkConverter
 
       if request_logical_part
 
+
         log_id_index = resp['log_id'].index log
+
+        if log_id_index == nil
+          @logger.error "[work_converter] Log-Id #{log} for work #{id} not found in index"
+          @file_logger.error "[work_converter] Log-Id #{log} for work #{id} not found in index"
+          return
+        end
 
         log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
         log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1

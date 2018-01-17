@@ -50,7 +50,9 @@ class IndexerService
         pushToQueue(@queue, [hsh.to_json])
       end
 
-      @logger.info "[indexer_service] Indexing started"
+      id                   = hsh['document']
+
+      @logger.info "[indexer_service] Indexing for #{id} has started"
       send_status(200, response, {"status" => "0", "msg" => "Indexing started"})
       return
 

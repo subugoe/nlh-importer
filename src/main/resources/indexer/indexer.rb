@@ -2045,7 +2045,7 @@ end
 
             addDocsToSolr(hsh)
 
-            if !@reindex
+            unless (@reindex == "true") || (@reindex == true)
               create_pdf_conversion(@id, @context)
             end
 
