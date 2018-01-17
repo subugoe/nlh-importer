@@ -90,8 +90,15 @@ class ConverterService
                 send_status(400, response, {"status" => "-1", "msg" => "Conversion errors"})
                 return
               else
+
                 if request_logical_part
                   log_id_index = resp['docs']&.first['log_id'].index log
+
+                  if  log_id_index == nil
+                    send_status(400, response, {"status" => "-1", "msg" => "Log-Id #{log} not found in index"})
+                    return
+                  end
+
                   log_start_page_index = (resp['docs']&.first['log_start_page_index'][log_id_index])-1
                   log_end_page_index   = (resp['docs']&.first['log_end_page_index'][log_id_index])-1
                   size = log_end_page_index.to_i - log_start_page_index.to_i
