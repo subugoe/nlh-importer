@@ -14,7 +14,12 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @inpath  = productin + ENV['TEI_IN_SUB_PATH']
 @outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
-@rredis      = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@rredis = Redis.new(
+    :host            => ENV['REDIS_HOST'],
+    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db              => ENV['REDIS_DB'].to_i,
+    :reconnect_attempts => 3
+)
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

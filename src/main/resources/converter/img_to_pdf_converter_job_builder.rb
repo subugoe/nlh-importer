@@ -14,11 +14,22 @@ require 'converter/img_to_pdf_converter'
 @file_logger       = Logger.new(ENV['LOG'] + "/img_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
 @file_logger.level = Logger::DEBUG
 
-@queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
+#@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
+
+if ENV['CONVERTER_TYPE'] == "full"
+  @img_convert_queue      = ENV['REDIS_IMG_CONVERT_FULL_QUEUE']
+
+elsif ENV['CONVERTER_TYPE'] == "log"
+  @img_convert_queue      = ENV['REDIS_IMG_CONVERT_LOG_QUEUE']
+end
+
+
+
 @rredis = Redis.new(
-    :host => ENV['REDIS_HOST'],
-    :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db   => ENV['REDIS_DB'].to_i
+    :host            => ENV['REDIS_HOST'],
+    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db              => ENV['REDIS_DB'].to_i,
+    :reconnect_attempts => 3
 )
 
 $vertx.execute_blocking(lambda {|future|
@@ -29,7 +40,7 @@ $vertx.execute_blocking(lambda {|future|
   begin
 
     while true do
-      res = @rredis.brpop(@queue) #, :timeout => nil)
+      res = @rredis.brpop(@img_convert_queue) #, :timeout => 5)
       msg  = res[1]
       json = JSON.parse msg
       converter = ImgToPdfConverter.new
@@ -37,9 +48,9 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    @logger.error "[img_converter_job_builder] Redis problem \t#{e.message}"
-    @file_logger.error "[img_converter_job_builder] Redis problem '#{res}' \t#{e.message}"
-
+    #@logger.error "[img_converter_job_builder] Redis problem \t#{e.message}\n\t#{e.bachtrace}"
+    #@file_logger.error "[img_converter_job_builder] Redis problem '#{res}' \t#{e.message}"
+    sleep(5)
     retry
   end
 

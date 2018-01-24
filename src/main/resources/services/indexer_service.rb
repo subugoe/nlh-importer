@@ -20,7 +20,12 @@ class IndexerService
     @file_logger.level = Logger::DEBUG
 
     @queue  = ENV['REDIS_INDEX_QUEUE']
-    @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+    @rredis = Redis.new(
+        :host            => ENV['REDIS_HOST'],
+        :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db              => ENV['REDIS_DB'].to_i,
+        :reconnect_attempts => 3
+    )
 
     @logger.debug "[indexer_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

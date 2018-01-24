@@ -22,7 +22,12 @@ class ReindexService
     @file_logger       = Logger.new(ENV['LOG'] + "/reindex_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
     @file_logger.level = Logger::DEBUG
 
-    @rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+    @rredis = Redis.new(
+        :host            => ENV['REDIS_HOST'],
+        :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db              => ENV['REDIS_DB'].to_i,
+        :reconnect_attempts => 3
+    )
     @queue  = ENV['REDIS_INDEX_QUEUE']
 
     @s3_client = Aws::S3::Client.new(

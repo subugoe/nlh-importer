@@ -4,8 +4,8 @@ source 'https://rubygems.org'
 gem 'rsolr', '~> 2.0', '>= 2.0.2'
 gem 'elasticsearch', '~> 2.0'
 
-
-gem 'redis', '~> 3.3', '>= 3.3.1'
+#gem 'redis', '~> 3.3', '>= 3.3.1'
+gem 'redis', '~> 4.0', '>= 4.0.1'
 
 gem 'json_pure', '~> 2.0', '>= 2.0.2'
 gem 'logger', '~> 1.2', '>= 1.2.8'

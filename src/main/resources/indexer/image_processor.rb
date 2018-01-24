@@ -18,7 +18,12 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
+@rredis = Redis.new(
+    :host            => ENV['REDIS_HOST'],
+    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db              => ENV['REDIS_DB'].to_i,
+    :reconnect_attempts => 3
+)
 
 @logger       = Logger.new(STDOUT)
 @logger.level = Logger::DEBUG

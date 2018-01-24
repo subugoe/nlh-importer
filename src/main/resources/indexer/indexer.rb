@@ -85,9 +85,11 @@ class Indexer
 
     @queue  = ENV['REDIS_INDEX_QUEUE']
     @rredis = Redis.new(
-        :host => ENV['REDIS_HOST'],
-        :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db   => ENV['REDIS_DB'].to_i)
+        :host            => ENV['REDIS_HOST'],
+        :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db              => ENV['REDIS_DB'].to_i,
+        :reconnect_attempts => 3
+    )
 
     @solr_gdz_tmp = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
     @solr_gdz     = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
@@ -1401,7 +1403,7 @@ end
 
   def metadata_for_dmdsec(id, mods)
 
-    @logger.info "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
+    #@logger.info "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
 
     dmdsec_meta = MetsDmdsecMetadata.new
 
@@ -1629,7 +1631,7 @@ end
 
       physical_meta.addToPhysicalElement(physicalElement)
 
-      @logger.info "[indexer] in retrieve_physical_structure_data (id: #{el['id']}) -> used: #{GC.stat[:used]}}\n\n"
+      #@logger.info "[indexer] in retrieve_physical_structure_data (id: #{el['id']}) -> used: #{GC.stat[:used]}}\n\n"
 
     }
 

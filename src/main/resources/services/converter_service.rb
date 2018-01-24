@@ -20,9 +20,15 @@ class ConverterService
 
     @work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
-    @rredis       = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db => ENV['REDIS_DB'].to_i)
 
-    @solr_gdz         = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
+    @rredis       = Redis.new(
+        :host               => ENV['REDIS_HOST'],
+        :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db                 => ENV['REDIS_DB'].to_i,
+        :reconnect_attempts => 3
+    )
+
+    @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
     @logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -80,6 +86,7 @@ class ConverterService
 
             already_in_queue = @rredis.hget(@unique_queue, log_id)
 
+
             if already_in_queue != nil
 
               # conversion error
@@ -93,21 +100,30 @@ class ConverterService
                 if request_logical_part
                   log_id_index = resp['docs']&.first['log_id'].index log
 
-                  if  log_id_index == nil
+                  if log_id_index == nil
                     send_status(400, response, {"status" => "-1", "msg" => "Log-Id #{log} not found in index"})
                     return
                   end
 
                   log_start_page_index = (resp['docs']&.first['log_start_page_index'][log_id_index])-1
                   log_end_page_index   = (resp['docs']&.first['log_end_page_index'][log_id_index])-1
-                  size = log_end_page_index.to_i - log_start_page_index.to_i
+
+                  if log_start_page_index == log_end_page_index
+                    size = 1
+                  elsif log_end_page_index < log_start_page_index
+                    log_end_page_index = log_start_page_index
+                    size               = 1
+                  else
+                    size = log_end_page_index.to_i - log_start_page_index.to_i
+                  end
+
                 else
                   size = resp['docs']&.first['page'].size
                 end
 
-                keys = @rredis.hkeys(log_id)
+                keys       = @rredis.hkeys(log_id)
                 to_process = keys.size
-                i = to_process * 100 / size
+                i          = to_process * 100 / size
 
                 if i <= 0
                   @logger.info "[converter_service] Processing for #{log_id} has started"
@@ -128,6 +144,8 @@ class ConverterService
 
               @rredis.hset(@unique_queue, log_id, 0)
               pushToQueue(@work_queue, [hsh.to_json])
+
+              @logger.info "[converter_service] Work #{log_id} staged for conversion"
               send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
 
               return

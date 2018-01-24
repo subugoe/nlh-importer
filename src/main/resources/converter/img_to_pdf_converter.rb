@@ -42,7 +42,6 @@ class ImgToPdfConverter
         :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
         :db                 => ENV['REDIS_DB'].to_i,
         :reconnect_attempts => 3
-    #  :timeout            => 30,
     )
 
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
@@ -90,8 +89,8 @@ class ImgToPdfConverter
     rescue Exception => e
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
-      @logger.error("[img_converter] Could not download '#{url}' \t#{e.message}")
-      @file_logger.error("[img_converter] Could not download '#{url}' \t#{e.message}")
+      @logger.error("[img_converter] [GDZ-527] Could not download '#{url}' \t#{e.message}")
+      @file_logger.error("[img_converter] [GDZ-527] Could not download '#{url}' \t#{e.message}")
       return false
     end
 
@@ -113,8 +112,8 @@ class ImgToPdfConverter
           target: path
       )
     rescue Exception => e
-      @logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_converter] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @logger.error "[img_converter] [GDZ-527] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
+      @file_logger.error "[img_converter] [GDZ-527] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
 
@@ -211,13 +210,13 @@ class ImgToPdfConverter
       to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       to_log_pdf_path  = "#{to_pdf_dir}/#{log}.pdf"
 
-      FileUtils.mkdir_p(to_pdf_dir)
-
       if request_logical_part
         to_full_pdf_path = "#{to_pdf_dir}/#{log}.pdf"
       else
         to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       end
+
+      FileUtils.mkdir_p(to_pdf_dir)
 
       # s3://gdz/  OR s3://nlh/
       case context
@@ -251,91 +250,93 @@ class ImgToPdfConverter
           upload_object_to_s3(to_log_pdf_path, s3_bucket, s3_log_pdf_key)
         end
 
-        remove_dir(pdf_dir)
-        @rredis.del(@unique_queue, log_id)
+        remove_dir(to_pdf_dir)
+
         @logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
         @file_logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
 
+        @rredis.del(@unique_queue, log_id)
+
       elsif !pdf_exist
 
-        if @rredis.hget(log_id, 'err') == nil
 
-          s3_image_key = @s3_image_key_pattern % [id, page, image_format]
+        s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
-          if @use_s3
-            load_succeed = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
-          else
-            load_succeed = download_via_http(img_url, to_tmp_img)
-          end
-
-          if load_succeed
-            convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
-          else
-            FileUtils.cp("templates/error_page_1.pdf", to_page_pdf_path, :force => true)
-          end
-
-            pushToQueue(log_id, page, true)
-
-            if all_images_converted?(log_id, pages_count)
-
-              removeQueue(log_id)
-
-              merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
-
-              disclaimer_info = load_metadata(id)
-
-              unless request_logical_part
-                add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
-              end
-
-              add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
-
-              if @use_s3
-                if request_logical_part
-                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
-                else
-                  upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
-                end
-              end
-
-              remove_dir(pdf_dir)
-              GC.start
-              @rredis.del(@unique_queue, log_id)
-              @logger.info("[img_converter] Finish PDF creation for #{log_id}")
-              @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
-            end
-
-
-
+        if @use_s3
+          load_succeed = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
         else
-          remove_dir(pdf_dir)
+          load_succeed = download_via_http(img_url, to_tmp_img)
+        end
+
+        if load_succeed
+          convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
+        else
+          FileUtils.cp("templates/page_not_found_error_1.pdf", to_page_pdf_path)
+        end
+
+        pushToQueue(log_id, page, true)
+
+        if all_images_converted?(log_id, pages_count)
+
+          removeQueue(log_id)
+
+          merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
+
+          disclaimer_info = load_metadata(id)
+
+          unless request_logical_part
+            add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
+          end
+
+          add_disclaimer_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, request_logical_part, disclaimer_info)
+          begin
+            if @use_s3
+              if request_logical_part
+                upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_log_pdf_key)
+              else
+                upload_object_to_s3(to_full_pdf_path, s3_bucket, s3_pdf_key)
+              end
+            end
+          rescue Exception => e
+
+            GC.start
+
+            remove_dir(to_pdf_dir)
+
+            @logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}\n\t#{e.backtrace}")
+            @file_logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
+
+            @rredis.del(@unique_queue, log_id)
+
+          end
+
+          GC.start
+
+          remove_dir(to_pdf_dir)
+
+          @logger.info("[img_converter] Finish PDF creation for #{log_id}")
+          @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
+
+          @rredis.del(@unique_queue, log_id)
+
         end
 
       else
         # nothing to do
         @logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
         @file_logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
+
         @rredis.del(@unique_queue, log_id)
       end
 
     rescue Exception => e
-
-      remove_dir(pdf_dir)
-      GC.start
-      @rredis.del(@unique_queue, log_id)
-
-      @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
+      @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}\n\t#{e.backtrace}"
       @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
     end
   end
 
 
-  def remove_file(path)
-    FileUtils.remove_file(path, force = true)
-  end
-
   def remove_dir(path)
-    sleep 30
     FileUtils.remove_dir(path, force = true)
   end
 
@@ -604,8 +605,10 @@ class ImgToPdfConverter
 
       unless request_logical_part
         system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
+        FileUtils.rm("#{to_pdf_dir}/tmp_2.pdf")
       else
         system "pdftk #{to_pdf_dir}/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{pdf_path}"
+        FileUtils.rm("#{to_pdf_dir}/tmp.pdf")
       end
 
     rescue Exception => e
@@ -614,8 +617,10 @@ class ImgToPdfConverter
 
       unless request_logical_part
         system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
+        FileUtils.rm("#{to_pdf_dir}/tmp_2.pdf")
       else
         system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp.pdf  cat output #{pdf_path}"
+        FileUtils.rm("#{to_pdf_dir}/tmp.pdf")
       end
 
     end
@@ -707,18 +712,24 @@ class ImgToPdfConverter
   def convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
 
     begin
-      FileUtils.rm(to_page_pdf_path, :force => true)
 
       depth, resolution_hsh = get_image_depth_and_resolution (to_tmp_img)
 
+      succeed = false
+
       if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
-        Vips::Image.tiffload(to_tmp_img).jpegsave(to_tmp_jpg)
+        begin
+          Vips::Image.tiffload(to_tmp_img).jpegsave(to_tmp_jpg)
+          succeed = true
+        rescue Exception => e
+          # nothing
+        end
       end
 
       MiniMagick::Tool::Convert.new do |convert|
         convert << "-define" << "pdf:use-cropbox=true"
 
-        if (resolution_hsh != nil) && (!resolution_hsh.empty?) && (resolution_hsh['x'].to_i > 72) && (depth.to_i != nil) && (depth.to_i > 1)
+        if succeed
           convert << "#{to_tmp_jpg}"
         else
           convert << "#{to_tmp_img}"
@@ -726,8 +737,17 @@ class ImgToPdfConverter
         convert << "#{to_page_pdf_path}"
       end
 
+      if succeed
+        FileUtils.rm(to_tmp_jpg)
+        FileUtils.rm(to_tmp_img)
+      else
+        FileUtils.rm(to_tmp_img)
+      end
+
     rescue Exception => e
-      FileUtils.cp("templates/error_page_2.pdf", to_page_pdf_path, :force => true)
+      FileUtils.cp("templates/conversion_error_2.pdf", to_page_pdf_path)
+
+      @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
       #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
       #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
     end
@@ -738,14 +758,10 @@ class ImgToPdfConverter
 
     keys = @rredis.hkeys(queue)
 
-    if @rredis.hget(queue, 'err') == nil
-      if keys.size < pages_count
-        false
-      else
-        true
-      end
+    if keys.size < pages_count
+      false
     else
-      raise 'Conversion error exist'
+      true
     end
 
   end

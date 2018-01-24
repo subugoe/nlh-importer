@@ -21,7 +21,12 @@ require 'indexer/indexer'
 @file_logger.level = Logger::DEBUG
 
 @queue  = ENV['REDIS_INDEX_QUEUE']
-@rredis = Redis.new(:host => ENV['REDIS_HOST'], :port => ENV['REDIS_EXTERNAL_PORT'].to_i, :db   => ENV['REDIS_DB'].to_i)
+@rredis = Redis.new(
+    :host            => ENV['REDIS_HOST'],
+    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db              => ENV['REDIS_DB'].to_i,
+    :reconnect_attempts => 3
+)
 
 
 @logger.debug "[indexer_job_builder] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -40,9 +45,9 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    @logger.error "[indexer_job_builder] Redis problem \t#{e.message}"
-    @file_logger.error "[indexer_job_builder] Redis problem '#{res}' \t#{e.message}"
-
+    #@logger.error "[indexer_job_builder] Redis problem \t#{e.message}"
+    #@file_logger.error "[indexer_job_builder] Redis problem '#{res}' \t#{e.message}"
+    sleep(5)
     retry
   end
   # future.complete(@doc.to_s)

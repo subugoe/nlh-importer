@@ -33,14 +33,18 @@ class WorkConverter
 
     @file_logger.level = Logger::DEBUG
 
-    @unique_queue       = ENV['REDIS_UNIQUE_QUEUE']
-    @img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
-    @work_convert_queue = ENV['REDIS_CONVERT_QUEUE']
+    @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
-    @rredis             = Redis.new(
-        :host => ENV['REDIS_HOST'],
-        :port => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db   => ENV['REDIS_DB'].to_i)
+    @img_convert_full_queue = ENV['REDIS_IMG_CONVERT_FULL_QUEUE']
+    @img_convert_log_queue  = ENV['REDIS_IMG_CONVERT_LOG_QUEUE']
+
+
+    @rredis = Redis.new(
+        :host               => ENV['REDIS_HOST'],
+        :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db                 => ENV['REDIS_DB'].to_i,
+        :reconnect_attempts => 3
+    )
 
     @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
@@ -165,10 +169,8 @@ class WorkConverter
     exist = resource.bucket(s3_bucket).object(s3_key).exists?
 
     if exist
-      # puts "exist"
       return true
     else
-      # puts "does not exist"
       return false
     end
 
@@ -178,9 +180,7 @@ class WorkConverter
   def build_jobs(context, id, log, log_id)
 
     request_logical_part = false
-    if id == log
-      log_id = id
-    else
+    unless id == log
       request_logical_part = true
     end
 
@@ -203,8 +203,8 @@ class WorkConverter
       log_start_page_index = 0
       log_end_page_index   = -1
 
-      if request_logical_part
 
+      if request_logical_part
 
         log_id_index = resp['log_id'].index log
 
@@ -217,6 +217,12 @@ class WorkConverter
         log_start_page_index = (resp['log_start_page_index'][log_id_index])-1
         log_end_page_index   = (resp['log_end_page_index'][log_id_index])-1
 
+        if log_end_page_index < log_start_page_index
+          log_end_page_index = log_start_page_index
+        end
+
+      else
+        log_end_page_index = (resp['log_end_page_index'][-1])
       end
 
 
@@ -234,6 +240,7 @@ class WorkConverter
       pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
+
       if pdf_exist
         msg = {
             'context'              => context,
@@ -246,7 +253,9 @@ class WorkConverter
             "log_start_page_index" => log_start_page_index,
             "log_end_page_index"   => log_end_page_index
         }
-        pushToQueue(@img_convert_queue, [msg.to_json])
+        #pushToQueue(@img_convert_queue, [msg.to_json])
+        pushToQueue(@img_convert_full_queue, [msg.to_json])
+        #pushToQueue(@img_convert_log_queue, [msg.to_json])
       else
         pages.each {|page|
           msg = {
@@ -261,14 +270,19 @@ class WorkConverter
               "log_start_page_index" => log_start_page_index,
               "log_end_page_index"   => log_end_page_index
           }
-          pushToQueue(@img_convert_queue, [msg.to_json])
+          if request_logical_part
+            pushToQueue(@img_convert_log_queue, [msg.to_json])
+          else
+            pushToQueue(@img_convert_full_queue, [msg.to_json])
+          end
+
         }
       end
 
-      unless request_logical_part
-        log_debug "Generate PDF for work #{id}"
+      if request_logical_part
+        @logger.info "[work_converter] Generate PDF for logical part #{log_id} of #{id}"
       else
-        log_debug "Generate PDF for logical part #{log_id} of #{id}"
+        @logger.info "[work_converter] Generate PDF for work #{id}"
       end
 
 
