@@ -23,8 +23,8 @@ export solr_external_port=8443
 
 export solr_core=${solr_core}
 export myUID=`id -u ${whoami}`
-export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | awk '{print $NF}') | grep 'inet ' | awk '{print $2}' | grep -Eo '([0-9]*\.){3}[0-9]*'`
-
+#export myIP=`ifconfig $(netstat -rn | grep -E "^default|^0.0.0.0" | head -1 | awk '{print $NF}') | grep 'inet ' | awk '{print $2}' | grep -Eo '([0-9]*\.){3}[0-9]*'`
+export myIP=134.76.18.25
 
 mkdir -p data/solr/$solr_core/data/
 mkdir -p data/solr/$solr_core2/data/
@@ -188,14 +188,27 @@ fi
 #mvn clean package
 #cp target/nlh-importer-verticle-1.0-SNAPSHOT.jar  docker/lib/
 
-docker-compose build --force-rm  # importer_services importer_indexer importer_converter solr
+
+# 18.25
+#docker-compose build --force-rm  importer_services solr redis
+#docker-compose stop
+#docker-compose rm -f
+#docker-compose up -d importer_services solr redis
+
+# 19.72
+#docker-compose build --force-rm  importer_indexer importer_converter
+#docker-compose stop
+#docker-compose rm -f
+#docker-compose up -d importer_log_converter importer_converter importer_indexer
+
+# local
+#docker-compose build --force-rm
+#docker-compose stop
+#docker-compose rm -f
+#docker-compose up -d
 
 
-docker-compose stop
-docker-compose rm -f
-#docker-compose up -d importer_converter importer_services importer_converter
-#docker-compose up -d --no-deps --no-recreate --no-build
-#docker-compose up -d --scale importer_converter=1
-docker-compose up -d
-#docker-compose up -d --scale importer_converter=3 redis importer_converter
-#docker-compose up -d --scale  importer_indexer=2 importer_converter importer_indexer
+
+
+# docker-compose up -d --scale  importer_converter=2 importer_converter importer_indexer
+

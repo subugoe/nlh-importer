@@ -71,6 +71,7 @@ services:
   solr:
     build: docker/solr/
     #image: solr:6.5.1
+    container_name: mets_importer_solr
     restart: always
     ports:
       - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
@@ -89,6 +90,7 @@ services:
   redis:
     image: redis:4.0
     command: redis-server --appendonly yes
+    container_name: mets_importer_redis
     restart: always
     ports:
       - "$REDIS_EXTERNAL_PORT:$REDIS_PORT"
