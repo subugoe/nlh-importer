@@ -303,7 +303,7 @@ class ImgToPdfConverter
 
             remove_dir(to_pdf_dir)
 
-            @logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}\n\t#{e.backtrace}")
+            @logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
             @file_logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
 
             @rredis.del(@unique_queue, log_id)
@@ -330,7 +330,7 @@ class ImgToPdfConverter
       end
 
     rescue Exception => e
-      @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}\n\t#{e.backtrace}"
+      @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
       @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
     end
   end
@@ -747,7 +747,7 @@ class ImgToPdfConverter
     rescue Exception => e
       FileUtils.cp("templates/conversion_error_2.pdf", to_page_pdf_path)
 
-      @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}\n\t#{e.backtrace}")
+      @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'")
       #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
       #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
     end
