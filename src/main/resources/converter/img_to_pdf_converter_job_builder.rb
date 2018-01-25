@@ -17,18 +17,16 @@ require 'converter/img_to_pdf_converter'
 #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
 
 if ENV['CONVERTER_TYPE'] == "full"
-  @img_convert_queue      = ENV['REDIS_IMG_CONVERT_FULL_QUEUE']
-
+  @img_convert_queue = ENV['REDIS_IMG_CONVERT_FULL_QUEUE']
 elsif ENV['CONVERTER_TYPE'] == "log"
-  @img_convert_queue      = ENV['REDIS_IMG_CONVERT_LOG_QUEUE']
+  @img_convert_queue = ENV['REDIS_IMG_CONVERT_LOG_QUEUE']
 end
 
 
-
 @rredis = Redis.new(
-    :host            => ENV['REDIS_HOST'],
-    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db              => ENV['REDIS_DB'].to_i,
+    :host               => ENV['REDIS_HOST'],
+    :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db                 => ENV['REDIS_DB'].to_i,
     :reconnect_attempts => 3
 )
 
@@ -40,9 +38,9 @@ $vertx.execute_blocking(lambda {|future|
   begin
 
     while true do
-      res = @rredis.brpop(@img_convert_queue) #, :timeout => 5)
-      msg  = res[1]
-      json = JSON.parse msg
+      res       = @rredis.brpop(@img_convert_queue) #, :timeout => 5)
+      msg       = res[1]
+      json      = JSON.parse msg
       converter = ImgToPdfConverter.new
       converter.process_response(json)
     end
