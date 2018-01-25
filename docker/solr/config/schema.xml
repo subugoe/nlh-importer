@@ -531,8 +531,8 @@
     <copyField source="work" dest="metadata"/>
     <copyField source="page" dest="metadata"/>
     <copyField source="id" dest="metadata"/>
-    <copyField source="work_id" dest="default"/>
-    <copyField source="ft_of_work" dest="default"/>
+    <copyField source="work_id" dest="metadata"/>
+    <copyField source="ft_of_work" dest="metadata"/>
     <copyField source="record_identifier" dest="metadata"/>
     <copyField source="identifier" dest="metadata"/>
     <copyField source="note" dest="metadata"/>
