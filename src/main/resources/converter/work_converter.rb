@@ -179,11 +179,11 @@ class WorkConverter
 
   def build_jobs(context, id, log, log_id)
 
-    request_logical_part = false
-    unless id == log
+    if id == log
+      request_logical_part = false
+    else
       request_logical_part = true
     end
-
 
     solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype"}
     if solr_resp['response']['numFound'] == 0
@@ -253,9 +253,13 @@ class WorkConverter
             "log_start_page_index" => log_start_page_index,
             "log_end_page_index"   => log_end_page_index
         }
-        #pushToQueue(@img_convert_queue, [msg.to_json])
-        pushToQueue(@img_convert_full_queue, [msg.to_json])
-        #pushToQueue(@img_convert_log_queue, [msg.to_json])
+
+        if request_logical_part
+          pushToQueue(@img_convert_log_queue, [msg.to_json])
+        else
+          pushToQueue(@img_convert_full_queue, [msg.to_json])
+        end
+
       else
         pages.each {|page|
           msg = {
@@ -270,6 +274,7 @@ class WorkConverter
               "log_start_page_index" => log_start_page_index,
               "log_end_page_index"   => log_end_page_index
           }
+
           if request_logical_part
             pushToQueue(@img_convert_log_queue, [msg.to_json])
           else

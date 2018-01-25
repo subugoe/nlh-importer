@@ -2070,9 +2070,31 @@ end
 
   end
 
+  def remove_s3_directory(id)
+
+    return if (id.size < 3) || (id.include? ' ')
+
+    s3_key = "pdf/#{id}/"
+
+    begin
+      resource = Aws::S3::Resource.new(client: @s3)
+      objs     = resource.bucket(@s3_bucket).objects({prefix: s3_key})
+      objs.each {|el|
+        el.delete
+      }
+    rescue Exception => e
+      @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
+      @file_logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
+      next
+    end
+
+  end
+
   def create_pdf_conversion(id, context)
 
     begin
+
+      remove_s3_directory(id)
 
       url = ENV['SERVICES_ADR'] + ENV['CONVERTER_CTX_PATH']
       RestClient.post url, {"document" => id, "log" => id, "context" => context}.to_json, {content_type: :json, accept: :json}
