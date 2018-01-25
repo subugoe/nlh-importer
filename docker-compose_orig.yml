@@ -43,8 +43,6 @@ services:
     volumes:
       - ./log:$LOG
       - ./src/main/resources:/usr/verticles
-    depends_on:
-      - redis
     mem_limit: 12GB
     memswap_limit: 12GB
     env_file:
