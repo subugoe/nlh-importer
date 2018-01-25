@@ -35,10 +35,6 @@ require 'converter/work_converter'
 #    :reconnect_attempts => 3
 )
 
-def pushToQueue(queue, field, value)
-  @rredis.hset(queue, field, value)
-end
-
 
 $vertx.execute_blocking(lambda {|future|
 

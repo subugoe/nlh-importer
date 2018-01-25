@@ -240,7 +240,7 @@ class WorkConverter
       pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
-
+      
       if pdf_exist
         msg = {
             'context'              => context,

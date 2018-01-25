@@ -142,12 +142,16 @@ class ConverterService
 
             else
 
-              @rredis.hset(@unique_queue, log_id, 0)
+              if @rredis.hset(@unique_queue, log_id, 0) == 0
+                @logger.info "[converter_service] Work #{log_id} already instaged"
+                send_status(200, response, {"status" => 0, "msg" => "staged"})
+                return
+              end
+
               pushToQueue(@work_queue, [hsh.to_json])
 
               @logger.info "[converter_service] Work #{log_id} staged for conversion"
               send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
-
               return
             end
           end
