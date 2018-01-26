@@ -185,8 +185,8 @@ class WorkConverter
       request_logical_part = true
     end
 
-    solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype"}
-    if solr_resp['response']['numFound'] == 0
+    solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype log_id"}
+    if (solr_resp['response']['numFound'] == 0) || (solr_resp['response']['log_id'] == nil)
       log_error "Couldn't find #{id} in index, conversion for #{log_id} not possible", nil
       return
     end
@@ -240,7 +240,7 @@ class WorkConverter
       pages       = resp['page'][log_start_page_index..log_end_page_index]
       pages_count = pages.size
 
-      
+
       if pdf_exist
         msg = {
             'context'              => context,
