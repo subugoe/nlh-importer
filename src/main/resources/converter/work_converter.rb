@@ -186,7 +186,7 @@ class WorkConverter
     end
 
     solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype log_id"}
-    if (solr_resp['response']['numFound'] == 0) || (request_logical_part && (solr_resp['response']['log_id'] == nil))
+    if (solr_resp['response']['numFound'] == 0) || (request_logical_part && (solr_resp['response']['docs'].first['log_id']== nil))
       log_error "Couldn't find #{id} in index, conversion for #{log_id} not possible", nil
       return
     end
