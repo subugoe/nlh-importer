@@ -74,7 +74,7 @@ class ConverterService
           doc = resp['docs']&.first
 
 
-          if (resp['response']['numFound'] == 0) || (request_logical_part && (doc['log_id'] == nil))
+          if (resp['numFound'] == 0) || (request_logical_part && (doc['log_id'] == nil))
             @logger.error "[converter_service] No index entry found for #{log_id}, job not staged"
             send_status(400, response, {"status" => "-1", "msg" => "No index entry found for #{log_id}, job not staged"})
             return
