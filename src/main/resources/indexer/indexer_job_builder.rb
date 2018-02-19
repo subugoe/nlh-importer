@@ -40,8 +40,10 @@ $vertx.execute_blocking(lambda {|future|
 
     while true do
       res     = @rredis.brpop(@queue) #, :timeout => nil)
+
       indexer = Indexer.new
       indexer.process_response(res)
+
     end
 
   rescue Exception => e

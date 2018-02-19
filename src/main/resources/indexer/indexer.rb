@@ -185,23 +185,25 @@ class Indexer
     begin
 
       mods.xpath('identifier').each {|id_element|
-        type = id_element.attributes['type']&.value
-        type = "unknown" if type == nil
+        #type = id_element.attributes['type']&.value
+        #type = "unknown" if type == nil
 
-        id = id_element.text
-        ids << "#{type} #{id}"
+        #id = id_element.text
+        #ids << "#{type} #{id}"
+        ids << id_element.text
       }
 
       #unless mods.xpath('recordInfo/recordIdentifier') == nil
       mods.xpath('recordInfo/recordIdentifier')&.each {|id_element|
 
-        type = id_element.attributes['id']&.value
-        type = id_element.attributes['type']&.value if type == nil
-        type = id_element.attributes['source']&.value if type == nil
-        type = "unknown" if type == nil
+        #type = id_element.attributes['id']&.value
+        #type = id_element.attributes['type']&.value if type == nil
+        #type = id_element.attributes['source']&.value if type == nil
+        #type = "unknown" if type == nil
 
-        id = id_element.text
-        ids << "#{type} #{id}"
+        #id = id_element.text
+        #ids << "#{type} #{id}"
+        ids << id_element.text
       }
 
     rescue Exception => e
@@ -1934,6 +1936,7 @@ end
         # {"s3_key" => key, "context" => context}.to_json
         # s3_obj_key= mets/<id>.xml
         msg  = res[1]
+
         json = JSON.parse msg
 
         @context = json['context']
