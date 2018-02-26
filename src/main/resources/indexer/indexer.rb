@@ -1030,7 +1030,8 @@ end
           'id'         => id,
           'order'      => attrs['ORDER'],
           'orderlabel' => attrs['ORDERLABEL'],
-          'type'       => attrs['TYPE']
+          'type'       => attrs['TYPE'],
+          'contentid'  => attrs['CONTENTIDS']
       }
 
       el['fptr'].each {|fptr|
@@ -1644,6 +1645,7 @@ end
       physicalElement.order      = checkEmptyString(el['order'])
       physicalElement.orderlabel = checkEmptyString(el['orderlabel'])
       physicalElement.ordertype  = checkEmptyString(el['type'])
+      physicalElement.contentid  = checkEmptyString(el['contentid'])
 
       physical_meta.addToPhysicalElement(physicalElement)
 
@@ -1949,7 +1951,7 @@ end
 
         # {"s3_key" => key, "context" => context}.to_json
         # s3_obj_key= mets/<id>.xml
-        msg  = res[1]
+        msg = res[1]
 
         json = JSON.parse msg
 

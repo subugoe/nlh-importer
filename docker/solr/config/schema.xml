@@ -359,6 +359,8 @@
         -->
         <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_content_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+
         <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
         <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
 
@@ -542,6 +544,8 @@
     <copyField source="purl" dest="metadata"/>
     <copyField source="catalogue" dest="metadata"/>
     <copyField source="log_label" dest="metadata"/>
+    <copyField source="phys_content_id" dest="metadata"/>
+
 
     <!-- copy fields into default for search -->
     <copyField source="fulltext" dest="default"/>
@@ -568,7 +572,7 @@
     <copyField source="subject" dest="default"/>
     <copyField source="purl" dest="default"/>
     <copyField source="catalogue" dest="default"/>
-
+    <copyField source="phys_content_id" dest="default"/>
 
     <!-- copy fields into facetfields -->
 
