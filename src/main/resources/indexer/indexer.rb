@@ -1319,20 +1319,42 @@ end
 
   def get_fulltext_from_s3(page)
 
+    attempts = 0
+
     #s3://gdz/fulltext/<work_id>/<page>.xml
     s3_fulltext_key = "fulltext/#{@id}/#{page}.xml"
 
     #puts "s3_fulltext_key: #{s3_fulltext_key}, s3_bucket: #{@s3_bucket}"
 
-    resp = @s3.get_object({bucket: @s3_bucket, key: s3_fulltext_key})
-    str  = resp.body.read.gsub('"', "'")
-    return Nokogiri::XML(str)
+    begin
+      resp = @s3.get_object({bucket: @s3_bucket, key: s3_fulltext_key})
+      str  = resp.body.read.gsub('"', "'")
+      return Nokogiri::XML(str)
+    rescue Exception => e
+      attempts = attempts + 1
+      if (attempts < MAX_ATTEMPTS)
+        sleep 1
+        retry
+      end
+
+      return e
+    end
   end
 
 
   def get_str_doc_from_s3
-    resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
-    @str_doc = resp.body.read
+    attempts = 0
+
+    begin
+      resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
+      @str_doc = resp.body.read
+    rescue Exception => e
+      attempts = attempts + 1
+      if (attempts < MAX_ATTEMPTS)
+        sleep 1
+        retry
+      end
+    end
   end
 
 
