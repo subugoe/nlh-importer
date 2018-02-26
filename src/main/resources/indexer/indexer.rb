@@ -432,6 +432,22 @@ end
     return classificationArr
   end
 
+
+  def getDigitalCollections(modsDigitalCollectionElements)
+    digitalCollectionArr = Array.new
+
+    while modsDigitalCollectionElements.count > 0
+
+      col = modsDigitalCollectionElements.shift
+      digitalCollectionArr << col.text
+
+    end
+    modsDigitalCollectionElements = nil
+
+    return digitalCollectionArr
+  end
+
+
   def getOriginInfo(modsOriginInfoElements)
 
     originalInfoArr = Array.new
@@ -1484,6 +1500,17 @@ end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve classification for #{@id} (#{e.message})")
       @file_logger.error("[indexer] Problems to resolve classification for #{@id} \t#{e.message}")
+    end
+
+    # Collection (added for new Goobi Ruleset)
+    begin
+
+      unless mods.xpath('extension/edm/isGatheredInto').empty?
+        dmdsec_meta.addDigital_collection = getDigitalCollections(mods.xpath('extension/edm/isGatheredInto'))
+      end
+    rescue Exception => e
+      @logger.error("[indexer] Problems to resolve digital collections for #{@id} (#{e.message})")
+      @file_logger.error("[indexer] Problems to resolve digital collections for #{@id} \t#{e.message}")
     end
 
 

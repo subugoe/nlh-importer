@@ -38,6 +38,7 @@ class MetsDmdsecMetadata
                 :genres,
                 :subject_genres,
                 :classifications,
+                :digital_collections,
                 :sponsors,
 
                 :original_infos,
@@ -164,6 +165,10 @@ class MetsDmdsecMetadata
 
   def addClassification=(classification)
     @classifications = classification
+  end
+
+  def addDigital_collection=(digital_collection)
+    @digital_collections = digital_collection
   end
 
   def addOriginalInfo=(originInfo)
@@ -424,19 +429,21 @@ class MetsDmdsecMetadata
     h.merge! ({:subject_genre => @subject_genres.collect {|genre| genre.genre}})
 
     # ---
-    if !@classifications.empty?
 
-      dc           = Array.new
-      dc_authority = Array.new
+    if !(@classifications.empty?) || !(@digital_collections.empty?)
+
+      dc = Array.new
 
       @classifications.each {|classification|
-
         dc << classification.value
-        dc_authority << classification.authority
+      }
+
+      # (added for new Goobi Ruleset)
+      @digital_collections.each {|digital_collection|
+        dc << digital_collection
       }
 
       h.merge! ({:dc => dc})
-      h.merge! ({:dc_authority => dc_authority})
 
     end
 
