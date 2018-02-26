@@ -92,9 +92,9 @@ class Indexer
         :reconnect_attempts => 3
     )
 
-    @solr_gdz_tmp = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
-    @solr_gdz     = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
-#@solr_gdz_legacy = RSolr.connect :url => ENV['SOLR_GDZ_LEGACY_ADR']
+    @solr_gdz_tmp    = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
+    @solr_gdz        = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
+    @solr_gdz_legacy = RSolr.connect :url => ENV['SOLR_GDZ_LEGACY_ADR']
 
 
     if @use_s3
@@ -1808,21 +1808,27 @@ end
     first_logical_element = retrieve_logical_structure_data(logical_meta, dmdsec_hsh)
 
     begin
+      date_modified = ""
+      date_indexed  = ""
 
-      #todo switch to new gdz solr
-      #solr_resp = (@solr_gdz_legacy.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
-      solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
+      solr_resp = (@solr_gdz_legacy.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
 
-
-      #if solr_resp&.size > 0
       if (solr_resp != nil) && (solr_resp&.size > 0)
+        date_modified = solr_resp['datemodified']
+        date_indexed  = solr_resp['dateindexed']
+      else
+        solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
+        if (solr_resp != nil) && (solr_resp&.size > 0)
+          date_modified = solr_resp['date_modified']
+          date_indexed  = solr_resp['date_indexed']
+        end
+      end
 
-        date_modified              = solr_resp['date_modified']
-        date_indexed               = solr_resp['date_indexed']
+      if (date_indexed != "") && (date_modified != "")
         logical_meta.date_modified = date_modified
         logical_meta.date_indexed  = date_indexed
-
       end
+
     rescue Exception => e
       @logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
       @file_logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
