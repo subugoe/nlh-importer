@@ -57,6 +57,7 @@ class MetsDmdsecMetadata
                 :structype,
 
                 :right_infos,
+                :access_condition_info,
 
                 :mods,
 
@@ -83,12 +84,13 @@ class MetsDmdsecMetadata
     @facet_person_corporate  = Array.new
 
 
-    @type_of_resources = Array.new
-    @locations         = Array.new
-    @genres            = Array.new
-    @subject_genres    = Array.new
-    @classifications   = Array.new
-    @sponsors          = Array.new
+    @type_of_resources   = Array.new
+    @locations           = Array.new
+    @genres              = Array.new
+    @subject_genres      = Array.new
+    @classifications     = Array.new
+    @digital_collections = Array.new
+    @sponsors            = Array.new
 
     @original_infos        = Array.new
     @edition_infos         = Array.new
@@ -210,6 +212,9 @@ class MetsDmdsecMetadata
     @right_infos = rightInfo
   end
 
+  def addAccessConditionInfo=(access_condition)
+    @access_condition_info = access_condition
+  end
 
   def to_s
     @identifier
@@ -629,7 +634,7 @@ class MetsDmdsecMetadata
     # rights_owner, rights_owner_site_url, rights_owner_contact, rights_license,  rights_reference
 
 
-    if !right_infos.empty? && !@is_child
+    if !@right_infos.empty? && !@is_child
 
       h.merge! ({:rights_owner => @right_infos.collect {|rights| rights&.owner}})
       h.merge! ({:rights_owner_site_url => @right_infos.collect {|rights| rights&.ownerSiteURL}})
@@ -637,10 +642,11 @@ class MetsDmdsecMetadata
       h.merge! ({:rights_owner_logo => @right_infos.collect {|rights| rights&.ownerLogo}})
       h.merge! ({:rights_license => @right_infos.collect {|rights| rights&.license}})
       #h.merge! ({:rights_reference => @right_infos.collect {|rights| rights&.reference}})
-
-
     end
 
+    if (@access_condition_info != nil) && !@is_child
+      h.merge! ({:rights_access_condition => @access_condition_info.value})
+    end
 
     unless @related_items.empty?
 

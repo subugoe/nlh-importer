@@ -369,6 +369,7 @@
         <field name="phys_desc_extent" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_digitalOrigin" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
+        <field name="rights_access_condition" type="string_mv" indexed="true" stored="true" multiValued="false"/>
         <field name="rights_owner" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_site_url" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_contact" type="string_mv" indexed="true" stored="true" multiValued="true"/>

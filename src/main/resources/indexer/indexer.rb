@@ -32,6 +32,7 @@ require 'model/physical_description'
 require 'model/subject'
 require 'model/note'
 require 'model/right'
+require 'model/access_condition'
 require 'model/logical_element'
 require 'model/physical_element'
 require 'model/classification'
@@ -1570,6 +1571,19 @@ end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve recordInfo for #{@id} (#{e.message})")
       @file_logger.error("[indexer] Problems to resolve recordInfo for #{@id} \t#{e.message}")
+    end
+
+
+    # AccessCondition:
+    begin
+      unless mods.xpath('accessCondition').empty?
+        ac                                 = AccessCondition.new
+        ac.value                           = mods.xpath('accessCondition[@type="use and reproduction"]').text
+        dmdsec_meta.addAccessConditionInfo = ac
+      end
+    rescue Exception => e
+      @logger.error("[indexer] Problems to resolve accessCondition for #{@id} (#{e.message})")
+      @file_logger.error("[indexer] Problems to resolve accessCondition for #{@id} \t#{e.message}")
     end
 
 
