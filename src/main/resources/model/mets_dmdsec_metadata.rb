@@ -272,6 +272,29 @@ class MetsDmdsecMetadata
           @catalogues << "OPAC http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{id}" if (@catalogues.empty?) && (id != nil)
           h.merge! ({:catalogue => @catalogues}) unless @is_child
         end
+
+      else
+
+        @identifiers.each {|id|
+          if (id.downcase.include? "kalliope-verbund.info")
+            @catalogues << "Kalliope #{id}"
+            break
+          elsif (id.downcase.include? "de-")
+
+
+            resp = RestClient.get(ENV['KALLIOPE_URI'] + ENV['KALLIOPE_SRU_PATH'] % id)
+            records = Nokogiri::XML( resp ).xpath("//srw:numberOfRecords", "srw" => "http://www.loc.gov/zing/srw/").text.to_i
+
+            puts "records: #{records}"
+
+            if records > 0
+              @catalogues << "Kalliope #{ENV['KALLIOPE_URI'] + ENV['KALLIOPE_PATH'] % id}"
+              break
+            end
+          end
+        }
+        h.merge! ({:catalogue => @catalogues}) if (!@is_child && !@catalogues.empty?)
+
       end
 
     end
