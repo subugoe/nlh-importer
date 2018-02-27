@@ -1,4 +1,5 @@
 require 'logger'
+require 'gelf'
 
 class OriginInfo
 
@@ -6,10 +7,10 @@ class OriginInfo
 
 
   def initialize
-    @file_logger       = Logger.new(ENV['LOG'] + "/origin_info_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
-    @file_logger.level = Logger::DEBUG
-    @places            = Array.new
-    @publishers        = Array.new
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
+    @places       = Array.new
+    @publishers   = Array.new
   end
 
 
@@ -18,45 +19,45 @@ class OriginInfo
     match = date.match(/(\d*)-(\d*)-(\d*)/)
 
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (2) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (2) for #{id}")
       return match[1].to_i
     end
 
     match = date.match(/\[(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (1) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (1) for #{id}")
       return match[1].to_i
     end
 
 
     match = date.match(/(s.a.)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (3) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (3) for #{id}")
       return nil
     end
 
     match = date.match(/(\[ca. )(\d*)\]/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (4) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (4) for #{id}")
       return match[2].to_i
     end
 
     match = date.match(/([\S]*) (\d\d\d\d)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (9) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (9) for #{id}")
       return match[2].to_i
     end
 
     match = date.match(/(\d*)(XX)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (5) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (5) for #{id}")
       value = match[1].to_i
       return {:start => value * 100, :end => value * 100 + 99}
     end
 
     match = date.match(/(\d\d)(\d*)\/(\d*)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (6) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (6) for #{id}")
       value1 = (match[1]+match[2]).to_i
       if match[3].size == 2
         value2 = (match[1]+match[3]).to_i
@@ -68,13 +69,13 @@ class OriginInfo
 
 
     if date.downcase.start_with? 'ppn'
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (8) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (8) for #{id}")
       return nil
     end
 
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
-      @file_logger.debug("[origin_info.rb] [GDZ-580] Year mapping (7) for #{id}")
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (7) for #{id}")
       return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
 

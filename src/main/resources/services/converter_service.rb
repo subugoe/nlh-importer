@@ -2,9 +2,10 @@ require 'vertx/vertx'
 require 'vertx-web/router'
 require 'vertx-web/body_handler'
 
+require 'logger'
+require 'gelf'
 require 'json'
 require 'redis'
-require 'logger'
 require 'rsolr'
 
 class ConverterService
@@ -12,11 +13,9 @@ class ConverterService
 
   def initialize
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/converter_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
-    @file_logger.level = Logger::DEBUG
 
     @work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
@@ -93,7 +92,6 @@ class ConverterService
               # conversion error
               if @rredis.hget(log_id, 'err') != nil
                 @logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
-                @file_logger.error("[converter_service] Errors in queue #{log_id}, job not staged")
                 send_status(400, response, {"status" => "-1", "msg" => "Conversion errors"})
                 return
               else
@@ -127,15 +125,15 @@ class ConverterService
                 i          = to_process * 100 / size
 
                 if i <= 0
-                  @logger.info "[converter_service] Processing for #{log_id} has started"
+                  @logger.debug "[converter_service] Processing for #{log_id} has started"
                   send_status(200, response, {"status" => i, "msg" => "staged"})
                   return
                 elsif i > 0 && i < 100
-                  @logger.info "[converter_service] Processing for #{log_id} in work (#{i}% done)"
+                  @logger.debug "[converter_service] Processing for #{log_id} in work (#{i}% done)"
                   send_status(200, response, {"status" => i, "msg" => "processing"})
                   return
                 elsif i >= 100
-                  @logger.info "[converter_service] Processing for #{log_id} has finished"
+                  @logger.debug "[converter_service] Processing for #{log_id} has finished"
                   send_status(200, response, {"status" => i, "msg" => "finished"})
                   return
                 end
@@ -144,14 +142,14 @@ class ConverterService
             else
 
               if @rredis.hset(@unique_queue, log_id, 0) == 0
-                @logger.info "[converter_service] Work #{log_id} already instaged"
+                @logger.debug "[converter_service] Work #{log_id} already instaged"
                 send_status(200, response, {"status" => 0, "msg" => "staged"})
                 return
               end
 
               pushToQueue(@work_queue, [hsh.to_json])
 
-              @logger.info "[converter_service] Work #{log_id} staged for conversion"
+              @logger.debug "[converter_service] Work #{log_id} staged for conversion"
               send_status(200, response, {"status" => 0, "msg" => "Work #{log_id} staged for conversion"})
               return
             end
@@ -159,13 +157,12 @@ class ConverterService
         end
       end
 
-      @logger.info "[converter_service] Conversion started"
+      @logger.debug "[converter_service] Conversion started"
       send_error(200, response)
       return
 
     rescue Exception => e
       @logger.error("[converter_service] Problem with request body \t#{e.message}")
-      @file_logger.error("[converter_service] Problem with request body \t#{e.message}")
 
       # any error
       send_status(400, response, {"status" => "-1", "msg" => "Problem with request body"})

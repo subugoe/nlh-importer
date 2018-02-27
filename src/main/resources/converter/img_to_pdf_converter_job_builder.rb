@@ -1,20 +1,15 @@
 require 'vertx/vertx'
 
 require 'logger'
-require 'benchmark'
+require 'gelf'
 require 'json'
 require 'redis'
 require 'rsolr'
 
 require 'converter/img_to_pdf_converter'
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/img_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-@file_logger.level = Logger::DEBUG
-
-#@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
 if ENV['CONVERTER_TYPE'] == "full"
   @img_convert_queue = ENV['REDIS_IMG_CONVERT_FULL_QUEUE']
@@ -47,7 +42,6 @@ $vertx.execute_blocking(lambda {|future|
 
   rescue Exception => e
     #@logger.error "[img_converter_job_builder] Redis problem \t#{e.message}\n\t#{e.bachtrace}"
-    #@file_logger.error "[img_converter_job_builder] Redis problem '#{res}' \t#{e.message}"
     sleep(5)
     retry
   end

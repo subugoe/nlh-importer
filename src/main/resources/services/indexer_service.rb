@@ -3,9 +3,10 @@ require 'vertx-web/router'
 require 'vertx-web/body_handler'
 
 
+require 'logger'
+require 'gelf'
 require 'json'
 require 'redis'
-require 'logger'
 require 'oai'
 require 'open-uri'
 
@@ -13,11 +14,9 @@ class IndexerService
 
   def initialize
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
-    @file_logger       = Logger.new(ENV['LOG'] + "/indexer_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
-    @file_logger.level = Logger::DEBUG
 
     @queue  = ENV['REDIS_INDEX_QUEUE']
     @rredis = Redis.new(
@@ -39,7 +38,6 @@ class IndexerService
   def send_status(status_code, response, msg_hsh)
     response.set_status_code(status_code).end(msg_hsh.to_json)
   end
-
 
 
   def process_response(hsh, response)

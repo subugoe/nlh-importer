@@ -1,6 +1,8 @@
 require 'vertx/vertx'
 require 'rsolr'
 require 'logger'
+require 'gelf'
+require 'rsolr'
 require 'nokogiri'
 require 'redis'
 require 'json'
@@ -21,14 +23,8 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
     :reconnect_attempts => 3
 )
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_input_path_mapper_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-@file_logger.level = Logger::DEBUG
-
-
-#----------------
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
 
 @logger.debug "[fulltext_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -56,7 +52,7 @@ def copyFile(from, to, to_dir)
 
     @rredis.incr 'fulltextscopied'
   rescue Exception => e
-    @file_logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @logger.error "Could not copy fulltext from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
   return to

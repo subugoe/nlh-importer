@@ -1,6 +1,5 @@
 class MetsLogicalMetadata
 
-
   attr_accessor :logicalElements,
                 :doctype,
                 :work,
@@ -27,8 +26,8 @@ class MetsLogicalMetadata
     @title_page = 1
     #@title_page_index = 0
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
   end
 
   # def addLogicalElement=(logicalElement)

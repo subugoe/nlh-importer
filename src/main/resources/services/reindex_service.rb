@@ -2,9 +2,10 @@ require 'vertx/vertx'
 require 'vertx-web/router'
 require 'vertx-web/body_handler'
 
+require 'logger'
+require 'gelf'
 require 'json'
 require 'redis'
-require 'logger'
 require 'oai'
 require 'open-uri'
 require 'aws-sdk'
@@ -16,11 +17,8 @@ class ReindexService
 
   def initialize
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
-
-    @file_logger       = Logger.new(ENV['LOG'] + "/reindex_service_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
-    @file_logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
     @rredis = Redis.new(
         :host            => ENV['REDIS_HOST'],
@@ -79,7 +77,6 @@ class ReindexService
         id = key.match(/mets\/(\S*).xml/)[1]
       rescue Exception => e
         @logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}")
-        @file_logger.error("[reindex_service] Regex pattern doesn't match #{key} #{e.message}")
         next
       end
       # {"document":"PPN876605080",  "log":"PPN876605080",  "context": "gdz", "reindex":true}
@@ -123,7 +120,6 @@ class ReindexService
 
     rescue Exception => e
       @logger.error("[reindex_service] #{e.message}")
-      @file_logger.error("[reindex_service] #{e.message}")
     end
 
     @logger.debug("[reindex_service] sum=#{i}")

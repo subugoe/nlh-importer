@@ -3,17 +3,16 @@ require 'vertx-web/router'
 require 'vertx-web/body_handler'
 
 require 'logger'
+require 'gelf'
 
 require 'services/converter_service'
 require 'services/indexer_service'
 require 'services/reindex_service'
 
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
-@file_logger       = Logger.new(ENV['LOG'] + "/services_verticle_#{Time.new.strftime('%y-%m-%d')}.log", 3, 1024000)
-@file_logger.level = Logger::DEBUG
 
 @logger.debug "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
@@ -32,7 +31,7 @@ def check_request(routingContext, route)
       @logger.error("[services_verticle] Expected JSON body missing")
       send_error(400, response)
     else
-      @logger.info("[services_verticle] Got message: \t#{hsh}")
+      @logger.debug("[services_verticle] Got message: \t#{hsh}")
 
       case route
         when "converter"
@@ -52,7 +51,6 @@ def check_request(routingContext, route)
 
   rescue Exception => e
     @logger.error("[services_verticle] Problem with request body \t#{e.message}")
-    @file_logger.error("[services_verticle] Problem with request body \t#{e.message}")
 
     # any error
     send_status(400, response, {"status" => "-1", "msg" => "Could not process request"})
@@ -125,8 +123,6 @@ router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
   check_request(routingContext, "reindexer")
 
 }, false)
-
-
 
 
 $vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080

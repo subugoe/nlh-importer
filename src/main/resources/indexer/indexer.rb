@@ -2,6 +2,8 @@ require 'benchmark'
 
 require 'rsolr'
 require 'logger'
+require 'gelf'
+require 'rsolr'
 require 'nokogiri'
 require 'saxerator'
 require 'open-uri'
@@ -76,11 +78,8 @@ class Indexer
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 #@context       = ENV['CONTEXT']
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
-
-    @file_logger       = Logger.new(ENV['LOG'] + "/indexer_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-    @file_logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
     @services_adr = ENV['SERVICES_ADR']
 
@@ -109,20 +108,17 @@ class Indexer
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
-    @logger.debug "[indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+    @logger.warn "[indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
   end
 
 
   def fileNotFound(type, e)
     if e.message.start_with? "redirection forbidden"
       @logger.error("[indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}")
-      @file_logger.error("[indexer] [GDZ-527] #{type} #{@id} not available \t#{e.message}")
     elsif e.message.start_with? "Failed to open TCP connection"
       @logger.error("[indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}")
-      @file_logger.error("[indexer] [GDZ-527] Failed to open #{type} #{@id} because of TCP connection problems \t#{e.message}")
     else
       @logger.error("[indexer] Could not open #{type} #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not open #{type} #{@id} \t#{e.message}")
     end
   end
 
@@ -166,7 +162,6 @@ class Indexer
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
       @logger.error("[indexer] Could not add doc to solr \t#{e.message}")
-      @file_logger.error("[indexer] Could not add doc to solr \t#{e.message}")
     end
   end
 
@@ -209,7 +204,6 @@ class Indexer
 
     rescue Exception => e
       @logger.error("[indexer] Could not retrieve an identifier for #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not retrieve an identifier for #{@id} \t#{e.message}")
     end
 
     return ids
@@ -249,7 +243,6 @@ class Indexer
 
     rescue Exception => e
       @logger.error("[indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}")
-      @file_logger.error("[indexer] Could not retrieve the recordidentifier for #{@id} \t#{e.message}")
     end
 
     return ids
@@ -490,7 +483,6 @@ end
 
         if originInfo.date_captured_start == 0
           @logger.error("[indexer] [GDZ-546] date_captured_start=0 for #{@id} (check conversion problem)")
-          @file_logger.error("[indexer] [GDZ-546] date_captured_start=0 for #{@id} (check conversion problem)")
         end
 
       else
@@ -516,7 +508,6 @@ end
 
         if originInfo.date_issued_start == 0
           @logger.error("[indexer] [GDZ-546] date_issued_start=0 for #{@id} (check conversion problem)")
-          @file_logger.error("[indexer] [GDZ-546] date_issued_start=0 for #{@id} (check conversion problem)")
         end
 
       end
@@ -731,7 +722,6 @@ end
         work    = match[4]
       rescue Exception => e
         @logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -751,7 +741,6 @@ end
         image_format = match[4]
       rescue Exception => e
         @logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -779,7 +768,6 @@ end
         end
       rescue Exception => e
         @logger.error("[indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for GDZ/IIIF image URI #{image_uri} \t#{e.message}")
         raise
       end
 
@@ -893,7 +881,6 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
-      @file_logger.error("[indexer] No regex match for fulltext URI #{firstUri} \t#{e.message}")
       raise
     end
 
@@ -917,7 +904,6 @@ end
         end
       rescue Exception => e
         @logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
         fulltext.fulltext             = "ERROR"
         fulltext.fulltext_ref         = "ERROR"
         fulltext.fulltext_of_work     = "ERROR"
@@ -965,7 +951,7 @@ end
 
       fulltextArr << fulltext
 
-      @logger.info "[indexer] in processFulltexts (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
+      @logger.debug "[indexer] in processFulltexts (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
 
     }
 
@@ -1138,7 +1124,6 @@ end
         work    = match[3]
       rescue Exception => e
         @logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
         raise
       end
 
@@ -1163,14 +1148,12 @@ end
           count += 1
 
           @logger.error("[indexer] [GDZ-522] - #{@id} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
-          @file_logger.error("[indexer] [GDZ-522] - #{@id} - Problem with part URI '#{part_url}'. Remove spaces and processed again!")
 
           part_url.gsub!(' ', '')
 
           retry
         end
         @logger.error("[indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}")
-        @file_logger.error("[indexer] No regex match for '#{part_url}' in parent #{@id} \t#{e.message}")
         raise
       end
     end
@@ -1407,7 +1390,6 @@ end
       @doc = Nokogiri::XML(@str_doc)
     rescue Exception => e
       @logger.error("[indexer] Could not build DOM for #{@id}\t#{e.message}")
-      @file_logger.error("[indexer] Could not build DOM for #{@id}\t#{e.message}")
       return nil
     end
   end
@@ -1418,7 +1400,6 @@ end
       doc = Nokogiri::XML(xml_str)
     rescue Exception => e
       @logger.error("[indexer] Could not parse part XML String for #{@id}\t#{e.message}")
-      @file_logger.error("[indexer] Could not parse part XML String for #{@id}\t#{e.message}")
       return nil
     end
 
@@ -1445,7 +1426,7 @@ end
 
   def metadata_for_dmdsec(id, mods)
 
-    #@logger.info "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
+    #@logger.debug "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
 
     dmdsec_meta = MetsDmdsecMetadata.new
 
@@ -1463,7 +1444,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve titleInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve titleInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1474,7 +1454,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve originInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve originInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1485,7 +1464,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve name for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve name for #{@id} \t#{e.message}")
     end
 
 
@@ -1496,7 +1474,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve location for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve location for #{@id} \t#{e.message}")
     end
 
 
@@ -1510,7 +1487,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve genre for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve genre for #{@id} \t#{e.message}")
     end
 
 
@@ -1521,7 +1497,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve classification for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve classification for #{@id} \t#{e.message}")
     end
 
     # Collection (added for new Goobi Ruleset)
@@ -1532,7 +1507,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve digital collections for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve digital collections for #{@id} \t#{e.message}")
     end
 
 
@@ -1543,7 +1517,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve language for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve language for #{@id} \t#{e.message}")
     end
 
 
@@ -1554,7 +1527,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve physicalDescription for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve physicalDescription for #{@id} \t#{e.message}")
     end
 
 
@@ -1565,7 +1537,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve note for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve note for #{@id} \t#{e.message}")
     end
 
 
@@ -1576,7 +1547,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} \t#{e.message}")
     end
 
 
@@ -1587,7 +1557,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve subject for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve subject for #{@id} \t#{e.message}")
     end
 
 
@@ -1598,7 +1567,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve relatedItem for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve relatedItem for #{@id} \t#{e.message}")
     end
 
 
@@ -1609,7 +1577,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve part for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve part for #{@id} \t#{e.message}")
     end
 
 
@@ -1620,7 +1587,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve recordInfo for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve recordInfo for #{@id} \t#{e.message}")
     end
 
 
@@ -1633,7 +1599,6 @@ end
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve accessCondition for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve accessCondition for #{@id} \t#{e.message}")
     end
 
 
@@ -1668,7 +1633,6 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve rights info for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve rights info for #{@id} \t#{e.message}")
     end
 
 
@@ -1698,7 +1662,7 @@ end
 
       physical_meta.addToPhysicalElement(physicalElement)
 
-      #@logger.info "[indexer] in retrieve_physical_structure_data (id: #{el['id']}) -> used: #{GC.stat[:used]}}\n\n"
+      #@logger.debug "[indexer] in retrieve_physical_structure_data (id: #{el['id']}) -> used: #{GC.stat[:used]}}\n\n"
 
     }
 
@@ -1751,7 +1715,6 @@ end
       processFulltexts(fulltext_meta)
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve full texts for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve full texts for #{@id} \t#{e.message}")
     end
   end
 
@@ -1761,7 +1724,6 @@ end
       summary_meta.addSummary = [processSummary(@summary_hsh[@id])]
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve summary texts for #{@id} (#{e.message})")
-      @file_logger.error("[indexer] Problems to resolve summary texts for #{@id} \t#{e.message}")
     end
   end
 
@@ -1824,7 +1786,6 @@ end
 
     if (logical_meta.doctype == "anchor") & (logical_meta.logicalElements.empty?)
       @logger.error("[indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
-      @file_logger.error("[indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
     end
 
     return firstmeta
@@ -1836,9 +1797,9 @@ end
 
     # get_doc_from_ppn(metsUri())
 
-    @logger.info "[indexer] parseDoc -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] parseDoc -> used: #{GC.stat[:used]}}\n\n"
 
-    @logger.info "[indexer] (#{@id}) before metadata_for_structure_elements -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before metadata_for_structure_elements -> used: #{GC.stat[:used]}}\n\n"
     # get metadata
     dmdsec_hsh = metadata_for_structure_elements()
 
@@ -1848,7 +1809,7 @@ end
       doctype = "anchor"
     end
 
-    @logger.info "[indexer] (#{@id}) before logical-meta -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before logical-meta -> used: #{GC.stat[:used]}}\n\n"
 
     # logical structure
     logical_meta          = MetsLogicalMetadata.new
@@ -1880,7 +1841,6 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
-      @file_logger.error("[indexer] Problem to read date_indexed/date_modified from old index (#{@id}) \t#{e.message}")
       raise
     end
 
@@ -1913,7 +1873,6 @@ end
           meta.product    = match[3]
         rescue Exception => e
           @logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}")
-          @file_logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}")
           raise
         end
 
@@ -1924,32 +1883,32 @@ end
 
     end
 
-    @logger.info "[indexer] (#{@id}) before physical-meta -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before physical-meta -> used: #{GC.stat[:used]}}\n\n"
     # get physical structure
     physical_meta = MetsPhysicalMetadata.new
     retrieve_physical_structure_data(physical_meta) if meta.doctype == "work"
 
 
-    @logger.info "[indexer] (#{@id}) before image-meta -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before image-meta -> used: #{GC.stat[:used]}}\n\n"
     # get image data or collection
     image_meta = MetsImageMetadata.new
     retrieve_image_data(image_meta) if meta.doctype == "work"
 
 
-    @logger.info "[indexer] (#{@id}) before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
     # get fulltexts
     fulltext_meta      = MetsFulltextMetadata.new
     fulltext_meta.work = @id
     retrieve_fulltext_data(fulltext_meta) if meta.doctype == "work"
 
 
-    #@logger.info "[indexer] before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
+    #@logger.debug "[indexer] before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
     # get rights info
     #fulltext_meta = MetsRightsMetadata.new
     #retrieve_rights_data(fulltext_meta) if meta.doctype == "work"
 
 
-    @logger.info "[indexer] (#{@id}) before summary-meta -> used: #{GC.stat[:used]}}\n\n"
+    @logger.debug "[indexer] (#{@id}) before summary-meta -> used: #{GC.stat[:used]}}\n\n"
     # get summary(id)
     if @summary_hsh[@id]
       summary_meta = MetsSummaryMetadata.new
@@ -1962,21 +1921,18 @@ end
       logical_meta.title_page = "#{meta.product}:#{meta.work}:#{image_meta.pages[0]}"
     end
 
-    #@logger.info "[indexer] before mods-meta -> used: #{GC.stat[:used]}}\n\n"
+    #@logger.debug "[indexer] before mods-meta -> used: #{GC.stat[:used]}}\n\n"
     #
     # add MODS
     #begin
     #  meta.mods = @doc.xpath('//mods')[0].to_xml
     #rescue Exception => e
     #  @logger.error "[indexer] Could not get MODS XML for #{@id} \t#{e.message}"
-    #  @file_logger.error("[indexer] Could not get MODS XML for #{@id} \t#{e.message}")
     #endNo regex match for GDZ/IIIF image URI
 
 
     if (meta.doctype != 'anchor') && (image_meta.pages.size != logical_meta.phys_last_page_index&.to_i)
-
       @logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size (#{image_meta.pages.size} vs #{logical_meta.phys_last_page_index&.to_i})")
-      @file_logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size")
     end
 
 
@@ -2030,8 +1986,6 @@ end
         #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
         # rescue Exception => e
         #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
-        #   @file_logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})"
-        #
         #   return
         # end
 
@@ -2040,9 +1994,9 @@ end
           if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
 
             if attempts == 0
-              @logger.info "[indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+              @logger.debug "[indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
             else
-              @logger.info "[indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+              @logger.debug "[indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
             end
 
             get_str_doc_from_s3()
@@ -2129,7 +2083,6 @@ end
             @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
           else
             @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
-            @file_logger.error "[indexer] Could not process #{@id} metadata, object is nil"
             next
           end
 
@@ -2139,7 +2092,6 @@ end
 
     rescue Exception => e
       @logger.error "[indexer] Processing problem with '#{res[1]}' \t#{e.message}"
-      @file_logger.error "[indexer] Processing problem with '#{res[1]}'  \t#{e.message}"
     end
 
   end
@@ -2158,7 +2110,6 @@ end
       }
     rescue Exception => e
       @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
-      @file_logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
       next
     end
 
@@ -2175,7 +2126,6 @@ end
 
     rescue Exception => e
       @logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
-      @file_logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
     end
 
   end
