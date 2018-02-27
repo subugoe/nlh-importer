@@ -20,7 +20,7 @@ class ConverterService
     @work_queue   = ENV['REDIS_WORK_CONVERT_QUEUE']
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
-    @rredis       = Redis.new(
+    @rredis = Redis.new(
         :host               => ENV['REDIS_HOST'],
         :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
         :db                 => ENV['REDIS_DB'].to_i,

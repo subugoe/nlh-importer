@@ -1,6 +1,5 @@
 require 'benchmark'
 
-require 'rsolr'
 require 'logger'
 require 'gelf'
 require 'rsolr'
@@ -1320,7 +1319,7 @@ end
         retry
       end
 
-      return e
+      raise e
     end
   end
 
@@ -1337,6 +1336,8 @@ end
         sleep 1
         retry
       end
+
+      raise e
     end
   end
 

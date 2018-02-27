@@ -24,7 +24,7 @@ end
 def check_request(routingContext, route)
 
   begin
-    hsh = routingContext.get_body_as_json
+    hsh      = routingContext.get_body_as_json
     response = routingContext.response
 
     if hsh == nil

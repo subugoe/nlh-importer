@@ -1,5 +1,5 @@
 require 'vertx/vertx'
-require 'rsolr'
+
 require 'logger'
 require 'gelf'
 require 'rsolr'
@@ -13,17 +13,17 @@ require 'model/mets_mods_metadata'
 context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-productin   = ENV['IN'] + '/' + ENV['PRODUCT']
-@inpath  = productin + ENV['IMAGE_IN_SUB_PATH']
-@outpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
+productin = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath   = productin + ENV['IMAGE_IN_SUB_PATH']
+@outpath  = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
 
 @image_in_format  = ENV['IMAGE_IN_FORMAT']
 @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
 @rredis = Redis.new(
-    :host            => ENV['REDIS_HOST'],
-    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db              => ENV['REDIS_DB'].to_i,
+    :host               => ENV['REDIS_HOST'],
+    :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db                 => ENV['REDIS_DB'].to_i,
     :reconnect_attempts => 3
 )
 
@@ -70,7 +70,7 @@ def convert(from, to, to_dir)
 end
 
 
-$vertx.execute_blocking(lambda { |future|
+$vertx.execute_blocking(lambda {|future|
 
   while true do
 
@@ -87,11 +87,11 @@ $vertx.execute_blocking(lambda { |future|
 
 
         # image_uri = "https://nl.sub.uni-goettingen.de/image/ecj:worldvolume4:0653/full/800,/0/default.jpg"
-        match     = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-        product   = match[2]
-        work      = match[3]
-        file      = match[4]
-        format    = match[9]
+        match   = image_uri.match(/(\S*)\/(\S*):(\S*):(\S*)\/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        product = match[2]
+        work    = match[3]
+        file    = match[4]
+        format  = match[9]
 
         @logger.debug "Start image processing for work #{work} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
 
@@ -123,6 +123,6 @@ $vertx.execute_blocking(lambda { |future|
 
   # future.complete(doc.to_s)
 
-}) { |res_err, res|
+}) {|res_err, res|
   #
 }

@@ -1,8 +1,6 @@
 require 'vertx/vertx'
 #require 'vertx-redis/redis_client'
 
-require 'benchmark'
-require 'aws-sdk'
 require 'logger'
 require 'gelf'
 require 'aws-sdk'
