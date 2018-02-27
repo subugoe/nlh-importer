@@ -1,6 +1,7 @@
 require 'vertx/vertx'
 
 require 'logger'
+require 'gelf'
 require 'nokogiri'
 require 'redis'
 require 'rsolr'
@@ -18,11 +19,8 @@ require 'converter/work_converter'
 # process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
 
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/work_converter_job_builder_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-@file_logger.level = Logger::DEBUG
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
 @queue        = ENV['REDIS_WORK_CONVERT_QUEUE']
 @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
@@ -54,7 +52,6 @@ $vertx.execute_blocking(lambda {|future|
 
   rescue Exception => e
     #@logger.error "[work_converter_job_builder] Redis problem \t#{e.message}"
-    #@file_logger.error "[work_converter_job_builder] Processing problem with '#{res}' \t#{e.message}"
     sleep(5)
     retry
   end

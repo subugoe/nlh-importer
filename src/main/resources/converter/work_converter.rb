@@ -4,6 +4,8 @@ require 'vertx/vertx'
 require 'benchmark'
 require 'aws-sdk'
 require 'logger'
+require 'gelf'
+require 'aws-sdk'
 require 'redis'
 require 'rsolr'
 require 'json'
@@ -26,12 +28,8 @@ class WorkConverter
     @image_in_format  = ENV['IMAGE_IN_FORMAT']
     @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
-
-    @file_logger = Logger.new(ENV['LOG'] + "/work_converter_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-
-    @file_logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
@@ -86,7 +84,7 @@ class WorkConverter
         log    = json['log']
         log_id = "#{id}___#{log}"
 
-        @logger.info "[work_converter] Start processing for '#{log_id}'"
+        @logger.debug "[work_converter] Start processing for '#{log_id}'"
 
         @s3_bucket = ''
 
@@ -102,7 +100,7 @@ class WorkConverter
 
           raise "Unknown context '#{context}', use {gdz | nlh}" unless (context.downcase == "nlh") || (context.downcase == "gdz")
 
-          log_info "Convert work #{log_id}"
+          @logger.debug("[work_converter] Convert work #{log_id}")
 
           build_jobs(context, id, log, log_id)
 
@@ -116,35 +114,11 @@ class WorkConverter
 
     rescue Exception => e
       @logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}"
-      @file_logger.error "[work_converter] Processing problem with '#{res}' \t#{e.message}"
     end
 
   end
 
 # ---
-
-  def log_error(msg, e)
-
-    unless e == nil
-      @logger.error("[work_converter] #{msg} \t#{e.message}")
-      @file_logger.error("[work_converter] #{msg} \t#{e.message}")
-    else
-      @logger.error("[work_converter] #{msg}")
-      @file_logger.error("[work_converter] #{msg}")
-    end
-
-  end
-
-
-  def log_info(msg)
-    @logger.info("[work_converter] #{msg}")
-    @file_logger.info("[work_converter] #{msg}")
-  end
-
-  def log_debug(msg)
-    @logger.debug("[work_converter] #{msg}")
-    @file_logger.debug("[work_converter] #{msg}")
-  end
 
   def removeQueue(queue)
 
@@ -187,7 +161,7 @@ class WorkConverter
 
     solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype log_id"}
     if (solr_resp['response']['numFound'] == 0) || (request_logical_part && (solr_resp['response']['docs'].first['log_id']== nil))
-      log_error "Couldn't find #{id} in index, conversion for #{log_id} not possible", nil
+      @logger.error("[work_converter] Couldn't find #{id} in index, conversion for #{log_id} not possible")
       return
     end
 
@@ -210,7 +184,6 @@ class WorkConverter
 
         if log_id_index == nil
           @logger.error "[work_converter] Log-Id #{log} for work #{id} not found in index"
-          @file_logger.error "[work_converter] Log-Id #{log} for work #{id} not found in index"
           return
         end
 
@@ -285,14 +258,14 @@ class WorkConverter
       end
 
       if request_logical_part
-        @logger.info "[work_converter] Generate PDF for logical part #{log_id} of #{id}"
+        @logger.debug "[work_converter] Generate PDF for logical part #{log_id} of #{id}"
       else
-        @logger.info "[work_converter] Generate PDF for work #{id}"
+        @logger.debug "[work_converter] Generate PDF for work #{id}"
       end
 
 
     else
-      log_error "Could not create a PDF for the multivolume work: '#{id}', PDF not created", nil
+      @logger.error("[work_converter] Could not create a PDF for the multivolume work: '#{id}', PDF not created")
       @rredis.hdel(@unique_queue, log_id)
     end
 

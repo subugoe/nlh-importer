@@ -2,6 +2,7 @@
 require 'rubygems'
 
 require 'logger'
+require 'gelf'
 require 'aws-sdk'
 require 'redis'
 require 'rsolr'
@@ -28,11 +29,8 @@ class ImgToPdfConverter
     @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
     @img_base_url = ENV['GDZ_IMG_BASE_URL']
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = Logger::DEBUG
-
-    @file_logger       = Logger.new(ENV['LOG'] + "/img_converter_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-    @file_logger.level = Logger::DEBUG
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
 
     #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
@@ -90,7 +88,6 @@ class ImgToPdfConverter
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
       @logger.error("[img_converter] [GDZ-527] Could not download '#{url}' \t#{e.message}")
-      @file_logger.error("[img_converter] [GDZ-527] Could not download '#{url}' \t#{e.message}")
       return false
     end
 
@@ -113,7 +110,6 @@ class ImgToPdfConverter
       )
     rescue Exception => e
       @logger.error "[img_converter] [GDZ-527] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
-      @file_logger.error "[img_converter] [GDZ-527] Could not download file (#{s3_bucket}/#{s3_key}) from S3 \t#{e.message}"
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
 
@@ -139,10 +135,8 @@ class ImgToPdfConverter
               }
           )
           @logger.debug("[img_converter] Full PDF #{to_full_pdf_path} added to S3")
-          @file_logger.debug("[img_converter] Full PDF #{to_full_pdf_path} added to S3")
         rescue Aws::S3::Errors::ServiceError => e
           @logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
-          @file_logger.error "[img_converter] Could not upload PDF #{to_full_pdf_path} to to S3 \t#{e.message}"
         end
 
       end
@@ -150,7 +144,6 @@ class ImgToPdfConverter
 
     rescue Exception => e
       @logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
-      @file_logger.error "[img_converter] Could not push file (#{s3_key}) to S3 \t#{e.message}"
     end
 
 
@@ -253,7 +246,6 @@ class ImgToPdfConverter
         remove_dir(to_pdf_dir)
 
         @logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
-        @file_logger.info("[img_converter] Finish PDF creation for '#{log_id}'")
 
         @rredis.del(@unique_queue, log_id)
 
@@ -303,8 +295,7 @@ class ImgToPdfConverter
 
             remove_dir(to_pdf_dir)
 
-            @logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
-            @file_logger.info("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
+            @logger.error("[img_converter] Upload to S3 failed #{log_id}\t#{e.message}")
 
             @rredis.del(@unique_queue, log_id)
 
@@ -315,7 +306,6 @@ class ImgToPdfConverter
           remove_dir(to_pdf_dir)
 
           @logger.info("[img_converter] Finish PDF creation for #{log_id}")
-          @file_logger.info("[img_converter] Finish PDF creation for #{log_id}")
 
           @rredis.del(@unique_queue, log_id)
 
@@ -323,15 +313,13 @@ class ImgToPdfConverter
 
       else
         # nothing to do
-        @logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
-        @file_logger.info("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
+        @logger.debug("[img_converter] PDF for '#{log_id}'  already exist (do nothing)")
 
         @rredis.del(@unique_queue, log_id)
       end
 
     rescue Exception => e
       @logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
-      @file_logger.error "[img_converter] Processing problem with request data '#{json}' \t#{e.message}"
     end
   end
 
@@ -457,7 +445,6 @@ class ImgToPdfConverter
     system "pdftk #{to_pdf_dir}/tmp.pdf update_info_utf8 #{data_file} output #{to_pdf_dir}/tmp_2.pdf"
 
     @logger.debug("[img_converter] Metadata added to #{to_pdf_dir}/tmp_2.pdf")
-    @file_logger.debug("[img_converter] Metadata added to #{to_pdf_dir}/tmp_2.pdf")
   end
 
   def add_label_and_value label, text, pdf_obj
@@ -613,7 +600,6 @@ class ImgToPdfConverter
 
     rescue Exception => e
       @logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}")
-      @file_logger.error("[img_converter] Problem with disclaimer creation \t#{e.message}")
 
       unless request_logical_part
         system "pdftk templates/disclaimer.pdf #{to_pdf_dir}/tmp_2.pdf  cat output #{pdf_path}"
@@ -626,7 +612,6 @@ class ImgToPdfConverter
     end
 
     @logger.debug("[img_converter] Disclaimer added to #{pdf_path}")
-    @file_logger.debug("[img_converter] Disclaimer added to #{pdf_path}")
   end
 
   def cut_from_full_pdf_pdftk_system(pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
@@ -645,7 +630,6 @@ class ImgToPdfConverter
     system "pdftk #{pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
 
     @logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
-    @file_logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
 
   end
 
@@ -673,7 +657,6 @@ class ImgToPdfConverter
     system "pdftk #{solr_page_path_arr.join ' '} cat output #{to_pdf_dir}/tmp.pdf"
 
     @logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
-    @file_logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
 
   end
 
@@ -702,7 +685,6 @@ class ImgToPdfConverter
       end
     rescue Exception => e
       @logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}")
-      @file_logger.error("[img_converter] Problem with image meta data for path #{path} \t#{e.message}")
       return [nil, {}]
     end
 
@@ -749,7 +731,6 @@ class ImgToPdfConverter
 
       @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'")
       #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
-      #@file_logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
     end
   end
 

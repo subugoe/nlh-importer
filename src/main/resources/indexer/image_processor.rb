@@ -1,6 +1,8 @@
 require 'vertx/vertx'
 require 'rsolr'
 require 'logger'
+require 'gelf'
+require 'rsolr'
 require 'nokogiri'
 require 'redis'
 require 'json'
@@ -25,11 +27,8 @@ productin   = ENV['IN'] + '/' + ENV['PRODUCT']
     :reconnect_attempts => 3
 )
 
-@logger       = Logger.new(STDOUT)
-@logger.level = Logger::DEBUG
-
-@file_logger       = Logger.new(ENV['LOG'] + "/#{context}_image_processing_#{Time.new.strftime('%y-%m-%d')}.log", 3, 20 * 1024000)
-@file_logger.level = Logger::DEBUG
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
 
 @logger.debug "[image_processor worker] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -45,7 +44,7 @@ def copyFile(from, to, to_dir)
     FileUtils.cp(from, to)
 
   rescue Exception => e
-    @file_logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @logger.error "Could not copy image from: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
   return to
@@ -65,7 +64,7 @@ def convert(from, to, to_dir)
     end
 
   rescue Exception => e
-    @file_logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
+    @logger.error "Could not convert image: '#{from}' to: '#{to}'\n\t#{e.message}"
   end
 
 end
@@ -118,7 +117,6 @@ $vertx.execute_blocking(lambda { |future|
       attempts = attempts + 1
       retry if (attempts < MAX_ATTEMPTS)
       @logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()})"
-      @file_logger.error "Could not process redis data '#{res[1]}' (#{Java::JavaLang::Thread.current_thread().get_name()}) \n\t#{e.message}"
     end
 
   end
