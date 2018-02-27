@@ -4,7 +4,7 @@ FROM vertx/vertx3:latest
 ENV JRUBY_HOME /opt/jruby
 ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
-ENV USER_UID=<UID>
+ENV USER_UID=<uid>
 ENV VIPS_WARNING=1
 
 RUN  useradd -r -u $USER_UID importer
@@ -110,22 +110,22 @@ RUN gem install bundler
 
 WORKDIR /
 
-RUN mkdir -p <VERTICLE_HOME>
-COPY Gemfile <VERTICLE_HOME>/Gemfile
-COPY Gemfile.lock <VERTICLE_HOME>/Gemfile.lock
+RUN mkdir -p <verticle_home>
+COPY Gemfile <verticle_home>/Gemfile
+COPY Gemfile.lock <verticle_home>/Gemfile.lock
 
-WORKDIR <VERTICLE_HOME>
+WORKDIR <verticle_home>
 
 
 RUN jruby -S bundle install
 
-RUN chown -R importer <VERTICLE_HOME>
+RUN chown -R importer <verticle_home>
 
 USER importer
 
 RUN rm -rf /var/lib/apt/lists/*
 
-WORKDIR <VERTICLE_HOME>
+WORKDIR <verticle_home>
 ENTRYPOINT ["sh", "-c"]
 
 
