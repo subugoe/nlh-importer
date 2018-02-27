@@ -20,9 +20,9 @@ class IndexerService
 
     @queue  = ENV['REDIS_INDEX_QUEUE']
     @rredis = Redis.new(
-        :host            => ENV['REDIS_HOST'],
-        :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db              => ENV['REDIS_DB'].to_i,
+        :host               => ENV['REDIS_HOST'],
+        :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db                 => ENV['REDIS_DB'].to_i,
         :reconnect_attempts => 3
     )
 
@@ -52,15 +52,15 @@ class IndexerService
         pushToQueue(@queue, [hsh.to_json])
       end
 
-      id                   = hsh['document']
+      id = hsh['document']
 
-      @logger.info "[indexer_service] Indexing for #{id} has started"
+      @logger.debug "[indexer_service] Indexing for #{id} has started"
       send_status(200, response, {"status" => "0", "msg" => "Indexing started"})
       return
 
     rescue Exception => e
       @logger.error("[indexer_service] Problem with request body \t#{e.message}")
-      send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request"})
+      send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request", "error" => e.message})
       return
     end
 

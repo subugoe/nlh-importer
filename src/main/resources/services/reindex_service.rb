@@ -21,9 +21,9 @@ class ReindexService
     @logger.level = ENV['DEBUG_MODE'].to_i
 
     @rredis = Redis.new(
-        :host            => ENV['REDIS_HOST'],
-        :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-        :db              => ENV['REDIS_DB'].to_i,
+        :host               => ENV['REDIS_HOST'],
+        :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+        :db                 => ENV['REDIS_DB'].to_i,
         :reconnect_attempts => 3
     )
     @queue  = ENV['REDIS_INDEX_QUEUE']

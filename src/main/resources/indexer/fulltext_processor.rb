@@ -1,5 +1,5 @@
 require 'vertx/vertx'
-require 'rsolr'
+
 require 'logger'
 require 'gelf'
 require 'rsolr'
@@ -9,17 +9,17 @@ require 'json'
 require 'fileutils'
 require 'model/mets_mods_metadata'
 
-context = ENV['CONTEXT']
+context      = ENV['CONTEXT']
 MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-productin   = ENV['IN'] + '/' + ENV['PRODUCT']
-@inpath  = productin + ENV['TEI_IN_SUB_PATH']
-@outpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
+productin = ENV['IN'] + '/' + ENV['PRODUCT']
+@inpath   = productin + ENV['TEI_IN_SUB_PATH']
+@outpath  = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
 @rredis = Redis.new(
-    :host            => ENV['REDIS_HOST'],
-    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db              => ENV['REDIS_DB'].to_i,
+    :host               => ENV['REDIS_HOST'],
+    :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db                 => ENV['REDIS_DB'].to_i,
     :reconnect_attempts => 3
 )
 
@@ -60,11 +60,10 @@ def copyFile(from, to, to_dir)
 end
 
 
-
 # index, calculate hash, copy to storage, check
 
 
-$vertx.execute_blocking(lambda { |future|
+$vertx.execute_blocking(lambda {|future|
 
   while true do
 
@@ -72,7 +71,7 @@ $vertx.execute_blocking(lambda { |future|
 
     if (res != '' && res != nil)
 
-      json   = JSON.parse res[1]
+      json = JSON.parse res[1]
 
       # arr << {"fulltexturi" => fulltexturi, "to" => to, "to_dir" => to_dir}.to_json
       from   = json['from']
@@ -90,7 +89,7 @@ $vertx.execute_blocking(lambda { |future|
 
   # future.complete(doc.to_s)
 
-}) { |res_err, res|
+}) {|res_err, res|
   #
 }
 

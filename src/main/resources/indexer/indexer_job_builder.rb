@@ -20,9 +20,9 @@ require 'indexer/indexer'
 
 @queue  = ENV['REDIS_INDEX_QUEUE']
 @rredis = Redis.new(
-    :host            => ENV['REDIS_HOST'],
-    :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
-    :db              => ENV['REDIS_DB'].to_i,
+    :host               => ENV['REDIS_HOST'],
+    :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
+    :db                 => ENV['REDIS_DB'].to_i,
     :reconnect_attempts => 3
 )
 
@@ -37,7 +37,7 @@ $vertx.execute_blocking(lambda {|future|
   begin
 
     while true do
-      res     = @rredis.brpop(@queue) #, :timeout => nil)
+      res = @rredis.brpop(@queue)
 
       indexer = Indexer.new
       indexer.process_response(res)

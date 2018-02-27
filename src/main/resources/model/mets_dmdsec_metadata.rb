@@ -295,8 +295,6 @@ class MetsDmdsecMetadata
             resp = RestClient.get(ENV['KALLIOPE_URI'] + ENV['KALLIOPE_SRU_PATH'] % id)
             records = Nokogiri::XML( resp ).xpath("//srw:numberOfRecords", "srw" => "http://www.loc.gov/zing/srw/").text.to_i
 
-            puts "records: #{records}"
-
             if records > 0
               @catalogues << "Kalliope #{ENV['KALLIOPE_URI'] + ENV['KALLIOPE_PATH'] % id}"
               break

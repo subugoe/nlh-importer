@@ -3,6 +3,7 @@
 *.iml
 env.sh
 env.yml
+.cfg
 .env
 indexer.env.GC_test
 tmp/*
