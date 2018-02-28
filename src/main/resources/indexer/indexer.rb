@@ -1047,7 +1047,6 @@ end
   def get_logical_page_range(logical_meta, from_logical_id_to_physical_ids_hsh)
 
     from_physical_id_to_attr_hsh, from_file_id_to_order_phys_id_hsh = get_physical_attr_hash
-    #get_physical_attr_hash
 
     from_log_id_to_start_end_hsh = Hash.new
     min, max                     = 1, 1
@@ -1056,20 +1055,7 @@ end
 
       logical_id, physical_ids = from_logical_id_to_physical_ids_hsh.shift
 
-=begin
-    puts "physical_ids: #{physical_ids}"
-    puts "physical_ids.first: #{physical_ids.first}"
-    puts "physical_ids.last: #{physical_ids.last}"
-    puts "from_physical_id_to_attr_hsh[physical_ids.first]: #{from_physical_id_to_attr_hsh[physical_ids.first]}"
-    puts "from_physical_id_to_attr_hsh[physical_ids.last]: #{from_physical_id_to_attr_hsh[physical_ids.last]}"
-=end
 
-
-      #puts "physical_ids.first: #{physical_ids.first}"
-      #puts "from_physical_id_to_attr_hsh[physical_ids.first]: #{from_physical_id_to_attr_hsh[physical_ids.first]}"
-
-      #to  = @doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{physical_ids.first}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
-      #puts "from_physical_id_to_attr_hsh[physical_ids.first]['order']: #{from_physical_id_to_attr_hsh[physical_ids.first]['order']}"
       begin
         to = from_physical_id_to_attr_hsh[physical_ids.first]&.fetch('order')&.to_i
       rescue Exception => e
@@ -1081,11 +1067,6 @@ end
       min = to if to < min
       addToHash(from_log_id_to_start_end_hsh, logical_id, to)
 
-      #puts "physical_ids.last: #{physical_ids.last}"
-      #puts "from_physical_id_to_attr_hsh[physical_ids.last]: #{from_physical_id_to_attr_hsh[physical_ids.last]}"
-
-      #to  = @doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:div[@ID='#{physical_ids.last}']/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text&.to_i
-      #puts "from_physical_id_to_attr_hsh[physical_ids.last]['order']: #{from_physical_id_to_attr_hsh[physical_ids.last]['order']}"
       begin
         to = from_physical_id_to_attr_hsh[physical_ids.last]&.fetch('order')&.to_i
       rescue Exception => e
@@ -1164,8 +1145,6 @@ end
 
   def get_attributes_from_logical_div(div, doctype, from_log_id_to_start_end_hsh, base_level, logical_meta, dmdsec_hsh)
 
-    #puts "in get_attributes_from_logical_div"
-
     logicalElement = LogicalElement.new
 
     logicalElement.doctype = doctype
@@ -1227,8 +1206,6 @@ end
       end
 
     end
-
-    #puts "logicalElement: #{logicalElement.to_s}"
 
     return logicalElement
 
@@ -1305,8 +1282,6 @@ end
 
     #s3://gdz/fulltext/<work_id>/<page>.xml
     s3_fulltext_key = "fulltext/#{@id}/#{page}.xml"
-
-    #puts "s3_fulltext_key: #{s3_fulltext_key}, s3_bucket: #{@s3_bucket}"
 
     begin
       resp = @s3.get_object({bucket: @s3_bucket, key: s3_fulltext_key})
@@ -2123,6 +2098,7 @@ end
       remove_s3_directory(id)
 
       url = ENV['SERVICES_ADR'] + ENV['CONVERTER_CTX_PATH']
+
       RestClient.post url, {"document" => id, "log" => id, "context" => context}.to_json, {content_type: :json, accept: :json}
 
     rescue Exception => e

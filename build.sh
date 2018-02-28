@@ -88,6 +88,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<s3_endpoint>|${S3_ENDPOINT}|g"                            .env
     sed -i '' "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"                         .env
     sed -i '' "s|<local_host>|${LOCAL_HOST}|"                               .env
+    sed -i '' "s|<service_host>|${SERVICE_HOST}|"                           .env
+    sed -i '' "s|<redis_host>|${REDIS_HOST}|"                               .env
+    sed -i '' "s|<solr_host>|${SOLR_HOST}|"                                 .env
     sed -i '' "s|<graylog_host>|${GRAYLOG_HOST}|"                           .env
     sed -i '' "s|<graylog_port>|${GRAYLOG_PORT}|"                           .env
     sed -i '' "s|<solr_core>|${solr_core}|"                                 .env
@@ -129,6 +132,9 @@ else
     sed -i "s|<s3_endpoint>|${S3_ENDPOINT}|g"                               .env
     sed -i "s|<solr_java_mem>|${SOLR_JAVA_MEM}|"                            .env
     sed -i "s|<local_host>|${LOCAL_HOST}|"                                  .env
+    sed -i "s|<service_host>|${SERVICE_HOST}|"                              .env
+    sed -i "s|<redis_host>|${REDIS_HOST}|"                                  .env
+    sed -i "s|<solr_host>|${SOLR_HOST}|"                                    .env
     sed -i "s|<graylog_host>|${GRAYLOG_HOST}|"                              .env
     sed -i "s|<graylog_port>|${GRAYLOG_PORT}|"                              .env
     sed -i "s|<solr_core>|${solr_core}|"                                    .env

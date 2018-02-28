@@ -29,8 +29,6 @@ require 'converter/work_converter'
     :host            => ENV['REDIS_HOST'],
     :port            => ENV['REDIS_EXTERNAL_PORT'].to_i,
     :db              => ENV['REDIS_DB'].to_i
-# ,
-#    :reconnect_attempts => 3
 )
 
 
