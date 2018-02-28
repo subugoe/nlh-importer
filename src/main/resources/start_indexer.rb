@@ -4,9 +4,9 @@ require 'rubygems'
 require 'logger'
 require 'gelf'
 
-@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger       = Logger.new(STDOUT)
 @logger.level = ENV['DEBUG_MODE'].to_i
-@logger.debug "[start_indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.info "[start_indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 indexer_options = {

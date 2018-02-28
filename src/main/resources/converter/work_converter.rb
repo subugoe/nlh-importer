@@ -192,8 +192,8 @@ class WorkConverter
           log_end_page_index = log_start_page_index
         end
 
-      else
-        log_end_page_index = (resp['log_end_page_index'][-1])
+      #else
+      #  log_end_page_index = (resp['log_end_page_index'][-1]) if resp['log_end_page_index'] != nil
       end
 
 

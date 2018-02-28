@@ -38,6 +38,7 @@ $vertx.execute_blocking(lambda {|future|
       json      = JSON.parse msg
       converter = ImgToPdfConverter.new
       converter.process_response(json)
+
     end
 
   rescue Exception => e

@@ -10,11 +10,11 @@ require 'services/indexer_service'
 require 'services/reindex_service'
 
 
-@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger       = Logger.new(STDOUT)
 @logger.level = ENV['DEBUG_MODE'].to_i
 
 
-@logger.debug "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
+@logger.info "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 
 def send_status(status_code, response, msg_hsh)
@@ -31,16 +31,18 @@ def check_request(routingContext, route)
       @logger.error("[services_verticle] Expected JSON body missing")
       send_error(400, response)
     else
-      @logger.debug("[services_verticle] Got message: \t#{hsh}")
 
       case route
         when "converter"
+          @logger.info("[services_verticle] Receive converter job: \t#{hsh}")
           converter = ConverterService.new
           converter.process_response(hsh, response)
         when "indexer"
+          @logger.info("[services_verticle] Receive indexer job: \t#{hsh}")
           indexer = IndexerService.new
           indexer.process_response(hsh, response)
         when "reindexer"
+          @logger.info("[services_verticle] Receive reindexer job: \t#{hsh}")
           reindexer = ReindexService.new
           reindexer.process_response(hsh, response)
         else

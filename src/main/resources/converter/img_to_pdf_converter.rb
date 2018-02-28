@@ -32,7 +32,6 @@ class ImgToPdfConverter
     @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
     @logger.level = ENV['DEBUG_MODE'].to_i
 
-
     #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     #@work_convert_queue  = ENV['REDIS_CONVERT_QUEUE']
     @rredis = Redis.new(
