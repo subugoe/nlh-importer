@@ -95,8 +95,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<graylog_port>|${GRAYLOG_PORT}|"                           .env
     sed -i '' "s|<solr_core>|${solr_core}|"                                 .env
     sed -i '' "s|<solr_core2>|${solr_core2}|"                               .env
-    sed -i '' "s|<solr_user>|${SOLR_USER}|"                                 .env
-    sed -i '' "s|<solr_password>|${SOLR_PASSWORD}|"                         .env
     sed -i '' "s|<service_verticle>|${SERVICE_VERTICLE}|"                   .env
     sed -i '' "s|<indexer_verticle>|${INDEXER_VERTICLE}|"                   .env
     sed -i '' "s|<converter_verticle>|${CONVERTER_VERTICLE}|"               .env
@@ -139,8 +137,6 @@ else
     sed -i "s|<graylog_port>|${GRAYLOG_PORT}|"                              .env
     sed -i "s|<solr_core>|${solr_core}|"                                    .env
     sed -i "s|<solr_core2>|${solr_core2}|"                                  .env
-    sed -i "s|<solr_user>|${SOLR_USER}|"                                    .env
-    sed -i "s|<solr_password>|${SOLR_PASSWORD}|"                            .env
     sed -i "s|<service_verticle>|${SERVICE_VERTICLE}|"                      .env
     sed -i "s|<indexer_verticle>|${INDEXER_VERTICLE}|"                      .env
     sed -i "s|<converter_verticle>|${CONVERTER_VERTICLE}|"                  .env

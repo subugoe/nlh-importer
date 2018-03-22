@@ -90,9 +90,8 @@ class Indexer
         :reconnect_attempts => 3
     )
 
-    @solr_gdz_tmp    = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
-    @solr_gdz        = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
-    @solr_gdz_legacy = RSolr.connect :url => ENV['SOLR_GDZ_LEGACY_ADR']
+    @solr_gdz_tmp = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
+    @solr_gdz     = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
 
     if @use_s3
@@ -1797,17 +1796,10 @@ end
       date_modified = ""
       date_indexed  = ""
 
-      solr_resp = (@solr_gdz_legacy.get 'select', :params => {:q => "id:#{@id}", :fl => "datemodified dateindexed"})['response']['docs'].first
-
+      solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
       if (solr_resp != nil) && (solr_resp&.size > 0)
-        date_modified = solr_resp['datemodified']
-        date_indexed  = solr_resp['dateindexed']
-      else
-        solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
-        if (solr_resp != nil) && (solr_resp&.size > 0)
-          date_modified = solr_resp['date_modified']
-          date_indexed  = solr_resp['date_indexed']
-        end
+        date_modified = solr_resp['date_modified']
+        date_indexed  = solr_resp['date_indexed']
       end
 
       if (date_indexed != "") && (date_modified != "")
