@@ -176,46 +176,57 @@ class MetsLogicalMetadata
         child.merge! ({:log_id => el.id})
         child.merge! ({:log_type => el.type}) unless el.type == nil
         child.merge! ({:log_label => el.label}) unless el.label == nil
-        child.merge! ({:log_order => el.id.match(/LOG_(\d*)/)[1].to_i}) unless el.id == nil
-        child.merge! ({:log_start_page_index => el.start_page_index}) unless @doctype == "anchor"
-        child.merge! ({:log_end_page_index => el.end_page_index}) unless @doctype == "anchor"
-        child.merge! ({:log_level => el.level}) unless el.level == nil
-        child.merge! ({:log_part_product => el.part_product}) unless el.part_product == nil
-        child.merge! ({:log_part_work => el.part_work}) unless el.part_work == nil
-        child.merge! ({:log_part_key => el.part_key}) unless el.part_key == nil
-        child.merge! ({:parentdoc_work => el.parentdoc_work}) unless el.parentdoc_work == nil
-        child.merge! ({:parentdoc_label => el.parentdoc_label}) unless el.parentdoc_label == nil
-        child.merge! ({:parentdoc_type => el.parentdoc_type}) unless el.parentdoc_type == nil
 
-        unless el.dmdsec_meta == nil
-          el.dmdsec_meta.is_child = true
-          child.merge! el.dmdsec_meta.to_solr_string
+        unless el.id == nil
+            # LOG_0001  OR   log1
+            if !el.id.index(/^LOG_/).nil?
+              child.merge! ({:log_order => el.id.match(/LOG_(\d*)/)[1].to_i})
+            elsif !el.id.index(/^log\d/).nil?
+              child.merge! ({:log_order => el.id.match(/log(\d*)/)[1].to_i})
+            else
+              @logger.error("[indexer] Unexpected ID pattern #{el.id} for work #{@work}\t#{e.message}")
+            end
+          end
+
+          child.merge! ({:log_start_page_index => el.start_page_index}) unless @doctype == "anchor"
+          child.merge! ({:log_end_page_index => el.end_page_index}) unless @doctype == "anchor"
+          child.merge! ({:log_level => el.level}) unless el.level == nil
+          child.merge! ({:log_part_product => el.part_product}) unless el.part_product == nil
+          child.merge! ({:log_part_work => el.part_work}) unless el.part_work == nil
+          child.merge! ({:log_part_key => el.part_key}) unless el.part_key == nil
+          child.merge! ({:parentdoc_work => el.parentdoc_work}) unless el.parentdoc_work == nil
+          child.merge! ({:parentdoc_label => el.parentdoc_label}) unless el.parentdoc_label == nil
+          child.merge! ({:parentdoc_type => el.parentdoc_type}) unless el.parentdoc_type == nil
+
+          unless el.dmdsec_meta == nil
+            el.dmdsec_meta.is_child = true
+            child.merge! el.dmdsec_meta.to_solr_string
 =begin
           @facet_creator_personal  += el.dmdsec_meta.facet_creator_personal if el.dmdsec_meta.facet_creator_personal != nil
           @facet_creator_corporate += el.dmdsec_meta.facet_creator_corporate if el.dmdsec_meta.facet_creator_corporate != nil
           @facet_person_personal   += el.dmdsec_meta.facet_person_personal if el.dmdsec_meta.facet_person_personal != nil
           @facet_person_corporate  += el.dmdsec_meta.facet_person_corporate if el.dmdsec_meta.facet_person_corporate != nil
 =end
+          end
+
+          child.merge! ({:date_modified => @date_modified})
+          child.merge! ({:date_indexed => @date_indexed})
+
+          log_child_arr << child
+
+          }
+
+          hsh.merge! "_childDocuments_" => log_child_arr
+
+          # todo add this, if logical info is removed from main solr doc
+          # hsh.merge!({:phys_first_page_index => @phys_first_page_index})
+          # hsh.merge!({:phys_last_page_index => @phys_last_page_index})
+          # hsh.merge!(:title_page => @title_page) unless @title_page == nil
+
         end
 
-        child.merge! ({:date_modified => @date_modified})
-        child.merge! ({:date_indexed => @date_indexed})
+        return hsh
 
-        log_child_arr << child
-
-      }
-
-      hsh.merge! "_childDocuments_" => log_child_arr
-
-      # todo add this, if logical info is removed from main solr doc
-      # hsh.merge!({:phys_first_page_index => @phys_first_page_index})
-      # hsh.merge!({:phys_last_page_index => @phys_last_page_index})
-      # hsh.merge!(:title_page => @title_page) unless @title_page == nil
-
-    end
-
-    return hsh
+        end
 
   end
-
-end
