@@ -188,7 +188,7 @@ module Mappings
       "periodical_issue"           => "issue",
       "periodical_part"            => "section",
       "periodical_volume"          => "volume",
-      "periodical"                 => "volume", 
+      "periodical"                 => "volume",
       #"periodical"                 => "periodical",
       "periodicalissue"            => "issue",
       "periodicalpart"             => "section",
