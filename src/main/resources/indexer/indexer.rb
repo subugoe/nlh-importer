@@ -1200,7 +1200,9 @@ end
 
   def is_work?
     hash_parser = Saxerator.parser(@str_doc)
-    return hash_parser.for_tag('mets:fileSec').first != nil
+    el          = hash_parser.for_tag('mets:fileSec').first
+    el          = hash_parser.for_tag('METS:fileSec').first if el == nil
+    return el
   end
 
   def getFulltext(xml_path)
@@ -1480,9 +1482,16 @@ end
 
     # Sponsor:
     begin
-      unless mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').empty?
-        dmdsec_meta.addSponsor = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').text
+      sponsor = ''
+
+      if !mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').empty?
+        sponsor = mods.xpath('gdz:sponsorship', 'gdz' => 'http://gdz.sub.uni-goettingen.de/').text
+      elsif !mods.xpath('GDZ:sponsorship', 'GDZ' => 'http://gdz.sub.uni-goettingen.de/').empty?
+        sponsor = mods.xpath('GDZ:sponsorship', 'GDZ' => 'http://gdz.sub.uni-goettingen.de/').text
       end
+
+      dmdsec_meta.addSponsor = sponsor
+
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve gdz:sponsorship for #{@id} (#{e.message})")
     end
