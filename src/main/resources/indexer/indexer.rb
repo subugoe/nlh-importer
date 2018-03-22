@@ -59,12 +59,6 @@ class Indexer
         "VD18 göttingen" => "vd18.göttingen"
     }
 
-    @summary_hsh = {
-        "HANS_DE_7_w042080" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz/misc/summary/HANS_DE_7_w042080/Cantor_Geometrie.html", 'name' => "Cantor_Geometrie"},
-        "HANS_DE_7_w042081" => {'uri' => "http://wwwuser.gwdg.de/~subtypo3/gdz/misc/summary/HANS_DE_7_w042081/Cantor_Algebra.html", 'name' => "Cantor_Algebra"}
-    }
-
-
 #@oai_endpoint   = ENV['METS_VIA_OAI']
     @short_product  = ENV['SHORT_PRODUCT']
     @access_pattern = ENV['ACCESS_PATTERN']
@@ -106,7 +100,6 @@ class Indexer
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
-    @logger.warn "[indexer] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
   end
 
 
@@ -999,7 +992,7 @@ end
   end
 
 
-# todo clean up
+  # todo clean up
   def get_physical_attr_hash
 
 
@@ -1861,22 +1854,12 @@ end
     s3_key    = "summary/#{@id}/"
     summaries = @resource.bucket(@s3_bucket).objects({prefix: s3_key})
 
-    puts "s3_key: #{s3_key}"
-    puts "@s3_bucket: #{@s3_bucket}"
-    puts "summaries.count: #{summaries.count}"
-
-
-    puts @resource.bucket(@s3_bucket).objects({prefix: s3_key}).count
-    @resource.bucket(@s3_bucket).objects({prefix: s3_key}).each {|el| puts el.key}
-
     if summaries.count > 0
 
       summary_arr = Array.new
 
 
       summaries.each {|el|
-
-        puts "el.key: #{el.key} (#{el.key.class})"
 
         if el.key.end_with?('html')
 
@@ -1888,7 +1871,6 @@ end
           content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
 
           # summary/DE-611-HS-3216957/Cantor_Geometrie.html
-
 
           match = el.key.match(/(summary)\/(\S*)\/(\S*).html/)
           name  = match[3] if match[3] != nil
@@ -2099,10 +2081,7 @@ end
 
     begin
       resource = Aws::S3::Resource.new(client: @s3)
-      objs     = resource.bucket(@s3_bucket).objects({prefix: s3_key})
-      objs.each {|el|
-        el.delete
-      }
+      resource.bucket(bucket).objects({prefix: s3_key}).batch_delete!
     rescue Exception => e
       @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
       next
