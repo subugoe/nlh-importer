@@ -280,27 +280,6 @@ end
   end
 
 
-  def getMissingTitleInfos(modsPartElements, structMapDiv)
-
-    detail = modsPartElements.xpath('detail')
-    unless detail.empty?
-      currentno = checkEmptyString detail.first.xpath('number').text
-      label     = structMapDiv.xpath("@LABEL", 'mets' => 'http://www.loc.gov/METS/').first
-
-      titleInfoArr       = Array.new
-      titleInfo          = TitleInfo.new
-      titleInfo.title    = label.value + " - Band " + currentno
-      titleInfo.subtitle = ""
-      titleInfo.nonsort  = ""
-      titleInfoArr << titleInfo
-    end
-    label  = nil
-    detail = nil
-
-    return titleInfoArr
-  end
-
-
   def getName(modsNameElements)
 
     nameArr = Array.new
@@ -1886,9 +1865,9 @@ end
           match = el.key.match(/(summary)\/(\S*)\/(\S*).html/)
           name  = match[3] if match[3] != nil
 
-          s              = Summary.new
-          s.summary_name = name
-          s.summary_ref  = "s3://#{@s3_bucket}/#{el.key}"
+          s                 = Summary.new
+          s.summary_name    = name
+          s.summary_ref     = "s3://#{@s3_bucket}/#{el.key}"
           s.summary_content = doc
 
           summary_arr << s
@@ -2095,7 +2074,6 @@ end
       resource.bucket(bucket).objects({prefix: s3_key}).batch_delete!
     rescue Exception => e
       @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
-      next
     end
 
   end
