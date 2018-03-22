@@ -21,6 +21,7 @@ module Mappings
       "epilogue" => "Epilogue", # unused type
       "errata" => "Errata", # unused type
       "figure" => "Abbildung", # unused type
+      "file" => "Akte", #
       "folder" => "Mappe", #
       "headword" => "Stichwort", # unused type
       "illustration" => "Illustration", #
@@ -137,6 +138,7 @@ module Mappings
       "epilogue"                   => "section",
       "errata"                     => "corrigenda",
       "figure"                     => "illustration",
+      "file"                       => "file",
       "folder"                     => "folder",
       "headword"                   => "section",
       "illustration_description"   => "illustration",
@@ -186,7 +188,8 @@ module Mappings
       "periodical_issue"           => "issue",
       "periodical_part"            => "section",
       "periodical_volume"          => "volume",
-      "periodical"                 => "volume",
+      "periodical"                 => "volume", 
+      #"periodical"                 => "periodical",
       "periodicalissue"            => "issue",
       "periodicalpart"             => "section",
       "periodicalvolume"           => "volume",
