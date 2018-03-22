@@ -537,6 +537,7 @@ end
     end
     modsLanguageElements = nil
     return langArr
+
   end
 
 
@@ -781,59 +782,46 @@ end
   end
 
 
-  def getSummary(html_path)
-
-    attempts = 0
-    fulltext = ""
-
-    begin
-
-      if html_path.start_with? 'http'
-
-        fulltext = Nokogiri::HTML(open(html_path))
-        return fulltext
-
-      else
-
-        fulltext = File.open(html_path) {|f|
-          Nokogiri::HTML(f) {|config|
-            #config.noblanks
-          }
-        }
-        return fulltext
-      end
-
-    rescue Exception => e
-      attempts = attempts + 1
-      if (attempts < MAX_ATTEMPTS)
-        sleep 1
-        retry
-      end
-      fileNotFound("summary", e)
-      return nil
-    end
-  end
-
-
-  def processSummary(summary_hsh)
-
-    s = Summary.new
-
-    s.summary_name = summary_hsh['name']
-    summary_ref    = summary_hsh['uri']
-    s.summary_ref  = summary_ref
-    content        = getSummary(summary_ref)
-
-    if content == nil
-      s.summary_content = "ERROR"
-    else
-      s.summary_content = content.xpath('//text()').to_a.join(" ")
-    end
-
-    return s
-
-  end
-
+  # def getSummary(id)
+  #
+  #   attempts    = 0
+  #   fulltext    = ""
+  #   summary_key = "summary/#{id}/"
+  #
+  #   begin
+  #     str      = @s3.get_object({bucket: @s3_bucket, key: summary_key}).body.read
+  #     fulltext = Nokogiri::HTML(str).xpath('//text()').to_a.join(" ") if (str != "") && (str != nil)
+  #     return fulltext
+  #   rescue Exception => e
+  #     attempts = attempts + 1
+  #     if (attempts < MAX_ATTEMPTS)
+  #       sleep 1
+  #       retry
+  #     end
+  #     raise
+  #   end
+  #
+  # end
+  #
+  # def processSummary(summary_hsh)
+  #
+  #   s = Summary.new
+  #
+  #   s.summary_name = summary_hsh['name']
+  #   summary_ref    = summary_hsh['uri']
+  #   s.summary_ref  = summary_ref
+  #   content        = getSummary(summary_ref)
+  #
+  #   if content == nil
+  #     s.summary_content = "ERROR"
+  #   else
+  #     s.summary_content = content.xpath('//text()').to_a.join(" ")
+  #   end
+  #
+  #   return s
+  #
+  # end
+  #
 
   def processFulltexts(fulltext_meta)
 
@@ -1695,15 +1683,6 @@ end
   end
 
 
-  def retrieve_summary_data(summary_meta)
-    begin
-      summary_meta.addSummary = [processSummary(@summary_hsh[@id])]
-    rescue Exception => e
-      @logger.error("[indexer] Problems to resolve summary texts for #{@id} (#{e.message})")
-    end
-  end
-
-
   def add_key_value_to_hash(hash, id, value)
 
     if hash[id] == nil
@@ -1878,11 +1857,58 @@ end
 
 
     @logger.debug "[indexer] (#{@id}) before summary-meta -> used: #{GC.stat[:used]}}\n\n"
-    # get summary(id)
-    if @summary_hsh[@id]
-      summary_meta = MetsSummaryMetadata.new
-      retrieve_summary_data(summary_meta)
+
+    s3_key    = "summary/#{@id}/"
+    summaries = @resource.bucket(@s3_bucket).objects({prefix: s3_key})
+
+    puts "s3_key: #{s3_key}"
+    puts "@s3_bucket: #{@s3_bucket}"
+    puts "summaries.count: #{summaries.count}"
+
+
+    puts @resource.bucket(@s3_bucket).objects({prefix: s3_key}).count
+    @resource.bucket(@s3_bucket).objects({prefix: s3_key}).each {|el| puts el.key}
+
+    if summaries.count > 0
+
+      summary_arr = Array.new
+
+
+      summaries.each {|el|
+
+        puts "el.key: #{el.key} (#{el.key.class})"
+
+        if el.key.end_with?('html')
+
+          name    = "ERROR"
+          content = "ERROR"
+
+          resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
+          doc     = resp.body.read # .gsub('"', "'")
+          content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
+
+          # summary/DE-611-HS-3216957/Cantor_Geometrie.html
+
+
+          match = el.key.match(/(summary)\/(\S*)\/(\S*).html/)
+          name  = match[3] if match[3] != nil
+
+          s              = Summary.new
+          s.summary_name = name
+          s.summary_ref  = "s3://#{@s3_bucket}/#{el.key}"
+          s.summary_content = doc
+
+          summary_arr << s
+        end
+
+      }
+
+
+      summary_meta            = MetsSummaryMetadata.new
+      summary_meta.addSummary = summary_arr
+
     end
+
 
     if meta.product != nil && meta.work != nil && image_meta.pages != nil && logical_meta.title_page_index != nil
       logical_meta.title_page = "#{meta.product}:#{meta.work}:#{image_meta.pages[logical_meta.title_page_index - 1]}"

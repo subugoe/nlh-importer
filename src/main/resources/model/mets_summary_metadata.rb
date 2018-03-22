@@ -7,7 +7,7 @@ class MetsSummaryMetadata
   end
 
   def addSummary=(summary)
-    @summary = summary
+    @summary += summary
   end
 
 
