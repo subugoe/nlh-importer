@@ -1771,10 +1771,19 @@ end
       date_modified = ""
       date_indexed  = ""
 
-      solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
-      if (solr_resp != nil) && (solr_resp&.size > 0)
-        date_modified = solr_resp['date_modified']
-        date_indexed  = solr_resp['date_indexed']
+
+      if (@reindex == "true") || (@reindex == true)
+        solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
+        if (solr_resp != nil) && (solr_resp&.size > 0)
+          date_modified = solr_resp['date_modified']
+          date_indexed  = solr_resp['date_indexed']
+        end
+      else
+        solr_resp = (@solr_gdz_tmp.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
+        if (solr_resp != nil) && (solr_resp&.size > 0)
+          date_modified = solr_resp['date_modified']
+          date_indexed  = solr_resp['date_indexed']
+        end
       end
 
       if (date_indexed != "") && (date_modified != "")
