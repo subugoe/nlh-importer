@@ -95,6 +95,8 @@ class Indexer
           :endpoint          => ENV['S3_ENDPOINT'],
           :force_path_style  => true,
           :region            => 'us-west-2')
+
+      @resource = Aws::S3::Resource.new(client: @s3)
     end
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
@@ -1980,7 +1982,7 @@ end
             #get_doc_from_str_doc
           else
             @logger.error "[indexer] Could not process context '#{@context}'"
-            next
+            return
           end
 
         else
