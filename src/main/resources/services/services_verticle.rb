@@ -8,6 +8,7 @@ require 'gelf'
 require 'services/converter_service'
 require 'services/indexer_service'
 require 'services/reindex_service'
+require 'services/purger_service'
 
 
 @logger       = Logger.new(STDOUT)
@@ -45,6 +46,10 @@ def check_request(routingContext, route)
           @logger.info("[services_verticle] Receive reindexer job: \t#{hsh}")
           reindexer = ReindexService.new
           reindexer.process_response(hsh, response)
+        when "purge"
+          @logger.info("[services_verticle] Receive purge job: \t#{hsh}")
+          purger = PurgerService.new
+          purger.process_response(hsh, response)
         else
           # TODO
       end
@@ -125,6 +130,23 @@ router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
   check_request(routingContext, "reindexer")
 
 }, false)
+
+# --- purge service ---
+
+
+# POST http://134.76.18.25:8083   /api/reindexer/jobs
+# Request
+# {
+#     "document": "PPN591416441",
+#     "context": "gdz"
+# }
+router.post(ENV['PURGE_CTX_PATH']).blocking_handler(lambda {|routingContext|
+
+  check_request(routingContext, "purge")
+
+}, false)
+
+
 
 
 $vertx.create_http_server.request_handler(&router.method(:accept)).listen 8080
