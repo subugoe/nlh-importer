@@ -217,8 +217,9 @@ class Indexer
       recordIdentifiers = mods.xpath('recordInfo/recordIdentifier[@source="gbv-ppn"]') if recordIdentifiers.empty?
       recordIdentifiers = mods.xpath('identifier[@type="ppn" or @type="PPN"]') if recordIdentifiers.empty?
       recordIdentifiers = mods.xpath('identifier[@type="urn" or @type="URN"]') if recordIdentifiers.empty?
-      recordIdentifiers = mods.xpath('recordInfo/recordIdentifier[@source="Kalliope"]') if recordIdentifiers.empty?
-      recordIdentifiers = mods.xpath('identifier[@type="DE-7/hans"]') if recordIdentifiers.empty?
+      recordIdentifiers = mods.xpath('recordInfo/recordIdentifier[@source="DE-611"]') if recordIdentifiers.empty?
+      #recordIdentifiers = mods.xpath('recordInfo/recordIdentifier[@source="Kalliope"]') if recordIdentifiers.empty?
+      #recordIdentifiers = mods.xpath('identifier[@type="DE-7/hans"]') if recordIdentifiers.empty?
       recordIdentifiers = mods.xpath('identifier[@type="local"][not(@invalid="yes")]') if recordIdentifiers.empty?
       recordIdentifiers = mods.xpath('recordInfo/recordIdentifier') if recordIdentifiers.empty?
 
