@@ -2051,7 +2051,7 @@ end
             addDocsToSolr(hsh)
 
             unless (@reindex == "true") || (@reindex == true)
-              create_pdf_conversion(@id, @context)
+               create_pdf_conversion(@id, @context)
             end
 
 
@@ -2079,7 +2079,7 @@ end
 
     begin
       resource = Aws::S3::Resource.new(client: @s3)
-      resource.bucket(bucket).objects({prefix: s3_key}).batch_delete!
+      resource.bucket(@s3_bucket).objects({prefix: s3_key}).batch_delete!
     rescue Exception => e
       @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
     end
