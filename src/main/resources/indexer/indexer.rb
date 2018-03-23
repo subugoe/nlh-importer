@@ -755,48 +755,6 @@ end
 
   end
 
-
-  # def getSummary(id)
-  #
-  #   attempts    = 0
-  #   fulltext    = ""
-  #   summary_key = "summary/#{id}/"
-  #
-  #   begin
-  #     str      = @s3.get_object({bucket: @s3_bucket, key: summary_key}).body.read
-  #     fulltext = Nokogiri::HTML(str).xpath('//text()').to_a.join(" ") if (str != "") && (str != nil)
-  #     return fulltext
-  #   rescue Exception => e
-  #     attempts = attempts + 1
-  #     if (attempts < MAX_ATTEMPTS)
-  #       sleep 1
-  #       retry
-  #     end
-  #     raise
-  #   end
-  #
-  # end
-  #
-  # def processSummary(summary_hsh)
-  #
-  #   s = Summary.new
-  #
-  #   s.summary_name = summary_hsh['name']
-  #   summary_ref    = summary_hsh['uri']
-  #   s.summary_ref  = summary_ref
-  #   content        = getSummary(summary_ref)
-  #
-  #   if content == nil
-  #     s.summary_content = "ERROR"
-  #   else
-  #     s.summary_content = content.xpath('//text()').to_a.join(" ")
-  #   end
-  #
-  #   return s
-  #
-  # end
-  #
-
   def processFulltexts(fulltext_meta)
 
     from_physical_id_to_attr_hsh, from_file_id_to_order_phys_id_hsh = get_physical_attr_hash
@@ -1856,37 +1814,22 @@ end
 
       summary_arr = Array.new
 
-
       summaries.each {|el|
 
         if el.key.end_with?('html')
-
           name    = "ERROR"
           content = "ERROR"
 
           resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
           doc     = resp.body.read # .gsub('"', "'")
           content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
-
-          # summary/DE-611-HS-3216957/Cantor_Geometrie.html
-
-          match = el.key.match(/(summary)\/(\S*)\/(\S*).html/)
-          name  = match[3] if match[3] != nil
-
-          s                 = Summary.new
-          s.summary_name    = name
-          s.summary_ref     = "s3://#{@s3_bucket}/#{el.key}"
-          s.summary_content = doc
-
-          summary_arr << s
+          summary_arr << content
         end
 
       }
 
-
       summary_meta            = MetsSummaryMetadata.new
       summary_meta.addSummary = summary_arr
-
     end
 
 
