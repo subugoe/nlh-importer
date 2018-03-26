@@ -653,6 +653,8 @@ class MetsDmdsecMetadata
       h.merge! ({:rights_owner_contact => @right_infos.collect {|rights| rights&.ownerContact}})
       h.merge! ({:rights_owner_logo => @right_infos.collect {|rights| rights&.ownerLogo}})
       h.merge! ({:rights_license => @right_infos.collect {|rights| rights&.license}})
+      h.merge! ({:rights_sponsor => @right_infos.collect {|rights| rights&.sponsor}})
+      h.merge! ({:rights_sponsor_site_url => @right_infos.collect {|rights| rights&.sponsorSiteURL}})
       #h.merge! ({:rights_reference => @right_infos.collect {|rights| rights&.reference}})
     end
 

@@ -1,6 +1,6 @@
 class Right
 
-  attr_accessor :owner, :ownerSiteURL, :ownerContact, :license, :ownerLogo #, :reference
+  attr_accessor :owner, :ownerSiteURL, :ownerContact, :license, :ownerLogo, :sponsor, :sponsorSiteURL #, :reference
 
   # def initialize(owner, ownerSiteURL, ownerContact, license)
   #   @owner = owner

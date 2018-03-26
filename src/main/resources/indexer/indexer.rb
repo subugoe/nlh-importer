@@ -1148,12 +1148,14 @@ end
 
     ri = Right.new
 
-    ri.owner        = "Niedersächsische Staats- und Universitätsbibliothek Göttingen"
-    ri.owner        = right['owner'] if @id == "PPN726234869"
-    ri.ownerContact = right['ownerContact']
-    ri.ownerSiteURL = right['ownerSiteURL']
-    ri.license      = right['license']
-    ri.ownerLogo    = right['ownerLogo']
+    ri.owner          = "Niedersächsische Staats- und Universitätsbibliothek Göttingen"
+    ri.owner          = right['owner'] if @id == "PPN726234869"
+    ri.ownerContact   = right['ownerContact']
+    ri.ownerSiteURL   = right['ownerSiteURL']
+    ri.license        = right['license']
+    ri.ownerLogo      = right['ownerLogo']
+    ri.sponsor        = right['sponsor']
+    ri.sponsorSiteURL = right['sponsorSiteURL']
 
     # links        = rights.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
     # ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text if links != nil
@@ -1830,19 +1832,23 @@ end
       summaries.each {|el|
 
         if el.key.end_with?('html')
+
           name    = "ERROR"
           content = "ERROR"
 
           resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
           doc     = resp.body.read # .gsub('"', "'")
           content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
+
           summary_arr << content
         end
 
       }
 
+
       summary_meta            = MetsSummaryMetadata.new
       summary_meta.addSummary = summary_arr
+
     end
 
 
@@ -1952,6 +1958,9 @@ end
         if (@str_doc != nil)
 
           # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
+
+
+
           metsModsMetadata = parseDoc()
 
 

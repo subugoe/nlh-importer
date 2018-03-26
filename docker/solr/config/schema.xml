@@ -378,6 +378,8 @@
         <field name="rights_owner_logo" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_license" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_reference" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_sponsor" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_sponsor_site_url" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <field name="subject_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="subject" type="text_ci" indexed="true" stored="true" multiValued="true"/>
