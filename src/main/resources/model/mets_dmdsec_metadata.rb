@@ -45,6 +45,7 @@ class MetsDmdsecMetadata
                 :edition_infos,
 
                 :languages,
+                :scriptterms,
 
                 :physical_descriptions,
 
@@ -96,6 +97,7 @@ class MetsDmdsecMetadata
     @original_infos        = Array.new
     @edition_infos         = Array.new
     @languages             = Array.new
+    @scriptterms           = Array.new
     @physical_descriptions = Array.new
     @notes                 = Array.new
 
@@ -183,6 +185,11 @@ class MetsDmdsecMetadata
   def addLanguage=(language)
     @languages = language
   end
+
+  def addScriptTerm=(scriptterm)
+    @scriptterms = scriptterm
+  end
+
 
   def addPhysicalDescription=(physicalDescription)
     @physical_descriptions = physicalDescription
@@ -536,7 +543,7 @@ class MetsDmdsecMetadata
     end
 
     h.merge! ({:lang => @languages.collect {|lang| lang.languageterm}})
-
+    h.merge! ({:scriptterm => @scriptterms})
 
     h.merge! ({:product => @product})
 

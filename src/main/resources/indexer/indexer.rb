@@ -498,6 +498,18 @@ end
 
   end
 
+  def getScriptterm(modsLanguageElements)
+
+    langArr = Array.new
+    while modsLanguageElements.count > 0
+      l = modsLanguageElements.shift
+      langArr << l.xpath("scriptTerm").text
+    end
+    modsLanguageElements = nil
+    return langArr
+
+  end
+
   def getLanguage(modsLanguageElements)
 
     langArr = Array.new
@@ -1411,7 +1423,8 @@ end
     # Language
     begin
       unless mods.xpath('language').empty?
-        dmdsec_meta.addLanguage = getLanguage(mods.xpath('language'))
+        dmdsec_meta.addLanguage   = getLanguage(mods.xpath("language[not(scriptTerm and languageTerm[text() = 'und'])]"))
+        dmdsec_meta.addScriptTerm = getScriptterm(mods.xpath("language[scriptTerm and languageTerm[text() = 'und']]"))
       end
     rescue Exception => e
       @logger.error("[indexer] Problems to resolve language for #{@id} (#{e.message})")
