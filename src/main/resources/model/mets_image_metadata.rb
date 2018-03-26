@@ -46,8 +46,8 @@ class MetsImageMetadata
     h.merge!({:product => @product}) unless @product == nil
 
     h.merge!({:image_format => @image_format}) unless @image_format == nil
-    h.merge! ({:baseurl => @baseurl}) unless @baseurl == nil
-    h.merge! ({:access_pattern => @access_pattern}) unless @access_pattern == nil
+    #h.merge! ({:baseurl => @baseurl}) unless @baseurl == nil
+    #h.merge! ({:access_pattern => @access_pattern}) unless @access_pattern == nil
 
     h.merge! ({:page => @pages})
     h.merge! ({:page_key => @page_keys})

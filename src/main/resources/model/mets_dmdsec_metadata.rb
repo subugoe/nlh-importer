@@ -551,23 +551,23 @@ class MetsDmdsecMetadata
       h.merge! ({:work => @work})
 
 
-      unless ENV['METS_VIA_OAI'] == 'true'
-        mets_path = "mets/#{@product}/#{@work}.mets.xml"
-      else
-        mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@work}"
-      end
-
-      h.merge! ({:mets_path => mets_path})
+      # unless ENV['METS_VIA_OAI'] == 'true'
+      #   mets_path = "mets/#{@product}/#{@work}.mets.xml"
+      # else
+      #   mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@work}"
+      # end
+      #
+      # h.merge! ({:mets_path => mets_path})
 
     elsif @doctype == "anchor"
       h.merge! ({:collection => @collection})
 
-      unless ENV['METS_VIA_OAI'] == 'true'
-        mets_path = "mets/#{@product}/#{@collection}.mets.xml"
-      else
-        mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@collection}"
-      end
-      h.merge! ({:mets_path => mets_path})
+      # unless ENV['METS_VIA_OAI'] == 'true'
+      #   mets_path = "mets/#{@product}/#{@collection}.mets.xml"
+      # else
+      #   mets_path = "http://gdz.sub.uni-goettingen.de/mets/#{@collection}"
+      # end
+      # h.merge! ({:mets_path => mets_path})
     end
 
 
