@@ -134,7 +134,7 @@ router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 # --- purge service ---
 
 
-# POST http://134.76.18.25:8083   /api/reindexer/jobs
+# POST http://134.76.18.25:8083   /api/purge/jobs
 # Request
 # {
 #     "document": "PPN591416441",
