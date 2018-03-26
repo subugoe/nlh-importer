@@ -701,13 +701,14 @@ end
     if (@context != nil) && (@context.downcase == "nlh")
 
       begin
+
         # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
         match   = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
         baseurl = match[1]
         product = match[3]
         work    = match[4]
       rescue Exception => e
-        @logger.error("[indexer] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
+        @logger.error("[indexer] [GDZ-757] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -720,13 +721,20 @@ end
     elsif (@context != nil) && (@context.downcase == "gdz")
 
       begin
-        # GDZ:  "http://gdz.sub.uni-goettingen.de/tiff/DE_611_BF_5619_1772_1779/00000001.tif
-        match        = firstUri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
+
+
+      #   http://gdz.sub.uni-goettingen.de/tiff/DE_611_BF_5619_1772_1779/00000001.tif
+      #   http://gdz.sub.uni-goettingen.de/tiff/PPN898111889/00000001.tif
+      match        = firstUri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
+      if match == nil
+        #   file:///goobi/tiff001/sbb/PPN726234869/00000001.tif
+        match        = firstUri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
+      end
         baseurl      = match[1]
         work         = match[2]
         image_format = match[4]
       rescue Exception => e
-        @logger.error("[indexer] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
+        @logger.error("[indexer] [GDZ-757] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
@@ -747,6 +755,9 @@ end
       begin
         if (@context != nil) && (@context.downcase == "gdz")
           match = image_uri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
+          if match == nil
+            match        = image_uri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
+          end
           page  = match[3]
         elsif (@context != nil) && (@context.downcase == "nlh")
           match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
