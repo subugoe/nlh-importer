@@ -18,51 +18,51 @@ class OriginInfo
 
     match = date.match(/(\d*)-(\d*)-(\d*)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (2) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (2) for #{id}")
       return match[1].to_i
     end
 
     match = date.match(/(\d*)\.(\d*)\.(\d\d\d\d)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (10) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (10) for #{id}")
       return match[3].to_i
     end
 
     match = date.match(/\[(\d*)\]/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (1) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (1) for #{id}")
       return match[1].to_i
     end
 
 
     match = date.match(/(s.a.)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (3) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (3) for #{id}")
       return nil
     end
 
     match = date.match(/(\[ca. )(\d*)\]/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (4) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (4) for #{id}")
       return match[2].to_i
     end
 
     match = date.match(/([\S]*) (\d\d\d\d)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (9) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (9) for #{id}")
       return match[2].to_i
     end
 
     match = date.match(/(\d*)(XX)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (5) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (5) for #{id}")
       value = match[1].to_i
       return {:start => value * 100, :end => value * 100 + 99}
     end
 
     match = date.match(/(\d\d)(\d*)\/(\d*)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (6) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (6) for #{id}")
       value1 = (match[1]+match[2]).to_i
       if match[3].size == 2
         value2 = (match[1]+match[3]).to_i
@@ -74,13 +74,13 @@ class OriginInfo
 
 
     if date.downcase.start_with? 'ppn'
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (8) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (8) for #{id}")
       return nil
     end
 
     match = date.match(/(\d\d\d\d)(\d\d\d\d)/)
     if match
-      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (7) for #{id}")
+      @logger.warn("[indexer] [GDZ-580] Year mapping (7) for #{id}")
       return {:start => (match[1]).to_i, :end => (match[2]).to_i, :str => "#{match[1]}/#{match[2]}"}
     end
 
