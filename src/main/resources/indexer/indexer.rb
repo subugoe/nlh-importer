@@ -723,13 +723,13 @@ end
       begin
 
 
-      #   http://gdz.sub.uni-goettingen.de/tiff/DE_611_BF_5619_1772_1779/00000001.tif
-      #   http://gdz.sub.uni-goettingen.de/tiff/PPN898111889/00000001.tif
-      match        = firstUri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
-      if match == nil
-        #   file:///goobi/tiff001/sbb/PPN726234869/00000001.tif
-        match        = firstUri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
-      end
+        #   http://gdz.sub.uni-goettingen.de/tiff/DE_611_BF_5619_1772_1779/00000001.tif
+        #   http://gdz.sub.uni-goettingen.de/tiff/PPN898111889/00000001.tif
+        match = firstUri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
+        if match == nil
+          #   file:///goobi/tiff001/sbb/PPN726234869/00000001.tif
+          match = firstUri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
+        end
         baseurl      = match[1]
         work         = match[2]
         image_format = match[4]
@@ -756,9 +756,9 @@ end
         if (@context != nil) && (@context.downcase == "gdz")
           match = image_uri.match(/(\S*)\/tiff\/(\S*)\/(\S*)\.(\S*)/)
           if match == nil
-            match        = image_uri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
+            match = image_uri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
           end
-          page  = match[3]
+          page = match[3]
         elsif (@context != nil) && (@context.downcase == "nlh")
           match = image_uri.match(/(\S*\/)(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
           page  = match[4]
@@ -997,7 +997,6 @@ end
     while from_logical_id_to_physical_ids_hsh.count > 0
 
       logical_id, physical_ids = from_logical_id_to_physical_ids_hsh.shift
-
 
       begin
         to = from_physical_id_to_attr_hsh[physical_ids.first]&.fetch('order')&.to_i
@@ -1652,6 +1651,7 @@ end
 
   def add_key_value_to_hash(hash, id, value)
 
+
     if hash[id] == nil
       hash[id] = [value]
     else
@@ -1685,6 +1685,7 @@ end
     firstmeta                           = ''
     from_logical_id_to_physical_ids_hsh = get_from_logical_id_to_physical_ids_hsh()
 
+
     from_log_id_to_start_end_hsh        = get_logical_page_range(logical_meta, from_logical_id_to_physical_ids_hsh) if logical_meta.doctype == "work"
 
     divs = get_logical_divs_for_tag
@@ -1705,6 +1706,7 @@ end
 
       firstmeta = meta if (meta.isLog_part == true) && (firstmeta == '')
     }
+
 
     if (logical_meta.doctype == "anchor") & (logical_meta.logicalElements.empty?)
       @logger.error("[indexer] [GDZ-532] No child documents referenced in '#{@id}'.")
@@ -1753,12 +1755,12 @@ end
       else
         solr_resp = (@solr_gdz_tmp.get 'select', :params => {:q => "id:#{@id}", :fl => "date_indexed"})['response']['docs'].first
         if (solr_resp != nil) && (solr_resp&.size > 0)
-          date_indexed  = solr_resp['date_indexed']
+          date_indexed = solr_resp['date_indexed']
         end
       end
 
       if (date_indexed != "")
-        logical_meta.date_indexed = date_indexed
+        logical_meta.date_indexed  = date_indexed
         logical_meta.date_modified = date_modified if date_modified != ""
       end
 
@@ -1969,7 +1971,6 @@ end
         if (@str_doc != nil)
 
           # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
-
 
 
           metsModsMetadata = parseDoc()
