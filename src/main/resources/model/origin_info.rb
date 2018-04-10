@@ -17,10 +17,15 @@ class OriginInfo
   def check_date(date, id)
 
     match = date.match(/(\d*)-(\d*)-(\d*)/)
-
     if match
       @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (2) for #{id}")
       return match[1].to_i
+    end
+
+    match = date.match(/(\d*)\.(\d*)\.(\d\d\d\d)/)
+    if match
+      @logger.warn("[origin_info.rb] [GDZ-580] Year mapping (10) for #{id}")
+      return match[3].to_i
     end
 
     match = date.match(/\[(\d*)\]/)
