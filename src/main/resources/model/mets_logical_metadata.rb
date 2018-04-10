@@ -32,15 +32,7 @@ class MetsLogicalMetadata
     @facet_person_corporate  = Array.new
 
     @title_page = 1
-    #@title_page_index = 0
-
-    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
-    @logger.level = ENV['DEBUG_MODE'].to_i
   end
-
-  # def addLogicalElement=(logicalElement)
-  #   @logicalElements += logicalElement
-  # end
 
   def addToLogicalElement(logicalElement)
     @logicalElements[logicalElement.id] = logicalElement
@@ -54,7 +46,6 @@ class MetsLogicalMetadata
     if !@logicalElements.empty?
 
       id               = Array.new
-      work_id          = Array.new
       type             = Array.new
       label            = Array.new
       dmdid            = Array.new
