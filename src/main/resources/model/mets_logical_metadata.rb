@@ -80,22 +80,25 @@ class MetsLogicalMetadata
 
       arr[1..-1].each {|el|
 
-        id << el.id
-        work_id << @work
-        type << el.type
-        label << el.label
+        if (el.start_page_index != nil) && (el.end_page_index != nil)
+          id << el.id
+          type << el.type
+          label << el.label
 
-        #dmdid << el.dmdid
-        #admid << el.admid
+          start_page_index << el.start_page_index unless @doctype == "anchor"
+          end_page_index << el.end_page_index unless @doctype == "anchor"
 
-        start_page_index << el.start_page_index unless @doctype == "anchor"
-        end_page_index << el.end_page_index unless @doctype == "anchor"
+          level << el.level
 
-        level << el.level
+          part_product << el.part_product
+          part_work << el.part_work
+          part_key << el.part_key
+        else
+          if el.id != nil
+            @logger.error("[indexer] [GDZ-761] Inconsistency between logical and physical structMap for #{@work} (#{el.id})")
+          end
+        end
 
-        part_product << el.part_product
-        part_work << el.part_work
-        part_key << el.part_key
       }
 
       h.merge! ({:log_id => id})
