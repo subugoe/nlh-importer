@@ -17,7 +17,6 @@ elsif ENV['CONVERTER_TYPE'] == "log"
   @img_convert_queue = ENV['REDIS_IMG_CONVERT_LOG_QUEUE']
 end
 
-
 @rredis = Redis.new(
     :host               => ENV['REDIS_HOST'],
     :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
@@ -34,6 +33,7 @@ $vertx.execute_blocking(lambda {|future|
 
     while true do
       res       = @rredis.brpop(@img_convert_queue) #, :timeout => 5)
+
       msg       = res[1]
       json      = JSON.parse msg
       converter = ImgToPdfConverter.new
@@ -42,7 +42,7 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    #@logger.error "[img_converter_job_builder] Redis problem \t#{e.message}\n\t#{e.bachtrace}"
+    @logger.error "[img_converter_job_builder] Redis problem \t#{e.message}\n\t#{e.bachtrace}"
     sleep(5)
     retry
   end

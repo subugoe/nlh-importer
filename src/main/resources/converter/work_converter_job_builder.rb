@@ -31,7 +31,6 @@ require 'converter/work_converter'
     :db              => ENV['REDIS_DB'].to_i
 )
 
-
 $vertx.execute_blocking(lambda {|future|
 
   GC.start
@@ -49,7 +48,7 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    #@logger.error "[work_converter_job_builder] Redis problem \t#{e.message}"
+    @logger.error "[work_converter_job_builder] Redis problem \t#{e.message}"
     sleep(5)
     retry
   end
