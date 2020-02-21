@@ -7,6 +7,7 @@ require 'json'
 
 require 'indexer/indexer'
 
+
 # prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
 # process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
 
@@ -39,12 +40,13 @@ $vertx.execute_blocking(lambda {|future|
     while true do
       res = @rredis.brpop(@queue)
 
-      indexer = Indexer.new
-      indexer.process_response(res)
+      indexer = Indexer.new(res)
+      indexer.process_response()
 
     end
 
   rescue Exception => e
+    @logger.error("[indexer_job_builder.rb] Error \t#{e.message}")
     sleep(5)
     retry
   end

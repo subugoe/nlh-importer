@@ -46,11 +46,30 @@ class Indexer
 
   MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
-  def initialize
+  def initialize(res)
 
-    @use_s3 = false
-    @use_s3 = true if ENV['USE_S3'] == 'true'
+    if (res != '' && res != nil)
 
+      # {"s3_key" => key, "context" => context}.to_json
+      # s3_obj_key= mets/<id>.xml
+      msg = res[1]
+
+      json = JSON.parse msg
+
+      @context = json['context']
+      @prod    = json['product']
+      @id      = json['document']
+      @reindex = json['reindex']
+
+
+      if @context == "nlh"
+        @s3_key = "mets/#{@id}.mets.xml"
+      else
+        @s3_key = "mets/#{@id}.xml"
+      end
+
+
+    end
 
     @dc_hsh = {
         "vd18 digital"   => "vd18.digital",
@@ -59,11 +78,25 @@ class Indexer
         "VD18 göttingen" => "vd18.göttingen"
     }
 
+    @image_format_hsh = {
+        "nlh-eai1" => "jpg",
+        "nlh-eai2" => "tif",
+        "nlh-ecj"  => "jpg",
+        "nlh-emo"  => "jpg",
+        "nlh-moc"  => "jpg",
+        "nlh-tda1" => "tif",
+        "nlh-tda2" => "tif",
+        "nlh-ecc"  => "TIF",
+        "nlh-tls"  => "jpg",
+        "nlh-eha"  => "jpg",
+        "gdz"      => "tif"
+    }
 #@oai_endpoint   = ENV['METS_VIA_OAI']
-    @short_product  = ENV['SHORT_PRODUCT']
+#@short_product  = ENV['SHORT_PRODUCT']
     @access_pattern = ENV['ACCESS_PATTERN']
 
-    productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+    productin = ENV['IN'] + '/' + @prod
+#productin   = ENV['IN'] + '/' + ENV['PRODUCT']
     @teiinpath  = productin + ENV['TEI_IN_SUB_PATH']
     @teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
@@ -71,12 +104,18 @@ class Indexer
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 #@context       = ENV['CONTEXT']
 
-    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+# @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+# @logger.level = ENV['DEBUG_MODE'].to_i
+
+    @logger       = Logger.new(STDOUT)
     @logger.level = ENV['DEBUG_MODE'].to_i
+
 
     @services_adr = ENV['SERVICES_ADR']
 
-    @queue  = ENV['REDIS_INDEX_QUEUE']
+    @queue                    = ENV['REDIS_INDEX_QUEUE']
+    @content_id_date_kv_store = ENV['REDIS_CONTENT_ID_DATE_KV_STORE']
+
     @rredis = Redis.new(
         :host               => ENV['REDIS_HOST'],
         :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
@@ -87,19 +126,45 @@ class Indexer
     @solr_gdz_tmp = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
     @solr_gdz     = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
+    attempts = 0
+    begin
+      if @context == "gdz"
+        access_key_id     = ENV['S3_SUB_AWS_ACCESS_KEY_ID']
+        secret_access_key = ENV['S3_SUB_AWS_SECRET_ACCESS_KEY']
+        endpoint          = ENV['S3_SUB_ENDPOINT']
+        region            = ENV['S3_SUB_REGION']
+      elsif @context == "digizeit"
+        access_key_id     = ENV['S3_DIGIZEIT_AWS_ACCESS_KEY_ID']
+        secret_access_key = ENV['S3_DIGIZEIT_AWS_SECRET_ACCESS_KEY']
+        endpoint          = ENV['S3_DIGIZEIT_ENDPOINT']
+        region            = ENV['S3_DIGIZEIT_REGION']
+      elsif @context.downcase.start_with?("nlh")
+        access_key_id     = ENV['S3_NLH_AWS_ACCESS_KEY_ID']
+        secret_access_key = ENV['S3_NLH_AWS_SECRET_ACCESS_KEY']
+        endpoint          = ENV['S3_NLH_ENDPOINT']
+        region            = ENV['S3_NLH_REGION']
+      end
 
-    if @use_s3
       @s3 = Aws::S3::Client.new(
-          :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-          :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-          :endpoint          => ENV['S3_ENDPOINT'],
-          :force_path_style  => true,
-          :region            => 'us-west-2')
+          :access_key_id     => access_key_id,
+          :secret_access_key => secret_access_key,
+          :endpoint          => endpoint,
+          :region            => region,
+          :force_path_style  => false)
 
-      @resource = Aws::S3::Resource.new(client: @s3)
+    rescue Exception => e
+      attempts = attempts + 1
+      if (attempts < MAX_ATTEMPTS)
+        sleep 0.2
+        retry
+      end
+
+      raise e
     end
 
-    @nlh_bucket = ENV['S3_NLH_BUCKET']
+
+    @resource = Aws::S3::Resource.new(client: @s3)
+
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
   end
@@ -117,7 +182,7 @@ class Indexer
 
 
   def modifyUrisInArray(images, object_uri)
-    arr = images.collect {|uri|
+    arr = images.collect { |uri|
       switchToFedoraUri uri, object_uri
     }
 
@@ -173,7 +238,7 @@ class Indexer
 
     begin
 
-      mods.xpath('identifier').each {|id_element|
+      mods.xpath('identifier').each { |id_element|
         #type = id_element.attributes['type']&.value
         #type = "unknown" if type == nil
 
@@ -183,7 +248,7 @@ class Indexer
       }
 
       #unless mods.xpath('recordInfo/recordIdentifier') == nil
-      mods.xpath('recordInfo/recordIdentifier')&.each {|id_element|
+      mods.xpath('recordInfo/recordIdentifier')&.each { |id_element|
 
         #type = id_element.attributes['id']&.value
         #type = id_element.attributes['type']&.value if type == nil
@@ -261,9 +326,7 @@ end
   def getTitleInfos(modsTitleInfoElements)
 
     titleInfoArr = Array.new
-
     while modsTitleInfoElements.count > 0
-
       ti = modsTitleInfoElements.shift
 
       titleInfo = TitleInfo.new
@@ -295,7 +358,7 @@ end
       if authority == 'gnd'
         value       = name['valueURI']
         n.gndURI    = checkEmptyString value
-        n.gndNumber = checkEmptyString value[(value.rindex('/')+1)..-1]
+        n.gndNumber = checkEmptyString value[(value.rindex('/') + 1)..-1]
       else
         n.gndURI    = ' '
         n.gndNumber = ' '
@@ -325,36 +388,37 @@ end
 
   end
 
-
   def getLocation(modsLocationElements)
 
     locationArr = Array.new
 
     while modsLocationElements.count > 0
-
       li = modsLocationElements.shift
 
-      locationInfo = Location.new
+      li.xpath("physicalLocation[@type='shelfmark']").each {|shelfmark|
+        if (shelfmark.text != '')
+          loc           = Location.new
+          loc.shelfmark = shelfmark.text
+          locationArr << loc
+        end
+      }
 
-      shelfmark_l1 = li.xpath("physicalLocation[@type='shelfmark']").text
-      shelfmark_l2 = li.xpath("shelfLocator").text
 
-      if (shelfmark_l1 != nil && shelfmark_l1 != '')
-        locationInfo.shelfmark = shelfmark_l1
-      elsif (shelfmark_l2 != nil && shelfmark_l2 != '')
-        locationInfo.shelfmark = shelfmark_l2
-      end
-
-      locationArr << locationInfo
-
+      li.xpath("shelfLocator").each {|shelfmark|
+        if (shelfmark.text != '')
+          loc           = Location.new
+          loc.shelfmark = shelfmark.text
+          locationArr << loc
+        end
+      }
     end
+
     modsLocationElements = nil
 
     return locationArr
   end
 
   def getGenre(modsGenreElements)
-
     genreArr = Array.new
 
     while modsGenreElements.count > 0
@@ -370,8 +434,8 @@ end
     end
     modsGenreElements = nil
 
-
     return genreArr
+
   end
 
   def getClassification(modsClassificationElements)
@@ -387,7 +451,7 @@ end
       c = checkEmptyString dc.text
       c = @dc_hsh[c] unless @dc_hsh[c] == nil
 
-      classification.value     = c
+      classification.value     = c.downcase
       classification.authority = checkEmptyString dc["authority"]
 
       classificationArr << classification
@@ -400,12 +464,21 @@ end
 
 
   def getDigitalCollections(modsDigitalCollectionElements)
+
     digitalCollectionArr = Array.new
 
     while modsDigitalCollectionElements.count > 0
 
       col = modsDigitalCollectionElements.shift
-      digitalCollectionArr << col.text
+
+      classification = Classification.new
+
+      c = checkEmptyString col.text.downcase
+      c = @dc_hsh[col] unless @dc_hsh[col] == nil
+
+      classification.value = c
+
+      digitalCollectionArr << classification
 
     end
     modsDigitalCollectionElements = nil
@@ -425,8 +498,8 @@ end
 
       originInfo = OriginInfo.new
 
-      originInfo.places     = oi.xpath("place/placeTerm[@type='text']").collect {|el| el.text}
-      originInfo.publishers = oi.xpath("publisher").collect {|el| el.text}
+      originInfo.places     = oi.xpath("place/placeTerm[@type='text']").collect { |el| el.text }
+      originInfo.publishers = oi.xpath("publisher").collect { |el| el.text }
       #originInfo.issuance = oi.xpath("issuance").text
 
       originInfo.edition = oi.xpath("edition").text
@@ -537,7 +610,7 @@ end
       pd       = PhysicalDescription.new
 
       forms = Hash.new
-      physdesc.xpath('form').each {|el| forms.merge! el['authority'] => el.text}
+      physdesc.xpath('form').each { |el| forms.merge! el['authority'] => el.text }
 
       pd.form                = forms['marccategory']
       pd.reformattingQuality = physdesc.xpath('reformattingQuality').text
@@ -591,21 +664,21 @@ end
 
       if !personal.empty?
         subject.type    = 'personal'
-        str             = personal.collect {|s| s.text if s != nil}.join("; ")
+        str             = personal.collect { |s| s.text if s != nil }.join("; ")
         subject.subject = str
 
       elsif !corporate.empty?
         subject.type    = 'corporate'
-        str             = corporate.collect {|s| s.text if s != nil}.join("; ")
+        str             = corporate.collect { |s| s.text if s != nil }.join("; ")
         subject.subject = str
 
       elsif !geographic.empty?
         subject.type    = 'geographic'
-        subject.subject = geographic.children.collect {|s| s.text if (s != nil && s.children != nil)}.join("/")
+        subject.subject = geographic.children.collect { |s| s.text if (s != nil && s.children != nil) }.join("/")
 
       elsif !topic.empty?
         subject.type    = 'topic'
-        subject.subject = topic.collect {|s| s.child.text if (s != nil && s.child != nil)}.join("/")
+        subject.subject = topic.collect { |s| s.child.text if (s != nil && s.child != nil) }.join("/")
 
       end
 
@@ -677,16 +750,19 @@ end
 
     #@str_doc = open("http://gdz.sub.uni-goettingen.de/mets/PPN235181684_0126.xml")
     #@str_doc = open("http://gdz.sub.uni-goettingen.de/mets/DE_611_BF_5619_1772_1779.xml")
-    doc_parser = Saxerator.parser(@str_doc) {|config|
+    doc_parser = Saxerator.parser(@str_doc) { |config|
       config.ignore_namespaces!
       config.output_type = :xml
     }
-    fileGrp    = doc_parser.for_tag('fileGrp').with_attribute('USE', 'PRESENTATION')
+
+    fileGrp = doc_parser.for_tag('fileGrp').with_attribute('USE', 'PRESENTATION')
+    fileGrp = doc_parser.for_tag('fileGrp').with_attribute('USE', 'MAX') if fileGrp.first.to_s == ''
+    fileGrp = doc_parser.for_tag('fileGrp').with_attribute('USE', 'DEFAULT') if fileGrp.first.to_s == ''
 
 
     fileGrp_str = fileGrp.first.to_s.gsub("xlink:href", "href")
     # or strip_namespaces! :xlink
-    fileGrp_parser = Saxerator.parser(fileGrp_str) {|config|
+    fileGrp_parser = Saxerator.parser(fileGrp_str) { |config|
       config.ignore_namespaces!
       config.put_attributes_in_hash!
       #config.strip_namespaces! :xlink
@@ -703,19 +779,22 @@ end
       begin
 
         # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
-        match   = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-        baseurl = match[1]
-        product = match[3]
-        work    = match[4]
+        match = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
+        #baseurl = match[1]
+        # product = match[3]
+        # product = "nlh-" + product if !product.start_with? 'nlh-'
+        work = match[4]
       rescue Exception => e
         @logger.error("[indexer] [GDZ-757] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
-      image_meta.image_format   = ENV['IMAGE_OUT_FORMAT']
-      image_meta.baseurl        = baseurl
+
+      image_meta.image_format = @image_format_hsh[@prod]
+      #image_meta.image_format = ENV['IMAGE_OUT_FORMAT']
+      #image_meta.baseurl        = baseurl
       image_meta.access_pattern = @access_pattern
-      image_meta.product        = product
+      image_meta.product        = @prod
       image_meta.work           = work
 
     elsif (@context != nil) && (@context.downcase == "gdz")
@@ -730,25 +809,26 @@ end
           #   file:///goobi/tiff001/sbb/PPN726234869/00000001.tif
           match = firstUri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
         end
-        baseurl      = match[1]
-        work         = match[2]
-        image_format = match[4]
+        #baseurl      = match[1]
+        work = match[2]
+          #image_format = match[4]
       rescue Exception => e
         @logger.error("[indexer] [GDZ-757] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
-      product = @short_product
+      #product = @short_product
 
-      image_meta.image_format   = ENV['IMAGE_OUT_FORMAT']
-      image_meta.baseurl        = baseurl
+      image_meta.image_format = @image_format_hsh[@prod]
+      #image_meta.image_format = ENV['IMAGE_OUT_FORMAT']
+      #image_meta.baseurl        = baseurl
       image_meta.access_pattern = @access_pattern
-      image_meta.product        = product
+      image_meta.product        = @prod
       image_meta.work           = work
     end
 
     files = fileGrp_parser.within('file')
-    files.each {|file|
+    files.each { |file|
 
       image_uri = file.attributes['href']
 
@@ -768,7 +848,7 @@ end
         raise
       end
 
-      id_arr << "#{product}:#{work}:#{page}"
+      id_arr << "#{@prod}:#{work}:#{page}"
       page_arr << page
 
     }
@@ -786,7 +866,7 @@ end
     # unless @doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').empty?
 
     #@str_doc   = open("http://gdz.sub.uni-goettingen.de/mets/PPN235181684_0126.xml")
-    doc_parser = Saxerator.parser(@str_doc) {|config|
+    doc_parser = Saxerator.parser(@str_doc) { |config|
       config.ignore_namespaces!
       config.output_type = :xml
     }
@@ -796,7 +876,7 @@ end
     return if fileGrp.first.to_s == ''
 
     fileGrp_str    = fileGrp.first.to_s.gsub("xlink:href", "href")
-    fileGrp_parser = Saxerator.parser(fileGrp_str) {|config|
+    fileGrp_parser = Saxerator.parser(fileGrp_str) { |config|
       config.ignore_namespaces!
       config.put_attributes_in_hash!
     }
@@ -810,15 +890,15 @@ end
 
       if (@context != nil) && (@context.downcase == "nlh")
         # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-        match   = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-        product = match[2]
-        work    = match[3]
+        match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+        #product = match[2]
+        work = match[3]
       elsif (@context != nil) && (@context.downcase == "gdz")
         # gdzocr_url": [
         #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
-        match   = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-        work    = match[3]
-        product = @short_product
+        match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
+        work  = match[3]
+        #product = @short_product
       end
 
     rescue Exception => e
@@ -827,7 +907,7 @@ end
     end
 
     files = fileGrp_parser.for_tag('file')
-    files.each {|file|
+    files.each { |file|
 
       fulltext = Fulltext.new
       uri      = file['FLocat'].attributes['href']
@@ -835,14 +915,16 @@ end
 
       begin
         if (@context != nil) && (@context.downcase == "nlh")
-          match    = uri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-          page     = match[4]
-          filename = match[4] + '.tei.xml'
+          match    = uri.match(/\S*:\S*:(\S*)\.(tei\.xml|txt\.xml|html)/)
+          page     = match[1]
+          format   = match[2]
+          filename = match[1] + '.' + match[2]
         elsif (@context != nil) && (@context.downcase == "gdz")
-          match  = uri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
-          page   = match[4]
-          format = match[5]
-          from   = match[0]
+          match  = uri.match(/\S*\/(\S*)\.(xml|txt|html)/)
+          page   = match[1]
+          format = match[2]
+          #from     = match[0]
+          filename = match[1] + '.' + match[2]
         end
       rescue Exception => e
         @logger.error("[indexer] No regex match for fulltext URI #{uri} \t#{e.message}")
@@ -872,11 +954,7 @@ end
 
       fulltext.fulltext_page_number = page_number
 
-      if @use_s3
-        ftext = get_fulltext_from_s3(page)
-      else
-        ftext = getFulltext(uri)
-      end
+      ftext = get_fulltext_from_s3(filename)
 
       if ftext == nil
         fulltext.fulltext     = "ERROR"
@@ -918,13 +996,13 @@ end
 
   def get_logical_divs_for_tag
     #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN496972103_0197.xml')) {|config|
-    xml_parser = Saxerator.parser(@str_doc) {|config|
+    xml_parser = Saxerator.parser(@str_doc) { |config|
       config.output_type = :xml
       config.ignore_namespaces!
     }
     structmap  = xml_parser.for_tag("structMap").with_attribute("TYPE", "LOGICAL")
 
-    structmap_parser = Saxerator.parser(structmap.first.to_s.gsub("xlink:href", "href")) {|config|
+    structmap_parser = Saxerator.parser(structmap.first.to_s.gsub("xlink:href", "href")) { |config|
       #config.ignore_namespaces!
       #config.put_attributes_in_hash!
       config.output_type = :xml
@@ -936,13 +1014,13 @@ end
 
   def get_physical_divs_within
     #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
-    xml_parser = Saxerator.parser(@str_doc) {|config|
+    xml_parser = Saxerator.parser(@str_doc) { |config|
       config.output_type = :xml
       config.ignore_namespaces!
     }
     structmap  = xml_parser.for_tag("structMap").with_attribute("TYPE", "PHYSICAL")
 
-    structmap_parser = Saxerator.parser(structmap.first.to_s) {|config|
+    structmap_parser = Saxerator.parser(structmap.first.to_s) { |config|
       #config.ignore_namespaces!
       config.put_attributes_in_hash!
       #config.output_type = :xml
@@ -962,7 +1040,7 @@ end
     from_file_id_to_order_phys_id_hsh = Hash.new
 
     divs = get_physical_divs_within
-    divs.each {|el|
+    divs.each { |el|
       attrs = el.attributes
       id    = attrs['ID']
       #arr.include? "FILE_0000_MIN"
@@ -978,7 +1056,7 @@ end
           'contentid'  => attrs['CONTENTIDS']
       }
 
-      el['fptr'].each {|fptr|
+      el['fptr'].each { |fptr|
         from_file_id_to_order_phys_id_hsh[fptr['FILEID']] = id
       }
     }
@@ -1032,8 +1110,8 @@ end
 
   def get_info_from_mets_mptrs(part_url)
 
-    product = ''
-    work    = ''
+    #product = ''
+    work = ''
 
     if (@context != nil) && (@context.downcase == "nlh")
 
@@ -1042,8 +1120,9 @@ end
         match = part_url.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
         match = part_url.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
 
-        product = match[2]
-        work    = match[3]
+        #product = @prod
+        #product = match[2]
+        work = match[3]
       rescue Exception => e
         @logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
         raise
@@ -1062,8 +1141,8 @@ end
           match = part_url.match(/(\S*)\/mets\/(\S*).xml/)
         end
 
-        work    = match[2]
-        product = "gdz"
+        work = match[2]
+          #product = @prod
 
       rescue Exception => e
         if (match == nil) && (count < 1)
@@ -1080,7 +1159,7 @@ end
       end
     end
 
-    return {'work' => work, 'product' => product}
+    return {'work' => work, 'product' => @prod}
 
   end
 
@@ -1201,8 +1280,8 @@ end
 
       else
 
-        fulltext = File.open(xml_path) {|f|
-          Nokogiri::XML(f) {|config|
+        fulltext = File.open(xml_path) { |f|
+          Nokogiri::XML(f) { |config|
             #config.noblanks
           }
         }
@@ -1213,7 +1292,7 @@ end
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
       fileNotFound("fulltext", e)
@@ -1222,13 +1301,21 @@ end
 
   end
 
-  def get_fulltext_from_s3(page)
+  def get_fulltext_from_s3(file)
 
     attempts = 0
 
     #s3://gdz/fulltext/<work_id>/<page>.xml
-    s3_fulltext_key = "fulltext/#{@id}/#{page}.xml"
+    #
+    #
 
+    if (@context != nil) && (@context.downcase == "nlh")
+      s3_fulltext_key = "fulltext/#{@id}/#{file}"
+    elsif (@context != nil) && (@context.downcase == "gdz")
+      s3_fulltext_key = "fulltext/#{@id}/#{file}"
+    end
+
+    attempts = 0
     begin
       resp = @s3.get_object({bucket: @s3_bucket, key: s3_fulltext_key})
       str  = resp.body.read.gsub('"', "'")
@@ -1236,28 +1323,28 @@ end
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
-
       raise e
     end
   end
 
 
   def get_str_doc_from_s3
-    attempts = 0
 
+    attempts = 0
     begin
       resp     = @s3.get_object({bucket: @s3_bucket, key: @s3_key})
       @str_doc = resp.body.read
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
 
+      @logger.error("[img_converter] [GDZ-527] Could not download file (#{@s3_bucket}/#{@s3_key}) from S3 \t#{e.message} ")
       raise e
     end
   end
@@ -1268,20 +1355,21 @@ end
   end
 
 
+=begin
   def get_doc_from_path()
 
     attempts = 0
 
     begin
-      @doc = File.open(@id) {|f|
-        Nokogiri::XML(f) {|config|
+      @doc = File.open(@id) { |f|
+        Nokogiri::XML(f) { |config|
           config.noblanks
         }
       }
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
       fileNotFound("METS", e)
@@ -1289,7 +1377,9 @@ end
     end
 
   end
+=end
 
+=begin
   def get_str_doc_from_ppn(uri)
     attempts = 0
 
@@ -1298,13 +1388,14 @@ end
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
       fileNotFound("METS", e)
       return nil
     end
   end
+=end
 
   def get_doc_from_str_doc
 
@@ -1337,7 +1428,7 @@ end
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
-        sleep 1
+        sleep 0.2
         retry
       end
       fileNotFound("METS", e)
@@ -1349,6 +1440,7 @@ end
   def metadata_for_dmdsec(id, mods)
 
     #@logger.debug "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
+
 
     dmdsec_meta = MetsDmdsecMetadata.new
 
@@ -1539,7 +1631,7 @@ end
       rightsInfoArr = Array.new
 
       #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
-      xml_parser = Saxerator.parser(@str_doc) {|config|
+      xml_parser = Saxerator.parser(@str_doc) { |config|
         config.output_type = :xml
         config.ignore_namespaces!
         #config.put_attributes_in_hash!
@@ -1548,14 +1640,14 @@ end
       amdsec = xml_parser.for_tag('amdSec').first.to_s # .each {|amdsec|
 
 
-      amdsec_parser = Saxerator.parser(amdsec) {|config|
+      amdsec_parser = Saxerator.parser(amdsec) { |config|
         #xml_parser = Saxerator.parser(@str_doc) {|config|
         #config.output_type = :xml
         #config.ignore_namespaces!
         #config.put_attributes_in_hash!
       }
 
-      right = amdsec_parser.for_tag('rights').each {|right|
+      right = amdsec_parser.for_tag('rights').each { |right|
         rightsInfoArr << metsRigthsMDElements(right)
       }
 
@@ -1574,13 +1666,27 @@ end
 
   end
 
+  def check_content_id_date(contentid)
+
+    date = @rredis.hget(@content_id_date_kv_store, contentid)
+    if date != nil
+      return date
+    else
+      # YYYY-MM-DDThh:mm:ssZ
+      now   = Time.now.utc.to_s.gsub(" UTC", "Z").gsub(" ", "T")
+      added = @rredis.hset(@content_id_date_kv_store, contentid, now)
+      if !added
+        @logger.error("[indexer] Could not add content_id_data to KV-Store: #{e.message}")
+      end
+      return now
+    end
+  end
 
   def retrieve_physical_structure_data(physical_meta)
 
     from_physical_id_to_attr_hsh, from_file_id_to_order_phys_id_hsh = get_physical_attr_hash
-    #get_physical_attr_hash
 
-    from_physical_id_to_attr_hsh.each_value {|el|
+    from_physical_id_to_attr_hsh.each_value { |el|
 
       physicalElement = PhysicalElement.new
 
@@ -1588,12 +1694,16 @@ end
       physicalElement.order      = checkEmptyString(el['order'])
       physicalElement.orderlabel = checkEmptyString(el['orderlabel'])
       physicalElement.ordertype  = checkEmptyString(el['type'])
-      physicalElement.contentid  = checkEmptyString(el['contentid'])
+
+      contentid                 = checkEmptyString(el['contentid'])
+      physicalElement.contentid = contentid
+
+      if (contentid != nil) && (contentid != " ")
+        date                                 = check_content_id_date(contentid)
+        physicalElement.contentid_changed_at = date
+      end
 
       physical_meta.addToPhysicalElement(physicalElement)
-
-      #@logger.debug "[indexer] in retrieve_physical_structure_data (id: #{el['id']}) -> used: #{GC.stat[:used]}}\n\n"
-
     }
 
   end
@@ -1604,22 +1714,22 @@ end
     dmdsec_hsh = Hash.new
 
     #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
-    xml_parser = Saxerator.parser(@str_doc) {|config|
+    xml_parser = Saxerator.parser(@str_doc) { |config|
       config.output_type = :xml
       config.ignore_namespaces!
       #config.put_attributes_in_hash!
     }
 
-    xml_parser.for_tag('dmdSec').each {|dmdsec|
+    xml_parser.for_tag('dmdSec').each { |dmdsec|
 
-      dmd_parser = Saxerator.parser(dmdsec.to_s) {|config|
+      dmd_parser = Saxerator.parser(dmdsec.to_s) { |config|
         config.output_type = :xml
         config.ignore_namespaces!
       }
 
       id = Nokogiri::XML(dmdsec.to_s).child.attributes['ID']&.text
 
-      dmd_parser.for_tag('mods').each {|mods_el|
+      dmd_parser.for_tag('mods').each { |mods_el|
 
         mods = Nokogiri::XML(mods_el.to_s).child
 
@@ -1644,7 +1754,8 @@ end
     begin
       processFulltexts(fulltext_meta)
     rescue Exception => e
-      @logger.error("[indexer] Problems to resolve full texts for #{@id} (#{e.message})")
+      @logger.error("[indexer] Problems to resolve full texts for #{@id} \t#{e.message}")
+      @logger.debug("[indexer] Problems to resolve full texts for #{@id} \t#{e.backtrace}")
     end
   end
 
@@ -1666,12 +1777,12 @@ end
     from_logical_id_to_physical_ids_hsh = Hash.new
 
     #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
-    xml_parser = Saxerator.parser(@str_doc) {|config|
+    xml_parser = Saxerator.parser(@str_doc) { |config|
       #config.output_type = :xml
       config.ignore_namespaces!
       config.put_attributes_in_hash!
     }
-    xml_parser.within('structLink').each {|attr|
+    xml_parser.within('structLink').each { |attr|
       add_key_value_to_hash(from_logical_id_to_physical_ids_hsh, attr['xlink:from'], attr['xlink:to'])
     }
 
@@ -1693,7 +1804,7 @@ end
     doc = get_doc_from_string(divs.first.to_s)
 
     base_level = doc.xpath("//div")[0]&.ancestors.length
-    doc.xpath("//div").each {|div|
+    doc.xpath("//div").each { |div|
 
       meta = get_attributes_from_logical_div(
           div,
@@ -1747,13 +1858,13 @@ end
 
 
       if (@reindex == "true") || (@reindex == true)
-        solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{@id}", :fl => "date_modified date_indexed"})['response']['docs'].first
+        solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{RSolr.solr_escape @id}", :fl => "date_modified date_indexed"})['response']['docs'].first
         if (solr_resp != nil) && (solr_resp&.size > 0)
           date_modified = solr_resp['date_modified']
           date_indexed  = solr_resp['date_indexed']
         end
       else
-        solr_resp = (@solr_gdz_tmp.get 'select', :params => {:q => "id:#{@id}", :fl => "date_indexed"})['response']['docs'].first
+        solr_resp = (@solr_gdz_tmp.get 'select', :params => {:q => "id:#{RSolr.solr_escape @id}", :fl => "date_indexed"})['response']['docs'].first
         if (solr_resp != nil) && (solr_resp&.size > 0)
           date_indexed = solr_resp['date_indexed']
         end
@@ -1771,8 +1882,9 @@ end
 
     meta         = dmdsec_hsh[first_logical_element.dmdid] #.clone
     meta.context = @context
-    meta.product = ENV['SHORT_PRODUCT']
-    meta.work    = @id
+    meta.product = @prod
+    #meta.product = ENV['SHORT_PRODUCT']
+    meta.work = @id
 
 
     if is_work?
@@ -1795,7 +1907,8 @@ end
         begin
           match           = @id.match(/(\S*)\/(\S*)_(\S*)_(\S*).xml/)
           meta.collection = match[4]
-          meta.product    = match[3]
+          meta.product    = @prod
+            #meta.product    = match[3]
         rescue Exception => e
           @logger.error("[indexer] No regex match for collection #{@id} \t#{e.message}")
           raise
@@ -1835,8 +1948,20 @@ end
 
     @logger.debug "[indexer] (#{@id}) before summary-meta -> used: #{GC.stat[:used]}}\n\n"
 
-    s3_key    = "summary/#{@id}/"
-    summaries = @resource.bucket(@s3_bucket).objects({prefix: s3_key})
+    s3_key = "summary/#{@id}/"
+
+    begin
+      summaries = @resource.bucket(@s3_bucket).objects({prefix: s3_key})
+    rescue Exception => e
+      attempts = attempts + 1
+      if (attempts < MAX_ATTEMPTS)
+        sleep 0.2
+        retry
+      end
+
+      raise e
+    end
+
 
     if summaries.count > 0
 
@@ -1846,14 +1971,25 @@ end
 
         if el.key.end_with?('html')
 
-          name    = "ERROR"
-          content = "ERROR"
+          #name     = "ERROR"
+          #content  = "ERROR"
+          attempts = 0
+          begin
+            resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
+            doc     = resp.body.read
+            content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
 
-          resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
-          doc     = resp.body.read # .gsub('"', "'")
-          content = Nokogiri::HTML(doc).xpath('//text()').to_a.join(" ")
+            summary_arr << content
+          rescue Exception => e
+            attempts = attempts + 1
+            if (attempts < MAX_ATTEMPTS)
+              sleep 0.2
+              retry
+            end
 
-          summary_arr << content
+            raise e
+          end
+
         end
 
       }
@@ -1902,84 +2038,56 @@ end
     return first + second
   end
 
-  def process_response(res)
+  def process_response()
 
     attempts = 0
 
     begin
 
-      if (res != '' && res != nil)
+      if @context == "gdz"
+        @s3_bucket = @gdz_bucket
+      elsif @context.downcase.start_with?("nlh")
+        @s3_bucket = @prod
+      elsif @context == "digizeit"
+        # todo
+      end
 
-        # {"s3_key" => key, "context" => context}.to_json
-        # s3_obj_key= mets/<id>.xml
-        msg = res[1]
-
-        json = JSON.parse msg
-
-        @context = json['context']
-        @id      = json['document']
-        @reindex = json['reindex']
-
-        @s3_key = "mets/#{@id}.xml"
+      # begin
+      #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
+      # rescue Exception => e
+      #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
+      #   return
+      # end
 
 
-        @s3_bucket = ''
+      if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
 
-        case @context
-          when 'nlh'
-            @s3_bucket = @nlh_bucket
-          when 'gdz'
-            @s3_bucket = @gdz_bucket
-        end
-
-        # begin
-        #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
-        # rescue Exception => e
-        #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
-        #   return
-        # end
-
-        if @use_s3
-
-          if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
-
-            if attempts == 0
-              @logger.debug "[indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-            else
-              @logger.debug "[indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-            end
-
-            get_str_doc_from_s3()
-            #get_doc_from_str_doc
-          else
-            @logger.error "[indexer] Could not process context '#{@context}'"
-            return
-          end
-
+        if attempts == 0
+          @logger.debug "[indexer] Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         else
-
-
-          if (@context.downcase == "gdz")
-            get_str_doc_from_ppn(metsUri())
-            #get_doc_from_str_doc
-          end
-
-
+          @logger.debug "[indexer] Retry Indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         end
 
+        get_str_doc_from_s3()
+        #get_doc_from_str_doc
+      else
+        @logger.error "[indexer] Could not process context '#{@context}'"
+        return
+      end
 
-        if (@str_doc != nil)
 
-          # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
+      if (@str_doc != nil)
 
-
-          metsModsMetadata = parseDoc()
+        # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
 
 
-          if metsModsMetadata != nil
+        metsModsMetadata = parseDoc()
 
-            hsh = Hash.new
-            hsh.merge! ({:id => @id})
+
+        if metsModsMetadata != nil
+
+          hsh = Hash.new
+          hsh.merge! ({:id => @id})
 
 
 =begin
@@ -1991,23 +2099,23 @@ end
            :summary_meta  => summary_meta}
 =end
 
-            #metsModsMetadata.each_value {|part|
-            #  hsh.merge! part.to_solr_string unless part == nil
-            #}
+          #metsModsMetadata.each_value {|part|
+          #  hsh.merge! part.to_solr_string unless part == nil
+          #}
 
 
-            hsh.merge! metsModsMetadata[:meta].to_solr_string unless metsModsMetadata[:meta] == nil
-            hsh.merge! metsModsMetadata[:logical_meta].to_solr_string unless metsModsMetadata[:logical_meta] == nil
-            hsh.merge! metsModsMetadata[:physical_meta].to_solr_string unless metsModsMetadata[:physical_meta] == nil
-            hsh.merge! metsModsMetadata[:image_meta].to_solr_string unless metsModsMetadata[:image_meta] == nil
-            hsh.merge! metsModsMetadata[:fulltext_meta].to_solr_string unless metsModsMetadata[:fulltext_meta] == nil
-            hsh.merge! metsModsMetadata[:summary_meta].to_solr_string unless metsModsMetadata[:summary_meta] == nil
+          hsh.merge! metsModsMetadata[:meta].to_solr_string unless metsModsMetadata[:meta] == nil
+          hsh.merge! metsModsMetadata[:logical_meta].to_solr_string unless metsModsMetadata[:logical_meta] == nil
+          hsh.merge! metsModsMetadata[:physical_meta].to_solr_string unless metsModsMetadata[:physical_meta] == nil
+          hsh.merge! metsModsMetadata[:image_meta].to_solr_string unless metsModsMetadata[:image_meta] == nil
+          hsh.merge! metsModsMetadata[:fulltext_meta].to_solr_string unless metsModsMetadata[:fulltext_meta] == nil
+          hsh.merge! metsModsMetadata[:summary_meta].to_solr_string unless metsModsMetadata[:summary_meta] == nil
 
 
-            # todo remove the embedded log fields and use the following (externalized) solr logical documents
-            hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string unless metsModsMetadata[:logical_meta] == nil
+          # todo remove the embedded log fields and use the following (externalized) solr logical documents
+          hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string unless metsModsMetadata[:logical_meta] == nil
 
-            addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
+          addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
 
 
 =begin
@@ -2023,27 +2131,29 @@ end
 =end
 
 
-            # todo add fulltexts as child-docs
+          # todo add fulltexts as child-docs
 
-            addDocsToSolr(hsh)
+          addDocsToSolr(hsh)
 
+          if @context.downcase == "nlh"
+            #
+          elsif @context.downcase == "gdz"
             unless (@reindex == "true") || (@reindex == true)
-               create_pdf_conversion(@id, @context)
+              create_pdf_conversion(@id, @context, @prod)
             end
-
-
-            @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
-          else
-            @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
-            next
           end
 
+
+          @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
+        else
+          @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
+          next
         end
 
       end
 
     rescue Exception => e
-      @logger.error "[indexer] Processing problem with '#{res[1]}' \t#{e.message}"
+      @logger.error "[indexer] Processing problem with '#{@id}' \nmsg: #{e.message} \nbacktrace: #{e.backtrace}"
     end
 
   end
@@ -2054,24 +2164,29 @@ end
 
     s3_key = "pdf/#{id}/"
 
+    attempts = 0
     begin
-      resource = Aws::S3::Resource.new(client: @s3)
-      resource.bucket(@s3_bucket).objects({prefix: s3_key}).batch_delete!
+      @resource.bucket(@s3_bucket).objects({prefix: s3_key}).batch_delete!
     rescue Exception => e
+      attempts = attempts + 1
+      if (attempts < MAX_ATTEMPTS)
+        sleep 0.2
+        retry
+      end
+
       @logger.error("[indexer] Problem to delete s3-key #{s3_key} before conversion \t#{e.message}")
     end
 
   end
 
-  def create_pdf_conversion(id, context)
+  def create_pdf_conversion(id, context, product)
 
     begin
-
       remove_s3_directory(id)
 
       url = ENV['SERVICES_ADR'] + ENV['CONVERTER_CTX_PATH']
 
-      RestClient.post url, {"document" => id, "log" => id, "context" => context}.to_json, {content_type: :json, accept: :json}
+      RestClient.post url, {"document" => id, "log" => id, "context" => context, "product" => product}.to_json, {content_type: :json, accept: :json}
 
     rescue Exception => e
       @logger.error("[indexer] Problem to create conversion job for #{id} \t#{e.message}")
