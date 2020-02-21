@@ -1,15 +1,13 @@
 version: '2.2'
 services:
 
-  importer_base:
+
+  importer_indexer:
     build:                         # on mac osx based host
       context: ./docker/
       dockerfile: Dockerfile
     user: "${myUID}"
     working_dir: /usr/verticles
-
-  importer_indexer:
-    extends: importer_base
     command: ["exec vertx run $VERTICLE_HOME/$INDEXER_VERTICLE"]
     restart: always
     volumes:
@@ -21,9 +19,30 @@ services:
       - ./.env
       - ./indexer.env
 
-  importer_converter:
-    extends: importer_base
-    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
+  importer_work_converter:
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    user: "${myUID}"
+    working_dir: /usr/verticles
+    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_WORK_VERTICLE"]
+    restart: always
+    volumes:
+      - ./log:$LOG
+      - ./src/main/resources:/usr/verticles
+    mem_limit: 12GB
+    memswap_limit: 12GB
+    env_file:
+      - ./.env
+      - ./converter.env
+
+  importer_img_full_converter:
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    user: "${myUID}"
+    working_dir: /usr/verticles
+    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_IMG_FULL_VERTICLE"]
     restart: always
     volumes:
       - ./log:$LOG
@@ -36,9 +55,13 @@ services:
     environment:
       - CONVERTER_TYPE=full
 
-  importer_log_converter:
-    extends: importer_base
-    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_VERTICLE"]
+  importer_img_log_converter:
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    user: "${myUID}"
+    working_dir: /usr/verticles
+    command: ["exec vertx run $VERTICLE_HOME/$CONVERTER_IMG_LOG_VERTICLE"]
     restart: always
     volumes:
       - ./log:$LOG
@@ -52,7 +75,11 @@ services:
       - CONVERTER_TYPE=log
 
   importer_services:
-    extends: importer_base
+    build:                         # on mac osx based host
+      context: ./docker/
+      dockerfile: Dockerfile
+    user: "${myUID}"
+    working_dir: /usr/verticles
     command: ["exec vertx run $VERTICLE_HOME/$SERVICE_VERTICLE"]
     restart: always
     volumes:
@@ -65,19 +92,17 @@ services:
       - ./.env
       - ./services.env
 
-  # https://hub.docker.com/_/solr/
   solr:
     build: docker/solr/
-    #image: solr:6.5.1
     container_name: mets_importer_solr
     restart: always
     ports:
-      - "$SOLR_EXTERNAL_PORT:$SOLR_PORT"
+      - "$SOLR_GDZ_EXTERNAL_PORT:$SOLR_GDZ_PORT"
     volumes:
-      - solrdata_core1:/opt/solr/server/solr/mycores/<solr_core>/data/
-      - solrdata_core2:/opt/solr/server/solr/mycores/<solr_core2>/data/
-      - ./docker/solr/config/sub/core.properties:/opt/solr/server/solr/mycores/<solr_core>/core.properties
-      - ./docker/solr/config/sub/core2.properties:/opt/solr/server/solr/mycores/<solr_core2>/core.properties
+      - solrdata_core1:/opt/solr/server/solr/mycores/<solr_gdz_core>/data/
+      - solrdata_core2:/opt/solr/server/solr/mycores/<solr_gdz_core2>/data/
+      - ./docker/solr/config/sub/core.properties:/opt/solr/server/solr/mycores/<solr_gdz_core>/core.properties
+      - ./docker/solr/config/sub/core2.properties:/opt/solr/server/solr/mycores/<solr_gdz_core2>/core.properties
     mem_limit: 8GB
     env_file:
       - ./.env
