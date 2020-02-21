@@ -3,11 +3,11 @@ require 'vertx/vertx'
 require 'rubygems'
 require 'logger'
 require 'gelf'
+require 'services/services_verticle'
 
 @logger       = Logger.new(STDOUT)
 @logger.level = ENV['DEBUG_MODE'].to_i
 @logger.info "[start_services] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
-
 
 service_options = {
     'instances'                  => 1,

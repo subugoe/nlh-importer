@@ -11,7 +11,7 @@ require "converter/img_to_pdf_converter_job_builder"
 
 
 img_job_builder_options = {
-    'instances'                  => 4,
+    'instances'                  => 1,
     'worker'                     => true,
     'blockedThreadCheckInterval' => 3600000,
     'warningExceptionTime'       => 3600000,

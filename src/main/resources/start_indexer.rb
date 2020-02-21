@@ -3,6 +3,7 @@ require 'vertx/vertx'
 require 'rubygems'
 require 'logger'
 require 'gelf'
+require "indexer/indexer_job_builder"
 
 @logger       = Logger.new(STDOUT)
 @logger.level = ENV['DEBUG_MODE'].to_i
@@ -18,6 +19,7 @@ indexer_options = {
     'maxEventLoopExecuteTime'    => 600000000000,
     'GEM_PATH'                   => '/opt/jruby/lib/ruby/gems/shared/gems'
 }
+
 
 # indexer
 $vertx.deploy_verticle("indexer/indexer_job_builder.rb", indexer_options)
