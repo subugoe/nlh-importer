@@ -13,7 +13,6 @@ require 'rsolr'
 
 class PurgerService
 
-
   MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
   def initialize
@@ -29,14 +28,7 @@ class PurgerService
     )
     @queue  = ENV['REDIS_INDEX_QUEUE']
 
-    @s3_client = Aws::S3::Client.new(
-        :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-        :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-        :endpoint          => ENV['S3_ENDPOINT'],
-        :force_path_style  => true,
-        :region            => 'us-west-2')
 
-    @resource = Aws::S3::Resource.new(client: @s3_client)
 
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
@@ -93,23 +85,25 @@ class PurgerService
   #   pushToQueue(@queue, arr)
   # end
 
-  def purge(context, document)
+  def purge(context, document, product)
 
     i      = 0
     bucket = ''
 
     begin
 
-      case context
-        when "nlh"
-          bucket = @nlh_bucket
-        when "gdz"
-          bucket = @gdz_bucket
-        when "test"
-          bucket = "test_bucket"
-        else
-          raise "Bucket '#{bucket}' unknown"
+
+      if @context == "gdz"
+        bucket = @gdz_bucket
+      elsif @context.downcase.start_with?("nlh")
+        bucket = product
+      elsif @context == "digizeit"
+        # todo
+      else
+        raise "Bucket '#{bucket}' unknown"
       end
+
+
 
       if (document.strip) == "" || (document == nil)
         raise "Document '#{document}' is not a valid Id"
@@ -120,6 +114,16 @@ class PurgerService
                 "fulltext/#{document}/",
                 "summary/#{document}/",
                 "orig/#{document}/"]
+
+
+        @s3_client = Aws::S3::Client.new(
+            :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
+            :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
+            :endpoint          => ENV['S3_ENDPOINT'],
+            :force_path_style  => true,
+            :region            => 'us-west-2')
+
+        @resource = Aws::S3::Resource.new(client: @s3_client)
 
         keys.each {|s3_key|
           @resource.bucket(bucket).objects({prefix: s3_key}).each {|el|
@@ -151,15 +155,13 @@ class PurgerService
 
         context  = json['context']
         document = json['document']
+        product = json['product']
 
         if (context != nil) && (context.downcase == "gdz")
-          purge("gdz", document)
+          purge("gdz", document, "gdz")
 
         elsif (context != nil) && (context.downcase == "nlh")
-          purge("nlh", document)
-
-        elsif (context != nil) && (context.downcase == "test")
-          purge("test", document)
+          purge("nlh", document, product)
 
         else
           @logger.error "[purge_service] Could not process context '#{context}'"

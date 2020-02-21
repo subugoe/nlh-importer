@@ -17,7 +17,6 @@ class IndexerService
     @logger       = Logger.new(STDOUT)
     @logger.level = ENV['DEBUG_MODE'].to_i
 
-
     @queue  = ENV['REDIS_INDEX_QUEUE']
     @rredis = Redis.new(
         :host               => ENV['REDIS_HOST'],
@@ -59,7 +58,7 @@ class IndexerService
       return
 
     rescue Exception => e
-      @logger.error("[indexer_service] Problem with request body \t#{e.message}")
+      @logger.error("[indexer_service] Problem with request body \t#{e.message} \n#{e.backtrace}")
       send_status(400, response, {"status" => "-1", "msg" => "Couldnot process request", "error" => e.message})
       return
     end

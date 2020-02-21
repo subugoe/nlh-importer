@@ -12,7 +12,6 @@ require 'aws-sdk'
 
 class ReindexService
 
-
   MAX_ATTEMPTS = ENV['MAX_ATTEMPTS'].to_i
 
   def initialize
@@ -35,7 +34,6 @@ class ReindexService
         :force_path_style  => true,
         :region            => 'us-west-2')
 
-    @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
     @logger.debug "[reindex_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
@@ -87,18 +85,22 @@ class ReindexService
     pushToQueue(@queue, arr)
   end
 
-  def reindex(context)
+  def reindex(context, product)
 
     i      = 0
     bucket = ''
 
     @rredis.del @queue
 
-    case context
-      when "nlh"
-        bucket = @nlh_bucket
-      when "gdz"
-        bucket = @gdz_bucket
+
+    if @context == "gdz"
+      bucket = @gdz_bucket
+    elsif @context.downcase.start_with?("nlh")
+      bucket = product
+    elsif @context == "digizeit"
+      # todo
+    else
+      raise "Bucket '#{bucket}' unknown"
     end
 
 

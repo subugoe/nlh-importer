@@ -8,6 +8,7 @@ require 'json'
 require 'redis'
 require 'rsolr'
 
+
 class ConverterService
 
 
@@ -27,8 +28,9 @@ class ConverterService
         :reconnect_attempts => 3
     )
 
-    @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
+    @solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
+    @solr_nlh  = RSolr.connect :url => ENV['SOLR_NLH_ADR']
     @logger.debug "[converter_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
   end
@@ -68,7 +70,11 @@ class ConverterService
           return
         else
 
-          resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+          if (context.downcase == 'gdz')
+            resp = (@solr_gdz.get 'select', :params => {:q => "id:#{RSolr.solr_escape id}", :fl => " page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+          else
+            resp = (@solr_nlh.get 'select', :params => {:q => "work:#{RSolr.solr_escape id}", :fl => " page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+          end
 
           doc = resp['docs']&.first
 
