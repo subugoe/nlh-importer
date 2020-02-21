@@ -1,8 +1,6 @@
-FROM vertx/vertx3:latest
+FROM vertx/vertx3
 #FROM vertx/vertx3-exec
 
-ENV JRUBY_HOME /opt/jruby
-ENV GEM_PATH /opt/jruby/lib/ruby/gems/shared/gems
 
 ENV USER_UID=<uid>
 ENV VIPS_WARNING=1
@@ -16,7 +14,7 @@ ENV PATH $PATH:$JRUBY_HOME/bin
 
 
 RUN apt-get update \
-    && apt-get install -y python-dateutil git curl vim libc6-dev --no-install-recommends \
+    && apt-get install -y python-dateutil git curl vim maven libc6-dev --no-install-recommends \
         imagemagick \
         ghostscript \
         pdftk
@@ -80,13 +78,28 @@ RUN apt-get update \
     #libcfitsio3-dev \
 
 
+ENV JRUBY_HOME  /opt/jruby
+#ENV GEM_PATH    /opt/jruby
+#ENV GEM_HOME    /opt/jruby
 
-ENV JRUBY_VERSION 9.1.10.0
-ENV JRUBY_SHA256 93ec6b55fa0d5b37e9f8131f76adc01efa82bebcef8df3e0de49e83dad3ee958
+#ENV JRUBY_VERSION 9.1.10.0
+#ENV JRUBY_SHA256 93ec6b55fa0d5b37e9f8131f76adc01efa82bebcef8df3e0de49e83dad3ee958
 
-# lib conflict with jruby version: (TypeError) no implicit conversion of Java::OrgJruby::Ruby into String
-#ENV JRUBY_VERSION 9.1.13.0
-#ENV JRUBY_SHA256 9d156646623ac2f27174721035b52572a4b05690db7c1293295aa2c04aad3908
+# lib conflict
+# ttfunk-1.6.1 requires ruby version ~> 2.4, which is incompatible with the current version, ruby 2.3.3p0 (jruby 9.1.10.0)
+#ENV JRUBY_VERSION 9.2.9.0
+#ENV JRUBY_SHA256 ced3fbb81b4f29f6a7fe7207e678e4154d95cc94de9f509fcaaf05768a6bf911
+
+#ENV JRUBY_VERSION 9.2.6.0
+#ENV JRUBY_SHA256 70a1ff0e17a98baa63ea92c91fd38ff1e55a2056e5d57ba0409c4543d29e0e3d
+
+#ENV JRUBY_VERSION 9.2.1.0
+#ENV JRUBY_SHA256 8c987378b144eff0dcc553312f1853c05ee9135f3ffdac7b0828b7ad62f32835
+
+# lib conflict:
+# (TypeError) no implicit conversion of Java::OrgJruby::Ruby into String
+ENV JRUBY_VERSION 9.1.13.0
+ENV JRUBY_SHA256 9d156646623ac2f27174721035b52572a4b05690db7c1293295aa2c04aad3908
 
 RUN mkdir /opt/jruby \
   && curl -fSL https://s3.amazonaws.com/jruby.org/downloads/${JRUBY_VERSION}/jruby-bin-${JRUBY_VERSION}.tar.gz -o /tmp/jruby.tar.gz \
@@ -105,7 +118,6 @@ RUN mkdir -p /opt/jruby/etc \
 	} >> /opt/jruby/etc/gemrc
 
 
-RUN gem install bundler
 
 
 WORKDIR /
@@ -113,11 +125,38 @@ WORKDIR /
 RUN mkdir -p <verticle_home>
 COPY Gemfile <verticle_home>/Gemfile
 COPY Gemfile.lock <verticle_home>/Gemfile.lock
+#COPY pom.xml <verticle_home>/pom.xml
 
 WORKDIR <verticle_home>
 
+#RUN mvn install
 
+
+RUN jruby -S gem install bundler  -v '1.17.3'
+# RUN gem update --system
+# RUN bundle update --bundler
 RUN jruby -S bundle install
+# RUN jruby -S gem list
+
+#RUN jruby -S gem install bundler  \
+#  && jruby -S bundle install  -V  \
+#  && jruby -S gem list
+
+#RUN jruby -S gem install bundler -i $GEM_PATH \
+#  && jruby -S bundle install --path=$GEM_PATH  \
+#  && jruby -S gem list
+
+ # && jruby -S gem install bundler \
+ # && jruby -S bundle update --bundler \
+ # && jruby -S bundle install \
+
+#RUN cat Gemfile
+#RUN cat Gemfile.lock
+
+# RUN jruby -e 'JRuby::Util.methods.each {|m| puts m}'
+# RUN gem env
+# RUN jruby -e 'ENV.each_pair {|k,v| puts "#{k} -> #{v}"}'
+
 
 RUN chown -R importer <verticle_home>
 
