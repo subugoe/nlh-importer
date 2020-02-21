@@ -360,6 +360,7 @@
         <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="phys_content_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_content_id_changed_at" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
         <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
         <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
@@ -550,6 +551,7 @@
     <copyField source="catalogue" dest="metadata"/>
     <copyField source="log_label" dest="metadata"/>
     <copyField source="phys_content_id" dest="metadata"/>
+
 
 
     <!-- copy fields into default for search -->

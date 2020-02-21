@@ -99,7 +99,7 @@ SOLR_OPTS="$SOLR_OPTS -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=
 #SOLR_LOGS_DIR=
 
 # Sets the port Solr binds to, default is 8983
-SOLR_PORT=<solr_port>
+SOLR_GDZ_PORT=<solr_gdz_port>
 
 # Uncomment to set SSL-related system properties
 # Be sure to update the paths to the correct keystore for your environment
