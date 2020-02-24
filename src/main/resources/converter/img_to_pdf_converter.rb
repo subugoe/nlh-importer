@@ -440,7 +440,7 @@ class ImgToPdfConverter
     disclaimer_info = DisclaimerInfo.new
 
     if @context == "gdz"
-      solr_work = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "purl catalogue log_id log_label  log_start_page_index  log_end_page_index log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
+      solr_work = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id product purl catalogue log_id log_label  log_start_page_index  log_end_page_index log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type"})['response']['docs'].first
     elsif @context.downcase.start_with?("nlh")
       solr_work = (@solr_nlh.get 'select', :params => {:q => "work:#{id}", :fl => "id product purl catalogue log_id log_label  log_start_page_index  log_end_page_index log_level   log_type    title subtitle shelfmark bycreator year_publish_string publisher place_publish genre dc subject rights_owner parentdoc_work parentdoc_label parentdoc_type navi_year navi_month navi_day"})['response']['docs'].first
 
