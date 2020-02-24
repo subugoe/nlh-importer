@@ -104,11 +104,11 @@ class Indexer
 #@imagefrompdf  = ENV['IMAGE_FROM_PDF']
 #@context       = ENV['CONTEXT']
 
-# @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
-# @logger.level = ENV['DEBUG_MODE'].to_i
+ @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+ @logger.level = ENV['DEBUG_MODE'].to_i
 
-    @logger       = Logger.new(STDOUT)
-    @logger.level = ENV['DEBUG_MODE'].to_i
+#    @logger       = Logger.new(STDOUT)
+#    @logger.level = ENV['DEBUG_MODE'].to_i
 
 
     @services_adr = ENV['SERVICES_ADR']
