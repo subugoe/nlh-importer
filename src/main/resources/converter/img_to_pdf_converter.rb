@@ -30,11 +30,11 @@ class ImgToPdfConverter
     @pdfoutpath   = ENV['OUT'] + ENV['PDF_OUT_SUB_PATH']
     @img_base_url = ENV['GDZ_IMG_BASE_URL']
 
-    #@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
-    #@logger.level = ENV['DEBUG_MODE'].to_i
-
-    @logger       = Logger.new(STDOUT)
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
     @logger.level = ENV['DEBUG_MODE'].to_i
+
+    #@logger       = Logger.new(STDOUT)
+    #@logger.level = ENV['DEBUG_MODE'].to_i
 
     #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
     #@work_convert_queue  = ENV['REDIS_CONVERT_QUEUE']

@@ -17,7 +17,10 @@ class PurgerService
 
   def initialize
 
-    @logger       = Logger.new(STDOUT)
+#    @logger       = Logger.new(STDOUT)
+#    @logger.level = ENV['DEBUG_MODE'].to_i
+
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
     @logger.level = ENV['DEBUG_MODE'].to_i
 
     @rredis = Redis.new(

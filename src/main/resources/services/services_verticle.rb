@@ -11,9 +11,11 @@ require 'services/reindex_service'
 require 'services/purger_service'
 
 
-@logger       = Logger.new(STDOUT)
-@logger.level = ENV['DEBUG_MODE'].to_i
+#@logger       = Logger.new(STDOUT)
+#@logger.level = ENV['DEBUG_MODE'].to_i
 
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+@logger.level = ENV['DEBUG_MODE'].to_i
 
 @logger.info "[services_verticle] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 

@@ -5,8 +5,12 @@ require 'logger'
 require 'gelf'
 require "converter/img_to_pdf_converter_job_builder"
 
-@logger       = Logger.new(STDOUT)
+#@logger       = Logger.new(STDOUT)
+#@logger.level = ENV['DEBUG_MODE'].to_i
+
+@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
 @logger.level = ENV['DEBUG_MODE'].to_i
+
 @logger.info "[start_converter] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
 

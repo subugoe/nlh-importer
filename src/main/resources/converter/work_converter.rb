@@ -26,11 +26,11 @@ class WorkConverter
     @image_in_format  = ENV['IMAGE_IN_FORMAT']
     @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
-    #@logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
-    #@logger.level = ENV['DEBUG_MODE'].to_i
-
-    @logger       = Logger.new(STDOUT)
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
     @logger.level = ENV['DEBUG_MODE'].to_i
+
+    #@logger       = Logger.new(STDOUT)
+    #@logger.level = ENV['DEBUG_MODE'].to_i
 
 
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
