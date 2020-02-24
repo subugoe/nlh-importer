@@ -192,10 +192,10 @@ fi
 #docker-compose up -d importer_services solr redis
 
 # 19.72
-#docker-compose build --force-rm  importer_indexer importer_converter
+#docker-compose build --force-rm  importer_converter=1  importer_work_converter importer_indexer
 #docker-compose stop
 #docker-compose rm -f
-#docker-compose up -d --scale  importer_converter=1 importer_converter importer_log_converter importer_indexer
+#docker-compose up -d --scale  importer_converter=1  importer_work_converter importer_img_full_converter importer_img_log_converter importer_indexer
 
 # local
 #docker-compose build --force-rm

@@ -299,8 +299,6 @@ class ImgToPdfConverter
         #merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
         cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
-        puts "cut from full pdf #{s3_pdf_key}"
-
         disclaimer_info = load_metadata(id)
 
         add_bookmarks_pdftk_system(to_pdf_dir, id, log, disclaimer_info)
@@ -320,13 +318,10 @@ class ImgToPdfConverter
         if s3_pdf_exist?(s3_bucket, id, page, @context)
           s3_key = @s3_pdf_key_pattern % [id, page]
           download_from_s3(s3_bucket, s3_key, to_page_pdf_path)
-          puts "load page pdf #{s3_key}"
         else
           s3_image_key = @s3_image_key_pattern % [id, page, image_format]
 
           load_succeed = download_from_s3(s3_bucket, s3_image_key, to_tmp_img)
-
-          puts "cnvert page image #{s3_image_key}"
 
           if load_succeed
             convert(to_tmp_img, to_tmp_jpg, to_page_pdf_path)
@@ -468,7 +463,7 @@ class ImgToPdfConverter
       # todo
     end
 
-    disclaimer_info.id                   = solr_work['id']
+    disclaimer_info.id                       = solr_work['id']
     disclaimer_info.log_id                   = solr_work['log_id']
     disclaimer_info.log_label_arr            = solr_work['log_label']
     disclaimer_info.log_start_page_index_arr = solr_work['log_start_page_index']
