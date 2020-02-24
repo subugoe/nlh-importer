@@ -1,7 +1,9 @@
 class DisclaimerInfo
-  attr_accessor :log_id,
+  attr_accessor :id,
+                :log_id,
                 :log_label_arr,
                 :log_start_page_index_arr,
+                :log_end_page_index_arr,
                 :log_level_arr,
                 :log_type_arr,
                 :purl, :catalogue_arr,
@@ -19,6 +21,8 @@ class DisclaimerInfo
                 :rights_owner_arr,
                 :parentdoc_work,
                 :parentdoc_label,
-                :parentdoc_type
+                :parentdoc_type,
+                :date,
+                :product
 
 end

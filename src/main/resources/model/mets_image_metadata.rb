@@ -1,7 +1,7 @@
 class MetsImageMetadata
 
   attr_accessor :image_format,
-                :baseurl,
+               # :baseurl,
                 :access_pattern,
                 :product,
                 :work,

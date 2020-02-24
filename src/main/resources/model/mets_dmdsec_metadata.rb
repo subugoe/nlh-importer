@@ -445,7 +445,7 @@ class MetsDmdsecMetadata
 
       # (added for new Goobi Ruleset)
       @digital_collections.each {|digital_collection|
-        dc << digital_collection
+        dc << digital_collection.value
       }
 
       h.merge! ({:dc => dc})
@@ -711,7 +711,11 @@ class MetsDmdsecMetadata
     sorttitle = Array.new
 
     @title_infos.each {|ti|
-      title << ti.nonsort + ti.title
+      if ti.nonsort != ""
+        title << ti.nonsort + " " + ti.title
+      else
+        title << ti.title
+      end
       subtitle << ti.subtitle
       unless (ti.title == nil)
         if ti.title.size > 1
@@ -723,6 +727,7 @@ class MetsDmdsecMetadata
         end
       end
     }
+
 
     h.merge! ({:title => title})
     h.merge! ({:sorttitle => sorttitle})
