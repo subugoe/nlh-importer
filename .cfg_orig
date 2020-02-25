@@ -1,0 +1,29 @@
+export environment=<production|development>
+
+export LOCAL_HOST=<urd>
+export SERVICE_HOST=<url>
+
+export SOLR_GDZ_HOST=<url>>
+export SOLR_NLH_HOST=<url>
+
+export REDIS_HOST=<url>
+
+export GRAYLOG_PORT=<port>
+export GRAYLOG_HOST=<url>
+
+export S3_SUB_PROVIDER=aws
+export S3_SUB_AWS_ACCESS_KEY_ID=<key_id>
+export S3_SUB_AWS_SECRET_ACCESS_KEY=<access_key>
+export S3_SUB_SESSION_TOKEN=
+export S3_SUB_REGION=us-west-2
+export S3_SUB_ENDPOINT=<url>
+
+export S3_NLH_PROVIDER=aws
+export S3_NLH_AWS_ACCESS_KEY_ID=<key_id>
+export S3_NLH_AWS_SECRET_ACCESS_KEY=<access_key>
+export S3_NLH_SESSION_TOKEN=
+export S3_NLH_REGION=us-west-2
+export S3_NLH_ENDPOINT=<url>
+
+export SOLR_USER=<usr>
+export SOLR_PASSWORD=<passwd>
