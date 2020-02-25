@@ -19,24 +19,11 @@ The nlh-importer directory is the project root, and the base directory for docke
 
 ##### Preparation: Set environment variables 
 
-```
-export solr_core=gdz            # set the solr core for the local solr (gdz is default)            
-export environment=develop      # develop is default, rquired in build.sh to distinguish the docker-compose config file
-
-```
-
-##### Preparation: For GDZ Reindex set the user/password to access the (remote) GDZ Solr 
-
-```
-export solr_user=changeme
-export solr_password=changeme
-```
-
-##### Preparation: Change the config file rootdir/.env_orig
-
-TODO
+Copy the file .cfg_orig and modify the values.
 
 ##### (Re-)Build and start the docker images (also after changes)
+
+Change the docker-compose commands at the bottom of the file.
 
 ```
 ./build.sh
@@ -48,13 +35,10 @@ In web image will be constructed in the build process, this will take a few minu
 ##### See log output
 
 ```
-export myUID=`id -u ${whoami}`
-export myGID=`id -g ${whoami}`
 docker-compose logs -f <service>
 ```
 
-Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you leave the service-info, the merged log of all services is shown. 
-
+Use the service names from the docker-compose-yml.
 
 ##### Index a single document
 
@@ -62,7 +46,9 @@ Switch <service> to 'importer' or 'solr'. Most interesting is 'importer'. If you
 POST 134.76.18.25:8083     /api/indexer/jobs
 { 
     "document": "PPN591416441",
-    "context": "gdz"
+    "context": "gdz",
+    "product": "gdz",
+    "reindex": false
 }
 ```
 
@@ -71,7 +57,8 @@ POST 134.76.18.25:8083     /api/indexer/jobs
 ```
 POST 134.76.18.25:8083     /api/reindexer/jobs
 {
-	"context": "gdz"
+	"context": "gdz",
+    "product": "gdz"
 }
 ```
 
@@ -82,7 +69,8 @@ POST 134.76.18.25:8083     /api/converter/jobs
 {
     "document": "PPN591416441",
     "log": "PPN591416441",
-    "context": "gdz"
+    "context": "gdz",
+    "product": "gdz"
 }
 ```
 
@@ -92,7 +80,8 @@ POST 134.76.18.25:8083     /api/converter/jobs
 {
     "document": "PPN591416441",
     "log": "LOG_0007",
-    "context": "gdz"
+    "context": "gdz",
+    "product": "gdz"
 }
 ```
 
