@@ -36,57 +36,17 @@ class PurgerService
     @nlh_bucket = ENV['S3_NLH_BUCKET']
     @gdz_bucket = ENV['S3_GDZ_BUCKET']
 
-    #@solr_gdz = RSolr.connect :url => ENV['SOLR_GDZ_TMP_ADR']
     @solr_gdz        = RSolr.connect :url => ENV['SOLR_GDZ_ADR']
 
     @logger.debug "[purge_service] Running in #{Java::JavaLang::Thread.current_thread().get_name()}"
 
   end
 
-  # def pushToQueue(queue, arr)
-  #   @rredis.lpush(queue, arr)
-  # end
-
 
   def send_status(status_code, response, msg_hsh)
     response.set_status_code(status_code).end(msg_hsh.to_json)
   end
 
-
-  # def parseId(id)
-  #
-  #   id = id.to_s
-  #
-  #   begin
-  #     i = id.rindex(':')
-  #     j = id.rindex('|')
-  #     j ||= id.size
-  #     s = id[(i+1)..(j-1)]
-  #     return s
-  #   rescue Exception => e
-  #     @logger.debug("[purge_service] Exception while parse id string: #{id} #{e.message}")
-  #   end
-  #
-  # end
-
-
-  # def process_keys keys, context
-  #
-  #   arr = Array.new
-  #   keys.each {|key|
-  #     begin
-  #       id = key.match(/mets\/(\S*).xml/)[1]
-  #     rescue Exception => e
-  #       @logger.error("[purge_service] Regex pattern doesn't match #{key} #{e.message}")
-  #       next
-  #     end
-  #     # {"document":"PPN876605080",  "log":"PPN876605080",  "context": "gdz", "reindex":true}
-  #     # {"document"=>"PPN234688475", "log"=>"PPN234688475", "context"=>"gdz", "reindex"=>true}
-  #     arr << {"document" => id, "context" => context, "reindex" => true}.to_json
-  #   }
-  #
-  #   pushToQueue(@queue, arr)
-  # end
 
   def purge(context, document, product)
 

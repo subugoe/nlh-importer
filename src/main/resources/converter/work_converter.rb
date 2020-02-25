@@ -19,10 +19,6 @@ class WorkConverter
         'sendTimeout' => 300000
     }
 
-    # productin     = ENV['IN'] + '/' + ENV['PRODUCT']
-    # @imageinpath  = productin + ENV['IMAGE_IN_SUB_PATH']
-    # @imageoutpath = ENV['OUT'] + ENV['IMAGE_OUT_SUB_PATH']
-
     @image_in_format  = ENV['IMAGE_IN_FORMAT']
     @image_out_format = ENV['IMAGE_OUT_FORMAT']
 
@@ -31,7 +27,6 @@ class WorkConverter
 
     #@logger       = Logger.new(STDOUT)
     #@logger.level = ENV['DEBUG_MODE'].to_i
-
 
     @unique_queue = ENV['REDIS_UNIQUE_QUEUE']
 
@@ -64,11 +59,10 @@ class WorkConverter
 
     begin
       if (res != '' && res != nil)
-        # {"id" => key, "context" => context}.to_json
+
         msg  = res[1]
         json = JSON.parse msg
 
-        #overwrite = json['overwrite']
         context = json['context']
         product = json['product']
         id      = json['document']
@@ -124,7 +118,6 @@ class WorkConverter
 
   def s3_object_exist?(id, object_id, context)
 
-    #s3_key    = @s3_pdf_key_pattern % [id, id]
     s3_key = @s3_pdf_key_pattern % [id, object_id]
 
 
@@ -167,10 +160,6 @@ class WorkConverter
   def build_jobs(context, product, id, log, log_id)
 
     if id == log
-      # if context.downcase.start_with?("nlh")
-      #   @logger.error("[work_converter] PDF conversion disabled for the complete work (#{id}___#{log})")
-      #   return
-      # end
       request_logical_part = false
     else
       request_logical_part = true
@@ -213,7 +202,6 @@ class WorkConverter
       log_end_page_index   = -1
 
       image_format = resp['image_format']
-      #product      = resp['product']
 
       if request_logical_part
 
@@ -231,11 +219,8 @@ class WorkConverter
           log_end_page_index = log_start_page_index
         end
 
-        #else
-        #  log_end_page_index = (resp['log_end_page_index'][-1]) if resp['log_end_page_index'] != nil
       end
 
-      #if !context.downcase.start_with?("nlh") && s3_object_exist?(id, id, context)
       if s3_object_exist?(id, id, context)
         pdf_exist = true
       else
@@ -300,7 +285,6 @@ class WorkConverter
       else
         @logger.debug "[work_converter] Start Full PDF creation #{id}"
       end
-
 
     else
       @logger.error("[work_converter] Could not create PDF for multivolume work '#{id}', PDF not created")

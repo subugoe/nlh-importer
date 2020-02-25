@@ -81,7 +81,8 @@ router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 # {
 #     "document": "PPN591416441",
 #     "log": "PPN591416441",
-#     "context": "gdz"
+#     "context": "gdz",
+#     "product": "gdz"
 # }
 #
 # or
@@ -89,7 +90,8 @@ router.route().handler(&VertxWeb::BodyHandler.create().method(:handle))
 # {
 #     "document": "PPN591416441",
 #     "log": "LOG_0007",
-#     "context": "gdz"
+#     "context": "gdz",
+#     "product": "gdz"
 # }
 #
 # Response
@@ -110,7 +112,9 @@ router.post(ENV['CONVERTER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 # Request
 # {
 #     "document": "PPN591416441",
-#     "context": "gdz"
+#     "context": "gdz",
+#     "product": "gdz",
+#     "reindex": false
 # }
 router.post(ENV['INDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 
@@ -125,7 +129,8 @@ router.post(ENV['INDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 # POST http://134.76.18.25:8083   /api/reindexer/jobs
 # Request
 # {
-#     "context": "gdz"
+#     "context": "gdz",
+#     "product": "gdz"
 # }
 router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 
@@ -140,7 +145,8 @@ router.post(ENV['REINDEXER_CTX_PATH']).blocking_handler(lambda {|routingContext|
 # Request
 # {
 #     "document": "PPN591416441",
-#     "context": "gdz"
+#     "context": "gdz",
+#     "product": "gdz"
 # }
 router.post(ENV['PURGE_CTX_PATH']).blocking_handler(lambda {|routingContext|
 

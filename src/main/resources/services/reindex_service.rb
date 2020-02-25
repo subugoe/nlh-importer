@@ -96,8 +96,8 @@ class ReindexService
     @rredis.del @queue
 
 
-    if @context == "gdz"
-      bucket = @gdz_bucket
+    if context == "gdz"
+      bucket = product
     elsif @context.downcase.start_with?("nlh")
       bucket = product
     elsif @context == "digizeit"
@@ -144,14 +144,11 @@ class ReindexService
         json = JSON.parse hsh.to_json
 
         context = json['context']
+        product = json['product']
 
 
-        if (context != nil) && (context.downcase == "gdz")
-          reindex "gdz"
-
-        elsif (context != nil) && (context.downcase == "nlh")
-          reindex "nlh"
-
+        if (context != nil) && (context.downcase == "gdz") || (context.downcase == "nlh")
+          reindex( context, product)
         else
           @logger.error "[reindex_service] Could not process context '#{context}'"
           send_error(400, response)

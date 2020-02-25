@@ -36,8 +36,6 @@ class ImgToPdfConverter
     #@logger       = Logger.new(STDOUT)
     #@logger.level = ENV['DEBUG_MODE'].to_i
 
-    #@img_convert_queue  = ENV['REDIS_IMG_CONVERT_QUEUE']
-    #@work_convert_queue  = ENV['REDIS_CONVERT_QUEUE']
     @rredis = Redis.new(
         :host               => ENV['REDIS_HOST'],
         :port               => ENV['REDIS_EXTERNAL_PORT'].to_i,
@@ -66,34 +64,6 @@ class ImgToPdfConverter
   end
 
 # ---
-
-=begin
-  def download_via_http(url, path)
-
-    attempts = 0
-
-    begin
-      open(path, 'wb') do |file|
-        file << open(url).read
-      end
-    rescue Exception => e
-      attempts = attempts + 1
-      retry if (attempts < MAX_ATTEMPTS)
-      @logger.error("[img_converter] [GDZ-527] Could not download '#{url}' \t#{e.message}")
-      return false
-    end
-
-    return true
-
-  end
-=end
-
-=begin
-  def download_via_mount(url, path)
-    return false
-  end
-=end
-
 
   def download_from_s3(s3_bucket, s3_key, path)
 
@@ -129,36 +99,6 @@ class ImgToPdfConverter
     end
   end
 
-
-=begin
-  def get_page_count
-    if @context == "gdz"
-      solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
-    elsif @context.downcase.start_with?("nlh")
-      solr_resp = (@solr_nlh.get 'select', :params => {:q => "work:#{work}", :fl => "page log_id log_start_page_index log_end_page_index"})['response']['docs'].first
-    elsif @context.downcase.start_with?("digizeit")
-      #
-    end
-
-    log_start_page_index = 0
-    log_end_page_index   = -1
-
-    if request_logical_part
-
-      log_id_index = solr_resp['log_id'].index log_id
-
-      log_start_page_index = (solr_resp['log_start_page_index'][log_id_index]) - 1
-      log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index]) - 1
-
-    end
-
-
-    solr_page_path_arr = (solr_resp['page'][log_start_page_index..log_end_page_index]).collect { |el| "#{to_pdf_dir}/#{el}.pdf" }
-
-  end
-=end
-
-
   def s3_pdf_exist?(bucket, id, object_id, context)
 
     #s3_key    = @s3_pdf_key_pattern % [id, id]
@@ -189,7 +129,7 @@ class ImgToPdfConverter
         :region            => region,
         :force_path_style  => false)
 
-    res = Aws::S3::Resource.new(client: @s3)
+    res   = Aws::S3::Resource.new(client: @s3)
     exist = res.bucket(bucket).object(s3_key).exists?
 
     if exist
@@ -251,22 +191,10 @@ class ImgToPdfConverter
 
       # ---
 
-      # if @context == "gdz"
-      #   solr_work = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "image_format, product"})['response']['docs'].first
-      # elsif @context.downcase.start_with?("nlh")
-      #   solr_work = (@solr_nlh.get 'select', :params => {:q => "work:#{id}", :fl => "image_format, product"})['response']['docs'].first
-      # elsif @context == "digizeit"
-      #   # todo
-      # end
-
-
-      pdf_dir          = "#{@pdfoutpath}/#{product}/#{id}"
       to_pdf_dir       = "#{@pdfoutpath}/#{product}/#{id}/#{log}"
-      img_url          = "#{@img_base_url}/tiff/#{id}/#{page}.#{image_format}"
       to_tmp_img       = "#{to_pdf_dir}/#{page}.#{image_format}"
       to_tmp_jpg       = "#{to_pdf_dir}/#{page}.jpg"
       to_page_pdf_path = "#{to_pdf_dir}/#{page}.pdf"
-      to_full_pdf_path = "#{to_pdf_dir}/#{id}.pdf"
       to_log_pdf_path  = "#{to_pdf_dir}/#{log}.pdf"
 
       if request_logical_part
@@ -296,7 +224,6 @@ class ImgToPdfConverter
 
         removeQueue(log_id)
 
-        #merge_to_full_pdf_pdftk_system(to_pdf_dir, id, log, request_logical_part)
         cut_from_full_pdf_pdftk_system(to_full_pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
         disclaimer_info = load_metadata(id)
@@ -666,14 +593,14 @@ class ImgToPdfConverter
           end
 
           if check_nil_or_empty_string disclaimer_info.subtitle_arr
-          subtitle_arr = disclaimer_info.subtitle_arr.map { |title|
-            if title.size > 80
-              title[0..80] + "..."
-            else
-              title
-            end
-          }
-          add_label_and_value("Untertitel", subtitle_arr, pdf)
+            subtitle_arr = disclaimer_info.subtitle_arr.map { |title|
+              if title.size > 80
+                title[0..80] + "..."
+              else
+                title
+              end
+            }
+            add_label_and_value("Untertitel", subtitle_arr, pdf)
           end
 
           add_label_and_value("Autor", disclaimer_info.bycreator, pdf) if check_nil_or_empty_string disclaimer_info.bycreator
@@ -688,21 +615,22 @@ class ImgToPdfConverter
             add_label_and_value("Jahr", disclaimer_info.year_publish_string, pdf) if check_nil_or_empty_string disclaimer_info.year_publish_string
           end
 
-#if @context == "gdz"
+          #if @context == "gdz"
 
           add_label_and_value("Kollektion", disclaimer_info.dc_arr, pdf) if check_nil_or_empty_string disclaimer_info.dc_arr
           add_label_and_value("Gattung", disclaimer_info.genre_arr, pdf) if check_nil_or_empty_string disclaimer_info.genre_arr
 
           add_label_and_value("Signatur", disclaimer_info.shelfmark_arr, pdf) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
-#add_label_and_value("Digitalisiert", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
+          #add_label_and_value("Digitalisiert", disclaimer_info.rights_owner_arr, pdf) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
           add_label_and_value("Werk Id", id, pdf) unless id == nil && @context == "gdz"
-#end
+          #end
 
 
           #if disclaimer_info.purl != nil
           #  add_label_and_value("PURL", disclaimer_info.purl, pdf) if check_nil_or_empty_string disclaimer_info.purl
           #else
-            add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?#{disclaimer_info.id}|#{log}", pdf)
+          #add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?#{disclaimer_info.id}|#{log}", pdf)
+          add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?PID=#{disclaimer_info.id}|#{log}", pdf)
           #end
 
           if (id.start_with? 'PPN') && (@context == "gdz")
@@ -713,58 +641,6 @@ class ImgToPdfConverter
             end
           end
 
-          # if @context == "gdz"
-          #   if request_logical_part
-          #
-          #     pdf.move_down 5
-          #
-          #     add_label_and_value("LOG Id", log, pdf)
-          #     i = disclaimer_info.log_id.index log
-          #
-          #     add_label_and_value("LOG Titel", disclaimer_info.log_label_arr[i], pdf)
-          #     add_label_and_value("LOG Typ", disclaimer_info.log_type_arr[i], pdf)
-          #   end
-          #
-          #
-          #   if check_nil_or_empty_string disclaimer_info.parentdoc_work
-          #     pdf.move_down 10
-          #     pdf.text("<font size='12'><b>Übergeordnetes Werk</b></font><br><br>", :inline_format => true)
-          #
-          #     parent_work = disclaimer_info.parentdoc_work
-          #     #add_label_and_value("Title", disclaimer_info.parentdoc_label, pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_label
-          #     add_label_and_value("Werk Id", parent_work, pdf) if check_nil_or_empty_string parent_work
-          #     add_label_and_value("PURL", "http://resolver.sub.uni-goettingen.de/purl?#{disclaimer_info.parentdoc_work.first}", pdf) if check_nil_or_empty_string disclaimer_info.parentdoc_work
-          #
-          #     parent_work = disclaimer_info.parentdoc_work.first
-          #     if parent_work.start_with? 'PPN'
-          #       ppn = parent_work.match(/PPN(\S*)/)[1]
-          #
-          #       if request_catalogue(ppn).code.to_i < 400
-          #         add_label_and_value("OPAC", "http://opac.sub.uni-goettingen.de/DB=1/PPN?PPN=#{ppn}", pdf)
-          #       end
-          #     end
-          #   end
-          #
-          #   # pdf.font "OpenSans", :style => :normal
-          #   #
-          #   #
-          #   # if @context == "gdz"
-          #   #   pdf.move_down 200
-          #   #   pdf.text ENV['DISCLAIMER_TEXT'], :inline_format => true
-          #   #
-          #   #   #pdf.move_down 25
-          #   #   pdf.text ENV['CONTACT_TEXT'], :inline_format => true, :valign => :bottom
-          #   #
-          #   # elsif @context.downcase.start_with?("nlh")
-          #   #   pdf.move_down 200
-          #   #   pdf.text ENV['NLH_EAI1_DISCLAIMER_TEXT'], :inline_format => true
-          #   #
-          #   #   #pdf.move_down 25
-          #   #   pdf.text ENV['NLH_CONTACT_TEXT'], :inline_format => true, :valign => :bottom
-          #   #
-          #   #   pdf.image ENV['NLH_FOOTER_PATH'], at: [120, 90], :scale => 0.11
-          #   # end
-          # end
         end
       end
 
@@ -838,9 +714,6 @@ class ImgToPdfConverter
 
   def cut_from_full_pdf_pdftk_system(pdf_path, to_pdf_dir, id, log, log_start_page_index, log_end_page_index)
 
-    #response = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
-    #if response['numFound'] > 0
-
     if @context == "gdz"
       solr_resp = (@solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "phys_order"})['response']['docs'].first
     elsif @context.downcase.start_with?("nlh")
@@ -848,9 +721,6 @@ class ImgToPdfConverter
     elsif @context == "digizeit"
       # todo
     end
-
-    #first_page = solr_resp['phys_order'][log_start_page_index].to_i
-    #last_page  = solr_resp['phys_order'][log_end_page_index].to_i
 
     first_page = (solr_resp['phys_order'][log_start_page_index].to_i) + 1
     last_page  = (solr_resp['phys_order'][log_end_page_index].to_i) + 1
@@ -880,9 +750,6 @@ class ImgToPdfConverter
 
       log_start_page_index = (solr_resp['log_start_page_index'][log_id_index]) - 1
       log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index]) - 1
-
-      #log_start_page_index = (solr_resp['log_start_page_index'][log_id_index])
-      #log_end_page_index   = (solr_resp['log_end_page_index'][log_id_index])
 
     end
 
@@ -971,7 +838,7 @@ class ImgToPdfConverter
       end
 
       @logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}'")
-      #@logger.error("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.message}")
+      @logger.debug("[img_converter] [GDZ-677] Could not convert '#{to_tmp_img}' to: '#{to_page_pdf_path}' \t#{e.backtrace}")
     end
   end
 

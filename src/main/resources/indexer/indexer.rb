@@ -91,21 +91,17 @@ class Indexer
         "nlh-eha"  => "jpg",
         "gdz"      => "tif"
     }
-#@oai_endpoint   = ENV['METS_VIA_OAI']
-#@short_product  = ENV['SHORT_PRODUCT']
+
     @access_pattern = ENV['ACCESS_PATTERN']
 
-    productin = ENV['IN'] + '/' + @prod
-#productin   = ENV['IN'] + '/' + ENV['PRODUCT']
+    productin   = ENV['IN'] + '/' + @prod
     @teiinpath  = productin + ENV['TEI_IN_SUB_PATH']
     @teioutpath = ENV['OUT'] + ENV['TEI_OUT_SUB_PATH']
 
     @fulltextexist = ENV['FULLTEXTS_EXIST']
-#@imagefrompdf  = ENV['IMAGE_FROM_PDF']
-#@context       = ENV['CONTEXT']
 
- @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
- @logger.level = ENV['DEBUG_MODE'].to_i
+    @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
+    @logger.level = ENV['DEBUG_MODE'].to_i
 
 #    @logger       = Logger.new(STDOUT)
 #    @logger.level = ENV['DEBUG_MODE'].to_i
@@ -239,24 +235,10 @@ class Indexer
     begin
 
       mods.xpath('identifier').each { |id_element|
-        #type = id_element.attributes['type']&.value
-        #type = "unknown" if type == nil
-
-        #id = id_element.text
-        #ids << "#{type} #{id}"
         ids << id_element.text
       }
 
-      #unless mods.xpath('recordInfo/recordIdentifier') == nil
       mods.xpath('recordInfo/recordIdentifier')&.each { |id_element|
-
-        #type = id_element.attributes['id']&.value
-        #type = id_element.attributes['type']&.value if type == nil
-        #type = id_element.attributes['source']&.value if type == nil
-        #type = "unknown" if type == nil
-
-        #id = id_element.text
-        #ids << "#{type} #{id}"
         ids << id_element.text
       }
 
@@ -285,7 +267,6 @@ class Indexer
 
       while recordIdentifiers.count > 0
 
-        #recordIdentifiers.each do |id_element|
         id_element = recordIdentifiers.shift
 
         id_source = id_element.attributes['source']
@@ -306,21 +287,6 @@ class Indexer
 
     return ids
   end
-
-
-=begin
-def get_purl_and_catalogue()
-
-  # info in dv:presentation is build upon the wrong schema
-  #purl = @doc.xpath("/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap/mets:xmlData/dv:links/dv:presentation", 'mets' => 'http://www.loc.gov/METS/', 'dv' => 'http://dfg-viewer.de/').text
-  purl = @doc.xpath("/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:identifier[@type='purl']", 'mets' => 'http://www.loc.gov/METS/', 'mods' => 'http://www.loc.gov/mods/v3').text
-  purl = @doc.xpath("/mets:mets/mets:dmdSec/mets:mdWrap/mets:xmlData/mods:mods/mods:location/mods:url", 'mets' => 'http://www.loc.gov/METS/', 'mods' => 'http://www.loc.gov/mods/v3').text if purl == nil
-
-  catalogue = @doc.xpath("/mets:mets/mets:amdSec/mets:digiprovMD/mets:mdWrap/mets:xmlData/dv:links/dv:reference", 'mets' => 'http://www.loc.gov/METS/', 'dv' => 'http://dfg-viewer.de/').map {|el| "OPAC #{el.text}"}
-
-  return [purl, catalogue]
-end
-=end
 
 
   def getTitleInfos(modsTitleInfoElements)
@@ -395,7 +361,7 @@ end
     while modsLocationElements.count > 0
       li = modsLocationElements.shift
 
-      li.xpath("physicalLocation[@type='shelfmark']").each {|shelfmark|
+      li.xpath("physicalLocation[@type='shelfmark']").each { |shelfmark|
         if (shelfmark.text != '')
           loc           = Location.new
           loc.shelfmark = shelfmark.text
@@ -404,7 +370,7 @@ end
       }
 
 
-      li.xpath("shelfLocator").each {|shelfmark|
+      li.xpath("shelfLocator").each { |shelfmark|
         if (shelfmark.text != '')
           loc           = Location.new
           loc.shelfmark = shelfmark.text
@@ -780,9 +746,6 @@ end
 
         # NLH:  https://nl.sub.uni-goettingen.de/image/eai1:0FDAB937D2065D58:0FD91D99A5423158/full/full/0/default.jpg
         match = firstUri.match(/(\S*)\/(\S*)\/(\S*):(\S*):(\S*)(\/\S*\/\S*\/\S*\/\S*)/)
-        #baseurl = match[1]
-        # product = match[3]
-        # product = "nlh-" + product if !product.start_with? 'nlh-'
         work = match[4]
       rescue Exception => e
         @logger.error("[indexer] [GDZ-757] No regex match for NLH/IIIF image URI #{firstUri.to_s} \t#{e.message}")
@@ -791,8 +754,6 @@ end
 
 
       image_meta.image_format = @image_format_hsh[@prod]
-      #image_meta.image_format = ENV['IMAGE_OUT_FORMAT']
-      #image_meta.baseurl        = baseurl
       image_meta.access_pattern = @access_pattern
       image_meta.product        = @prod
       image_meta.work           = work
@@ -809,19 +770,13 @@ end
           #   file:///goobi/tiff001/sbb/PPN726234869/00000001.tif
           match = firstUri.match(/(\S*)\/sbb\/(\S*)\/(\S*)\.(\S*)/)
         end
-        #baseurl      = match[1]
         work = match[2]
-          #image_format = match[4]
       rescue Exception => e
         @logger.error("[indexer] [GDZ-757] No regex match for GDZ/IIIF image URI #{firstUri.to_s} \t#{e.message}")
         raise
       end
 
-      #product = @short_product
-
       image_meta.image_format = @image_format_hsh[@prod]
-      #image_meta.image_format = ENV['IMAGE_OUT_FORMAT']
-      #image_meta.baseurl        = baseurl
       image_meta.access_pattern = @access_pattern
       image_meta.product        = @prod
       image_meta.work           = work
@@ -861,11 +816,6 @@ end
   def processFulltexts(fulltext_meta)
 
     from_physical_id_to_attr_hsh, from_file_id_to_order_phys_id_hsh = get_physical_attr_hash
-    #get_physical_attr_hash
-
-    # unless @doc.xpath("//mets:fileSec/mets:fileGrp[@USE='FULLTEXT' or @USE='TEI' or @USE='GDZOCR']/mets:file/mets:FLocat", 'mets' => 'http://www.loc.gov/METS/').empty?
-
-    #@str_doc   = open("http://gdz.sub.uni-goettingen.de/mets/PPN235181684_0126.xml")
     doc_parser = Saxerator.parser(@str_doc) { |config|
       config.ignore_namespaces!
       config.output_type = :xml
@@ -891,14 +841,10 @@ end
       if (@context != nil) && (@context.downcase == "nlh")
         # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
         match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
-        #product = match[2]
         work = match[3]
       elsif (@context != nil) && (@context.downcase == "gdz")
-        # gdzocr_url": [
-        #   "http://gdz.sub.uni-goettingen.de/gdzocr/PPN517650908/00000001.xml",... ]
         match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
         work  = match[3]
-        #product = @short_product
       end
 
     rescue Exception => e
@@ -923,7 +869,6 @@ end
           match  = uri.match(/\S*\/(\S*)\.(xml|txt|html)/)
           page   = match[1]
           format = match[2]
-          #from     = match[0]
           filename = match[1] + '.' + match[2]
         end
       rescue Exception => e
@@ -939,11 +884,7 @@ end
 
       fulltext.fulltext_of_work = work
 
-      #page_number                   = @doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:fptr[@FILEID='#{id}']/parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
-
-
       phys_id = from_file_id_to_order_phys_id_hsh[id]
-
 
       if phys_id != nil
         page_number = from_physical_id_to_attr_hsh[phys_id]['order']
@@ -1013,7 +954,6 @@ end
   end
 
   def get_physical_divs_within
-    #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
     xml_parser = Saxerator.parser(@str_doc) { |config|
       config.output_type = :xml
       config.ignore_namespaces!
@@ -1043,10 +983,6 @@ end
     divs.each { |el|
       attrs = el.attributes
       id    = attrs['ID']
-      #arr.include? "FILE_0000_MIN"
-
-
-      #@doc.xpath("//mets:structMap[@TYPE='PHYSICAL']//mets:fptr[@FILEID='#{id}']/parent::*/@ORDER", 'mets' => 'http://www.loc.gov/METS/').text
 
       from_physical_id_to_attr_hsh[id] = {
           'id'         => id,
@@ -1110,7 +1046,6 @@ end
 
   def get_info_from_mets_mptrs(part_url)
 
-    #product = ''
     work = ''
 
     if (@context != nil) && (@context.downcase == "nlh")
@@ -1120,8 +1055,6 @@ end
         match = part_url.match(/(\S*)\/(\S*):(\S*).(mets).(xml)/)
         match = part_url.match(/(\S*)\/(\S*)_(\S*).(mets).(xml)/) if match == nil
 
-        #product = @prod
-        #product = match[2]
         work = match[3]
       rescue Exception => e
         @logger.error("[indexer] No regex match for part URI #{part_url} in parent #{@path} \t#{e.message}")
@@ -1140,9 +1073,7 @@ end
           # http://gdz.sub.uni-goettingen.de/mets/PPN807026034.xml
           match = part_url.match(/(\S*)\/mets\/(\S*).xml/)
         end
-
         work = match[2]
-          #product = @prod
 
       rescue Exception => e
         if (match == nil) && (count < 1)
@@ -1246,10 +1177,6 @@ end
     ri.sponsor        = right['sponsor']
     ri.sponsorSiteURL = right['sponsorSiteURL']
 
-    # links        = rights.xpath('dv:links', 'dv' => 'http://dfg-viewer.de/')[0]
-    # ri.reference = links.xpath('dv:reference', 'dv' => 'http://dfg-viewer.de/').text if links != nil
-
-
     return ri
 
   end
@@ -1303,11 +1230,7 @@ end
 
   def get_fulltext_from_s3(file)
 
-    attempts = 0
-
     #s3://gdz/fulltext/<work_id>/<page>.xml
-    #
-    #
 
     if (@context != nil) && (@context.downcase == "nlh")
       s3_fulltext_key = "fulltext/#{@id}/#{file}"
@@ -1354,49 +1277,6 @@ end
     Nokogiri::XML(@str_doc)
   end
 
-
-=begin
-  def get_doc_from_path()
-
-    attempts = 0
-
-    begin
-      @doc = File.open(@id) { |f|
-        Nokogiri::XML(f) { |config|
-          config.noblanks
-        }
-      }
-    rescue Exception => e
-      attempts = attempts + 1
-      if (attempts < MAX_ATTEMPTS)
-        sleep 0.2
-        retry
-      end
-      fileNotFound("METS", e)
-      return nil
-    end
-
-  end
-=end
-
-=begin
-  def get_str_doc_from_ppn(uri)
-    attempts = 0
-
-    begin
-      @str_doc = open(uri).read
-    rescue Exception => e
-      attempts = attempts + 1
-      if (attempts < MAX_ATTEMPTS)
-        sleep 0.2
-        retry
-      end
-      fileNotFound("METS", e)
-      return nil
-    end
-  end
-=end
-
   def get_doc_from_str_doc
 
     begin
@@ -1438,9 +1318,6 @@ end
 
 
   def metadata_for_dmdsec(id, mods)
-
-    #@logger.debug "[indexer] in metadata_for_dmdsec (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
-
 
     dmdsec_meta = MetsDmdsecMetadata.new
 
@@ -1630,7 +1507,6 @@ end
 
       rightsInfoArr = Array.new
 
-      #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
       xml_parser = Saxerator.parser(@str_doc) { |config|
         config.output_type = :xml
         config.ignore_namespaces!
@@ -1657,10 +1533,7 @@ end
       @logger.error("[indexer] Problems to resolve rights info for #{@id} (#{e.message})")
     end
 
-
     mods = nil
-
-    #GC.start
 
     return dmdsec_meta
 
@@ -1713,7 +1586,6 @@ end
 
     dmdsec_hsh = Hash.new
 
-    #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
     xml_parser = Saxerator.parser(@str_doc) { |config|
       config.output_type = :xml
       config.ignore_namespaces!
@@ -1776,7 +1648,6 @@ end
 
     from_logical_id_to_physical_ids_hsh = Hash.new
 
-    #xml_parser = Saxerator.parser(open('http://gdz.sub.uni-goettingen.de/mets/PPN13357363X.xml')) {|config|
     xml_parser = Saxerator.parser(@str_doc) { |config|
       #config.output_type = :xml
       config.ignore_namespaces!
@@ -1829,8 +1700,6 @@ end
 
 
   def parseDoc()
-
-    # get_doc_from_ppn(metsUri())
 
     @logger.debug "[indexer] parseDoc -> used: #{GC.stat[:used]}}\n\n"
 
@@ -1939,13 +1808,6 @@ end
     fulltext_meta.work = @id
     retrieve_fulltext_data(fulltext_meta) if meta.doctype == "work"
 
-
-    #@logger.debug "[indexer] before fulltext-meta -> used: #{GC.stat[:used]}}\n\n"
-    # get rights info
-    #fulltext_meta = MetsRightsMetadata.new
-    #retrieve_rights_data(fulltext_meta) if meta.doctype == "work"
-
-
     @logger.debug "[indexer] (#{@id}) before summary-meta -> used: #{GC.stat[:used]}}\n\n"
 
     s3_key = "summary/#{@id}/"
@@ -1967,12 +1829,10 @@ end
 
       summary_arr = Array.new
 
-      summaries.each {|el|
+      summaries.each { |el|
 
         if el.key.end_with?('html')
 
-          #name     = "ERROR"
-          #content  = "ERROR"
           attempts = 0
           begin
             resp    = @s3.get_object({bucket: @s3_bucket, key: el.key})
@@ -2006,16 +1866,6 @@ end
     elsif meta.product != nil && meta.work != nil && image_meta.pages != nil && logical_meta.title_page_index == nil
       logical_meta.title_page = "#{meta.product}:#{meta.work}:#{image_meta.pages[0]}"
     end
-
-    #@logger.debug "[indexer] before mods-meta -> used: #{GC.stat[:used]}}\n\n"
-    #
-    # add MODS
-    #begin
-    #  meta.mods = @doc.xpath('//mods')[0].to_xml
-    #rescue Exception => e
-    #  @logger.error "[indexer] Could not get MODS XML for #{@id} \t#{e.message}"
-    #endNo regex match for GDZ/IIIF image URI
-
 
     if (meta.doctype != 'anchor') && (image_meta.pages.size != logical_meta.phys_last_page_index&.to_i)
       @logger.error("[indexer] [GDZ-497] - #{@id} - number of pages is not equal physical page size (#{image_meta.pages.size} vs #{logical_meta.phys_last_page_index&.to_i})")
@@ -2052,14 +1902,6 @@ end
         # todo
       end
 
-      # begin
-      #   @id = @s3_key.match(/mets\/([\S\s]*)(.xml)/)[1]
-      # rescue Exception => e
-      #   @logger.error "[indexer] Wrong request '#{json}' (example request body: {'s3_key':'mets/PPN007.xml','context':'gdz'})\t#{e.message}"
-      #   return
-      # end
-
-
       if (@context != nil) && ((@context.downcase == "gdz") || (@context.downcase == "nlh"))
 
         if attempts == 0
@@ -2069,7 +1911,6 @@ end
         end
 
         get_str_doc_from_s3()
-        #get_doc_from_str_doc
       else
         @logger.error "[indexer] Could not process context '#{@context}'"
         return
@@ -2080,29 +1921,12 @@ end
 
         # [meta, logical_meta, physical_meta, image_meta, fulltext_meta, summary_meta]
 
-
         metsModsMetadata = parseDoc()
-
 
         if metsModsMetadata != nil
 
           hsh = Hash.new
           hsh.merge! ({:id => @id})
-
-
-=begin
-          {:meta          => meta,
-           :logical_meta  => logical_meta,
-           :physical_meta => physical_meta,
-           :image_meta    => image_meta,
-           :fulltext_meta => fulltext_meta,
-           :summary_meta  => summary_meta}
-=end
-
-          #metsModsMetadata.each_value {|part|
-          #  hsh.merge! part.to_solr_string unless part == nil
-          #}
-
 
           hsh.merge! metsModsMetadata[:meta].to_solr_string unless metsModsMetadata[:meta] == nil
           hsh.merge! metsModsMetadata[:logical_meta].to_solr_string unless metsModsMetadata[:logical_meta] == nil
@@ -2116,20 +1940,6 @@ end
           hsh.merge! metsModsMetadata[:logical_meta].to_child_solr_string unless metsModsMetadata[:logical_meta] == nil
 
           addDocsToSolr(metsModsMetadata[:fulltext_meta].fulltext_to_solr_string) unless metsModsMetadata[:fulltext_meta] == nil
-
-
-=begin
-        facet_creator_personal  = merge_array(hsh[:facet_creator_personal], metsModsMetadata[:logical_meta].facet_creator_personal)
-        facet_creator_corporate = merge_array(hsh[:facet_creator_corporate], metsModsMetadata[:logical_meta].facet_creator_corporate)
-        facet_person_personal   = merge_array(hsh[:facet_person_personal], metsModsMetadata[:logical_meta].facet_person_personal)
-        facet_person_corporate  = merge_array(hsh[:facet_person_corporate], metsModsMetadata[:logical_meta].facet_person_corporate)
-
-        hsh.merge! ({:facet_creator_personal => facet_creator_personal.uniq})
-        hsh.merge! ({:facet_creator_corporate => facet_creator_corporate.uniq!})
-        hsh.merge! ({:facet_person_personal => facet_person_personal.uniq!})
-        hsh.merge! ({:facet_person_corporate => facet_person_corporate.uniq!})
-=end
-
 
           # todo add fulltexts as child-docs
 

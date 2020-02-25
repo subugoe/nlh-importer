@@ -12,12 +12,6 @@ require 'open-uri'
 
 require 'converter/work_converter'
 
-# prepare config (gdz): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (gdz): 20 instances, 8GB importer, 3GB redis, 5GB solr
-
-# prepare config (nlh): 1 instance, 8GB importer, 3GB redis, 5GB solr
-# process config (nlh): 8 instances, 8GB importer, 3GB redis, 5GB solr
-
 
 @logger       = GELF::Logger.new(ENV['GRAYLOG_URI'], ENV['GRAYLOG_PORT'].to_i, "WAN", {:facility => ENV['GRAYLOG_FACILITY']})
 @logger.level = ENV['DEBUG_MODE'].to_i
