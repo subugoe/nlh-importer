@@ -56,11 +56,11 @@ class PurgerService
     begin
 
 
-      if @context == "gdz"
-        bucket = @gdz_bucket
-      elsif @context.downcase.start_with?("nlh")
+      if context == "gdz"
         bucket = product
-      elsif @context == "digizeit"
+      elsif context.downcase.start_with?("nlh")
+        bucket = product
+      elsif context == "digizeit"
         # todo
       else
         raise "Bucket '#{bucket}' unknown"
