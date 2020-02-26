@@ -15,12 +15,12 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-core</artifactId>
-            <version>3.3.3</version>
+            <version>3.5.4</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-redis-client</artifactId>
-            <version>3.3.3</version>
+            <version>3.5.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
