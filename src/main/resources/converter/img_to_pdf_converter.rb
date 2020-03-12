@@ -727,7 +727,7 @@ class ImgToPdfConverter
 
     system "pdftk #{pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
 
-    @logger.debug("[img_converter] Temporary Full PDF #{to_pdf_dir}/tmp.pdf created")
+    @logger.debug("[img_converter] Intermediate PDF #{to_pdf_dir}/tmp.pdf created")
 
   end
 
