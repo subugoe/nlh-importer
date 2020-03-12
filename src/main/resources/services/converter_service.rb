@@ -76,7 +76,7 @@ class ConverterService
           if (context.downcase == 'gdz')
             resp = (@solr_gdz.get 'select', :params => {:q => "id:#{RSolr.solr_escape id}", :fl => " page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
           else
-            resp = (@solr_nlh.get 'select', :params => {:q => "id:#{RSolr.solr_escape id}", :fl => " page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
+            resp = (@solr_nlh.get 'select', :params => {:q => "work:#{RSolr.solr_escape id}", :fl => " page   log_id   log_start_page_index   log_end_page_index doctype"})['response']
           end
 
 
