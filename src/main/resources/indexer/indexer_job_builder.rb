@@ -35,6 +35,7 @@ $vertx.execute_blocking(lambda {|future|
 
   @logger.debug "[indexer_job_builder] GC.start #{GC.start} -> max: #{GC.stat[:max]}"
 
+  attempts = 0
   begin
 
     while true do
@@ -46,9 +47,15 @@ $vertx.execute_blocking(lambda {|future|
     end
 
   rescue Exception => e
-    @logger.error("[indexer_job_builder.rb] Error \t#{e.message}")
-    sleep(5)
-    retry
+    sleep(1)
+    if attempts < 3
+      attempts += 1
+      retry
+    else
+      attempts = 0
+      @logger.error("[indexer_job_builder.rb] Error #{e.message}\nrequest data: #{res}")
+      next
+    end
   end
   # future.complete(@doc.to_s)
 
