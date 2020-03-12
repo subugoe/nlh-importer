@@ -168,7 +168,7 @@ class WorkConverter
     if context.downcase == "gdz"
       solr_resp = @solr_gdz.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype log_id record_identifier"}
     elsif context.downcase.start_with?("nlh")
-      solr_resp = @solr_nlh.get 'select', :params => {:q => "id:#{id}", :fl => "id doctype log_id record_identifier work"}
+      solr_resp = @solr_nlh.get 'select', :params => {:q => "work:#{id}", :fl => "id doctype log_id record_identifier work"}
     elsif context.downcase == "digizeit"
       # todo
     end
@@ -177,10 +177,6 @@ class WorkConverter
     if (solr_resp['response']['numFound'] == 0) || (request_logical_part && (solr_resp['response']['docs'].first['log_id'] == nil))
       @logger.error("[work_converter] Couldn't find #{id} in index, conversion for #{log_id} not possible")
       return
-    end
-
-    if context.downcase.start_with?("nlh")
-      id = solr_resp['response']['docs'].first['work']
     end
 
     removeQueue(log_id)
