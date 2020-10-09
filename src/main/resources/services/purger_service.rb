@@ -76,22 +76,37 @@ class PurgerService
                 "pdf/#{document}/",
                 "fulltext/#{document}/",
                 "summary/#{document}/",
-                "orig/#{document}/"]
+                "orig/#{document}/",
+                "cache/#{bucket}:#{document}/"]
 
 
-        @s3_client = Aws::S3::Client.new(
-            :access_key_id     => ENV['S3_AWS_ACCESS_KEY_ID'],
-            :secret_access_key => ENV['S3_AWS_SECRET_ACCESS_KEY'],
-            :endpoint          => ENV['S3_ENDPOINT'],
-            :force_path_style  => true,
-            :region            => 'us-west-2')
+        if bucket.start_with?("gdz")
+          @s3_client = Aws::S3::Client.new(
+              :access_key_id     => ENV['S3_SUB_AWS_ACCESS_KEY_ID'],
+              :secret_access_key => ENV['S3_SUB_AWS_SECRET_ACCESS_KEY'],
+              :endpoint          => ENV['S3_SUB_ENDPOINT'],
+              :force_path_style  => true,
+              :region            => 'us-west-2')
+        else bucket.start_with?("nlh")
+          @s3_client = Aws::S3::Client.new(
+              :access_key_id     => ENV['S3_NLH_AWS_ACCESS_KEY_ID'],
+              :secret_access_key => ENV['S3_NLH_AWS_SECRET_ACCESS_KEY'],
+              :endpoint          => ENV['S3_NLH_ENDPOINT'],
+              :force_path_style  => true,
+              :region            => 'us-west-2')
+        end
 
         @resource = Aws::S3::Resource.new(client: @s3_client)
 
-        keys.each {|s3_key|
-          @resource.bucket(bucket).objects({prefix: s3_key}).each {|el|
-            el.move_to(:bucket => bucket, :key => "remove/" + el.key)
-          }
+        keys.each { |s3_key|
+          if !s3_key.start_with?("cache")
+            @resource.bucket(bucket).objects({prefix: s3_key}).each { |el|
+              el.move_to(:bucket => bucket, :key => "remove/" + el.key)
+            }
+          else
+            objects = @resource.bucket(bucket).objects({prefix: s3_key})
+            @resource.bucket(bucket).delete_objects(objects)
+          end
         }
 
         @solr_gdz.delete_by_query "work_id:#{document}"
