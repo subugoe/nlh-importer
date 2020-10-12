@@ -77,7 +77,7 @@ class PurgerService
                 "fulltext/#{document}/",
                 "summary/#{document}/",
                 "orig/#{document}/",
-                "cache/#{bucket}:#{document}/"]
+                "cache/#{bucket}:#{document}"]
 
 
         if bucket.start_with?("gdz")
@@ -87,7 +87,8 @@ class PurgerService
               :endpoint          => ENV['S3_SUB_ENDPOINT'],
               :force_path_style  => true,
               :region            => 'us-west-2')
-        else bucket.start_with?("nlh")
+        else
+          bucket.start_with?("nlh")
           @s3_client = Aws::S3::Client.new(
               :access_key_id     => ENV['S3_NLH_AWS_ACCESS_KEY_ID'],
               :secret_access_key => ENV['S3_NLH_AWS_SECRET_ACCESS_KEY'],
@@ -105,7 +106,14 @@ class PurgerService
             }
           else
             objects = @resource.bucket(bucket).objects({prefix: s3_key})
-            @resource.bucket(bucket).delete_objects(objects)
+            objects.each { |el|
+              resp = @resource.bucket(bucket).delete_objects(
+                  {
+                      delete: {
+                          objects: [{key: el.key}]
+                      }
+                  })
+            }
           end
         }
 
