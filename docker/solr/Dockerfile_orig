@@ -48,7 +48,7 @@ RUN mkdir -p $SOLR_GDZ_CORE2/data/
 COPY  config/sub/currency.xml                           $SOLR_GDZ_CORE2/conf/currency.xml
 COPY  config/sub/mapping-FoldToASCII.txt                $SOLR_GDZ_CORE2/conf/mapping-FoldToASCII.txt
 COPY  config/sub/mapping-ISOLatin1Accent.txt            $SOLR_GDZ_CORE2/conf/mapping-ISOLatin1Accent.txt
-COPY  config/schema.xml                                 $SOLR_GDZ_CORE2/conf/schema.xml
+COPY  config/schema2.xml                                 $SOLR_GDZ_CORE2/conf/schema.xml
 COPY  config/solrconfig.xml                             $SOLR_GDZ_CORE2/conf/solrconfig.xml
 COPY  config/stopwords.txt                              $SOLR_GDZ_CORE2/conf/stopwords.txt
 COPY  config/stopwords_en.txt                           $SOLR_GDZ_CORE2/conf/stopwords_en.txt

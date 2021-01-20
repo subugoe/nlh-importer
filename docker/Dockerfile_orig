@@ -124,7 +124,7 @@ WORKDIR /
 
 RUN mkdir -p <verticle_home>
 COPY Gemfile <verticle_home>/Gemfile
-COPY Gemfile.lock <verticle_home>/Gemfile.lock
+#COPY Gemfile.lock <verticle_home>/Gemfile.lock
 #COPY pom.xml <verticle_home>/pom.xml
 
 WORKDIR <verticle_home>
