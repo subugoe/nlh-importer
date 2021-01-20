@@ -106,7 +106,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     sed -i '' "s|<redis_host>|${REDIS_HOST}|"                               .env
     sed -i '' "s|<solr_gdz_host>|${SOLR_GDZ_HOST}|"                                 .env
     sed -i '' "s|<solr_nlh_host>|${SOLR_NLH_HOST}|"                                 .env
-    sed -i '' "s|<graylog_host>|${GRAYLOG_HOST}|"                           .env
+    sed -i '' "s|<graylog_uri>|${GRAYLOG_URI}|"                           .env
     sed -i '' "s|<graylog_port>|${GRAYLOG_PORT}|"                           .env
     sed -i '' "s|<solr_gdz_core>|${solr_gdz_core}|"                                 .env
     sed -i '' "s|<solr_gdz_core2>|${solr_gdz_core2}|"                               .env
@@ -165,7 +165,7 @@ else
     sed -i "s|<redis_host>|${REDIS_HOST}|"                                  .env
     sed -i "s|<solr_gdz_host>|${SOLR_GDZ_HOST}|"                                    .env
     sed -i "s|<solr_nlh_host>|${SOLR_NLH_HOST}|"                                    .env
-    sed -i "s|<graylog_host>|${GRAYLOG_HOST}|"                              .env
+    sed -i "s|<graylog_uri>|${GRAYLOG_URI}|"                              .env
     sed -i "s|<graylog_port>|${GRAYLOG_PORT}|"                              .env
     sed -i "s|<solr_gdz_core>|${solr_gdz_core}|"                                    .env
     sed -i "s|<solr_gdz_core2>|${solr_gdz_core2}|"                                  .env
