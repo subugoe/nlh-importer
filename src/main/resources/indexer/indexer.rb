@@ -1106,6 +1106,7 @@ class Indexer
     logicalElement.id      = checkEmptyString(div.attributes['ID']&.text)
     logicalElement.admid   = checkEmptyString(div.attributes['ADMID']&.text)
     logicalElement.label   = checkEmptyString(div.attributes['LABEL']&.text)
+    logicalElement.label   = Mappings.strctype_label(logicalElement.type) if (logicalElement.label == " ") || (logicalElement.label == nil)
     logicalElement.label   = logicalElement.type if (logicalElement.label == " ") || (logicalElement.label == nil)
 
     logicalElement.dmdsec_meta = dmdsec_hsh[logicalElement.dmdid]

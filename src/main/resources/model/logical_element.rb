@@ -26,9 +26,10 @@ class LogicalElement
   def label=(label)
     # Mapping no longer desired
     # l = Mappings.strctype_label(label)
-    # l = label if l == nil
-    l = label
-    @label = l
+    #l = label if l == nil
+    #l = label
+    #@label = l
+    @label = label
   end
 
   def label
@@ -36,10 +37,10 @@ class LogicalElement
   end
 
   def type=(type)
-    t = Mappings.strctype_type(type)
-    t = type if t == nil
-
-    @type = t
+    #t = Mappings.strctype_type(type)
+    #t = type if t == nil
+    #@type = t
+    @type = type
   end
 
   def type
