@@ -262,49 +262,52 @@
         -->
         <field name="_root_" type="string" indexed="true" stored="false"/>
 
-
         <!-- ###### NEW INDEX ####################################################-->
         <field name="uid" type="uuid" indexed="true" stored="true" default="NEW"/>
+        
         <!-- Identifiers -->
         <field name="id" type="string" indexed="true" stored="true" required="true"/>
-        <field name="work_id" type="string" indexed="true" stored="true" multiValued="false" />
-
-        <field name="record_identifier" type="string" indexed="true" stored="true" />
-
-
+        <field name="work_id" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="collection" type="string" indexed="true" stored="true"/>   <!-- id of multivolume work (anchor) -->
+        <field name="work" type="string" indexed="true" stored="true"/>         <!-- id of work -->
+        <field name="record_identifier" type="string" indexed="true" stored="true"/> <!-- id of record, same as work except for eai1 and eai2 -->
         <field name="logid" type="string" indexed="true" stored="true" required="false"/>
         <field name="dmdid" type="string" indexed="true" stored="true"/>
-        <field name="mods" type="string" indexed="true" stored="true"/>
-        <field name="identifier" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
+        <field name="id_parentdoc" type="string" indexed="true" multiValued="true"/>
+        <field name="identifier" type="string" indexed="true" stored="true" multiValued="true"/>  <!-- array of all work related IDs -->
+        <!-- <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/> -->
+        <field name="shelfmark" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+       
         <field name="issn" type="string" indexed="true" stored="true"/>
         <field name="zdb" type="string" indexed="true" stored="true"/>
         <field name="vd" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="vd17" type="string" indexed="true" stored="true"/>
         <field name="vd18" type="string" indexed="true" stored="true"/>
 
-
-        <field name="marc" type="string" indexed="true" stored="true"/>
-
-
-        <field name="shelfmark" type="string" indexed="true" stored="true" multiValued="true"/>
-
-        <!-- from mets logical structMap, part of table of contents -->
+        <!-- parent identification for NLH -->
+        <field name="parentdoc_id" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_title_abbreviated" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_title_partname" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_title_partnumber" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_note" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="parentdoc_type" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="parentdoc_work" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="parentdoc_label" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="parentdoc_type" type="string" indexed="true" stored="true" multiValued="true"/>
         <!--<field name="parentdoc_url" type="string" indexed="true" stored="true" multiValued="true"/>-->
-
-        <!-- from mods:relatedItem, bibliographix description -->
+        
+        <!-- parent identification for GDZ -->
         <field name="relateditem_id" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="relateditem_title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="relateditem_title_abbreviated" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="relateditem_title_partname" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="relateditem_title_partnumber" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="relateditem_note" type="text_ci" indexed="true" stored="true" multiValued="true"/>
         <field name="relateditem_type" type="string" indexed="true" stored="true" multiValued="true"/>
 
         <!-- flags -->
-        <!-- use 1 instead of true for downward compatibility -->
         <field name="isvd" type="boolean" indexed="true"/>
         <field name="isvd17" type="boolean" indexed="true"/>
         <field name="isvd18" type="boolean" indexed="true"/>
@@ -313,87 +316,172 @@
         <field name="ismets" type="boolean" indexed="true"/>
         <field name="islog" type="boolean" indexed="true"/>
         <field name="isparent" type="boolean" indexed="true" stored="true"/>
+        <field name="iscontribution" type="boolean" indexed="true" stored="true"/>
+  
+        <!-- metadata -->
+        <field name="context" type="string" indexed="true" stored="true"/> <!-- {'nlh' | 'gdz' | 'digizeit' | ...} -->        
+        <field name="product" type="string" indexed="true" stored="true"/> <!-- {'nlh-eai1' | 'gdz' | 'digizeit' | ...} -->
+        <field name="doctype" type="string" indexed="true" stored="true"/> <!-- {'fulltext' | 'work' | 'anchor' | 'log' | ...} -->
+        <field name="docstrct" type="text_lc" indexed="true" stored="true"/>
 
-        <!-- {'fulltext' | 'work' | 'anchor' | 'log' | ...} -->
-        <field name="doctype" type="string" indexed="true" stored="true"/>
+        <field name="subject_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
-        <!-- {'nlh' | 'gdz' | 'digizeit' | ...} -->
-        <field name="context" type="string" indexed="true" stored="true"/>
+        <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="subject_genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        
+        <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>   
+        <field name="dc_authority" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        
+        <field name="lang" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="scriptterm" type="text_lc_multi" indexed="true" stored="true"/>
+        
+        <field name="note_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="note" type="text_ci" indexed="true" stored="true" multiValued="true"/>
 
-        <!-- related image index position of fulltext (solr doc) -->
-        <field name="image_index" type="string" indexed="true" stored="true"/>
-
-        <field name="collection" type="string" indexed="true" stored="true"/>
-        <field name="product" type="string" indexed="true" stored="true"/>
-        <field name="work" type="string" indexed="true" stored="true"/>
-        <field name="page" type="string" indexed="true" stored="true" multiValued="true"/>
-        <field name="page_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="image_format" type="string" indexed="true" stored="true"/>
-        <field name="mets_path" type="string" indexed="true" stored="true"/>
-
-        <field name="access_pattern" type="string" indexed="true" stored="true"/>
-        <field name="baseurl" type="string" indexed="false" stored="true"/>
-
+        <field name="periodical_name" type="string" indexed="true" stored="true" />        
+        <field name="issue_number" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="volume_number" type="string" indexed="true" stored="true" multiValued="false"/>        
         <field name="volume_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="volume_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="volume_label" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <!-- end remove -->
 
-        <field name="log" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
         <field name="log_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_label" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_dmdid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_admid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_level" type="tint" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_index" type="tint" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_order" type="tint" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_start_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
-        <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
         <field name="log_part_product" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_work" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="log_part_key" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="log_title_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
-
+        
+        
+        <field name="phys_content_id_changed_at" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <!--
-        <field name="phys_id" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_level" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         -->
-        <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
-        <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="phys_content_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
-        <field name="phys_content_id_changed_at" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
-        <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
-
-        <field name="title_page" type="string" indexed="false" stored="true"/>
-
+        
         <field name="phys_desc_form" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_reformattingQuality" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_extent" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="phys_desc_digitalOrigin" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
-        <field name="rights_access_condition" type="string_mv" indexed="true" stored="true" multiValued="false"/>
         <field name="rights_owner" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_site_url" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="rights_owner_contact" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_owner_logo" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_owner_contact" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_license" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_reference" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="rights_access_condition" type="string_mv" indexed="true" stored="true" multiValued="false"/>
         <field name="rights_sponsor" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="rights_sponsor_site_url" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
+        <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="license_for_metadata" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="license_for_use_and_reproduction" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
-        <field name="subject_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="subject" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="title_original" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="title_abbreviated" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="title_alternative" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="sorttitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="sorttitle_first_value" type="string" indexed="true" stored="true"/>
+        <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="partname" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="partnumber" type="tint" indexed="true" stored="true" multiValued="true"/>
 
-        <field name="note_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="note" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="publisher" type="text_ci" indexed="true" stored="true"/>
+        <field name="place_publish" type="text_ci" indexed="true" stored="true"/>
+        <field name="year_publish_string" type="string" indexed="true" stored="true"/>
+        <field name="year_publish" type="tint" indexed="true" stored="true"/>
+        <field name="year_publish_start" type="tint" indexed="true" stored="true"/>
+        <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
+        
+        <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
+        <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
+        <field name="year_digitization" type="tint" indexed="true" stored="true"/>
+        <field name="year_digitization_string" type="string" indexed="true" stored="true"/>
+        <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
+        <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
+        
+        <field name="edition" type="string" indexed="true" stored="true"/>
+        <field name="edition_digitization" type="string" indexed="true" stored="true"/>
+        
+        <field name="navi_year" type="tint" indexed="true" stored="true"/>  
+        <field name="navi_month" type="tint" indexed="true" stored="true"/>
+        <field name="navi_day" type="tint" indexed="true" stored="true"/>
+        <field name="navi_string" type="string" indexed="true" stored="true"/>
+        <field name="navi_date" type="tdate" indexed="true" stored="true"/>
 
+        <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_type" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_gndNumber" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_date" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_date_string" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_roleterm" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="creator_roleterm_authority" type="string" indexed="true" stored="true" multiValued="true"/>
+        
+        <field name="person" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_type" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_gndNumber" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_date" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_date_string" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_roleterm" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="person_roleterm_authority" type="string" indexed="true" stored="true" multiValued="true"/>
+        
+        <field name="image_format" type="string" indexed="true" stored="true"/>    <!-- jpg, tiff, gif, .. -->
+        <field name="mets_path" type="string" indexed="true" stored="true"/>       <!-- deprecated, nfs location, now all doc's in S3 -->
+        <field name="access_pattern" type="string" indexed="true" stored="true"/>  <!-- deprecated, now fixed S3 storage structure -->
+        
+        <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
+        <field name="date_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
+
+        <!--
+        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
+        -->
+
+        <!-- fulltext -->
+        <field name="fulltext" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"
+               termOffsets="true"/>
+        <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
+        <field name="ft" type="text_general" indexed="true" stored="true"/>
+        <field name="ft_ref" type="string" indexed="true" stored="true"/>
+        <field name="ft_of_work" type="string" indexed="true" stored="true"/>
+        <field name="ft_page_number" type="tint" indexed="true" stored="true"/>
+        <!-- related image index position of fulltext (solr doc) -->
+        <field name="image_index" type="string" indexed="true" stored="true"/>
+
+        <!-- summary -->
+        <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_content_with_tags" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        <field name="summary_ref" type="text_ci" indexed="true" stored="true" multiValued="true"/>
+        
+        <!-- stored but not indexed fields -->
+        <field name="location" type="text_ci" indexed="false" stored="true" multiValued="true"/>
+        <field name="purl" type="string" indexed="false" stored="true" multiValued="false"/>
+        <field name="catalogue" type="string" indexed="false" stored="true" multiValued="true"/>
+        <field name="baseurl" type="string" indexed="false" stored="true"/>        <!-- deprecated, now all doc's in S3-->
+        <field name="structrun" type="string" indexed="false" stored="true" multiValued="false"/>  <!-- all infos for the logical structure hierachie -->
+        <field name="title_page" type="string" indexed="false" stored="true"/>
+        <field name="log_title_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
+        <field name="order" type="tint" indexed="false" stored="true"/>        
+        <field name="phys_order" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_orderlabel" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="phys_content_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>        
+        <field name="phys_first_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
+        <field name="phys_last_page_index" type="tint" indexed="false" stored="true" multiValued="false"/>
+        <field name="log_dmdid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_admid" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_level" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_order" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_start_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_end_page_index" type="tint" indexed="false" stored="true" multiValued="true"/>
+        <field name="log" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+        <field name="log_id" type="string_mv" indexed="false" stored="true" multiValued="true"/>
+      
         <!-- sort fields -->
         <field name="bytitle" type="string" indexed="true" omitNorms="true"/>
         <field name="bycreator" type="string" indexed="true" omitNorms="true"/>
@@ -401,128 +489,46 @@
         <field name="currentnosort" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="currentno" type="string" indexed="true" stored="true" multiValued="false"/>
 
-        <!--
-        <field name="part_order" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="part_number" type="string" indexed="true" stored="true" multiValued="false"/>
-        -->
+        <!-- formatted metadata -->
+        <field name="mods" type="string" indexed="true" stored="true"/>
+        <field name="marc" type="string" indexed="true" stored="true"/>
 
+        <!-- special fields for metadata and default search  (not stored) -->
+        <field name="metadata" type="text_ci" indexed="true" stored="false"/>
+        <field name="default" type="text_ci" indexed="true" stored="false"/>
+        
+        <!-- ###### OLD INDEX ####################################################-->
+        <field name="IDDOC" type="string" indexed="true" stored="true"/>
+    
 
-        <field name="date_indexed" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
-        <field name="date_modified" type="tdate" indexed="true" stored="true" default="NOW" multiValued="false"/>
-
+        <dynamicField name="*_url" type="string_mv" stored="true" multiValued="true"/>
+        <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        
 
         <!-- facet fields -->
-        <field name="docstrct" type="text_lc" indexed="true" stored="true"/>
-
-        <field name="lang" type="text_lc_multi" indexed="true" stored="true"/>
-        <field name="scriptterm" type="text_lc_multi" indexed="true" stored="true"/>
-
-        <field name="genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
-        <field name="subject_genre" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="dc" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
-        <field name="dc_authority" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_normalized_genre" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_normalized_place_term" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_dc" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="edition" type="string" indexed="true" stored="true"/>
-        <field name="edition_digitization" type="string" indexed="true" stored="true"/>
-
-
-        <field name="sponsor" type="text_lc_multi" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_place_publish" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="year_publish_string" type="string" indexed="true" stored="true"/>
-        <field name="year_publish" type="tint" indexed="true" stored="true"/>
-        <field name="year_publish_start" type="tint" indexed="true" stored="true"/>
-        <field name="year_publish_end" type="tint" indexed="true" stored="true"/>
-
-
+        <field name="facet_publisher" type="string_mv" indexed="true" stored="true" multiValued="true"/>        
+        <field name="facet_year_publish" type="tint" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_creator_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_person_personal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_creator_corporate" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_person_corporate" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
-
         <field name="facet_place_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_publisher_digitization" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-        <field name="year_digitization_string" type="string" indexed="true" stored="true"/>
-        <field name="year_digitization_start" type="tint" indexed="true" stored="true"/>
-        <field name="year_digitization_end" type="tint" indexed="true" stored="true"/>
-
+        <field name="facet_year_digitization" type="tint" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_product" type="string_mv" indexed="true" stored="true"/>
-
-        <field name="facet_subject_topic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
         <field name="facet_subject_geographic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_topic" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_temporal" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_subject_hierarchicalGeographic" type="string_mv" indexed="true" stored="true"
+               multiValued="true"/>
+        <field name="facet_periodical_name" type="string_mv" indexed="true" stored="true" multiValued="true"/>
+        <field name="facet_log_type" type="string_mv" indexed="true" stored="true" multiValued="true"/>
 
-
-        <!-- indexed and stored text fields -->
-        <field name="title" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="sorttitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="sorttitle_first_value" type="string" indexed="true" stored="true" />
-        <field name="subtitle" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="nonsort" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="publisher" type="text_ci" indexed="true" stored="true"/>
-        <field name="place_publish" type="text_ci" indexed="true" stored="true"/>
-
-        <field name="creator" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-
-        <field name="publisher_digitization" type="text_ci" indexed="true" stored="true"/>
-        <field name="place_digitization" type="text_ci" indexed="true" stored="true"/>
-
-
-        <field name="creator_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person_type" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="creator_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="creator_gndNumber" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person_gndURI" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person_gndNumber" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-        <field name="creator_roleterm" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="creator_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person_roleterm" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="person_roleterm_authority" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-
-        <!-- only indexed  text fields -->
-        <field name="metadata" type="text_ci" indexed="true" stored="false"/>
-        <field name="default" type="text_ci" indexed="true" stored="false"/>
-
-
-        <!--<field name="fulltexts" type="text_ci" indexed="true" stored="false" />-->
-        <!-- # todo for production change to stored="false" -->
-        <field name="fulltext" type="text_ci" indexed="true" stored="true" termVectors="true" termPositions="true"  termOffsets="true" />
-        <field name="fulltext_ref" type="text_ci" indexed="true" stored="true"/>
-
-        <field name="ft" type="text_general" indexed="true" stored="true" />
-        <field name="ft_ref" type="string" indexed="true" stored="true"/>
-        <field name="ft_of_work" type="string" indexed="true" stored="true"/>
-        <field name="ft_page_number" type="tint" indexed="true" stored="true"/>
-
-        <field name="summary_name" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="summary_content" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="summary_content_with_tags" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-        <field name="summary_ref" type="text_ci" indexed="true" stored="true" multiValued="true"/>
-
-        <!-- only stored fields -->
-        <field name="location" type="string" indexed="false" stored="true" multiValued="true"/>
-
-        <field name="purl" type="string" indexed="false" stored="true" multiValued="false"/>
-        <field name="catalogue" type="string" indexed="false" stored="true" multiValued="true"/>
-
-        <field name="structrun" type="string" indexed="false" stored="true" multiValued="false"/>
-
-        <dynamicField name="*_url" type="string_mv" stored="true" multiValued="true"/>
-
-        <dynamicField name="*_s" type="string_mv" indexed="true" stored="true" multiValued="true"/>
-
-        <!-- ###### OLD INDEX ####################################################-->
-        <field name="IDDOC" type="string" indexed="true" stored="true"/>
-
-
+        
     </fields>
 
     <!-- Field to use to determine and enforce document uniqueness.
@@ -533,64 +539,88 @@
     <uniqueKey>id</uniqueKey>
 
 
+    <!-- copy fields into metadata for search -->
     <copyField source="title" dest="metadata"/>
     <copyField source="subtitle" dest="metadata"/>
+    <copyField source="log_label" dest="metadata"/>
+    <copyField source="summary_name" dest="metadata"/>
+    <copyField source="periodical_name" dest="metadata"/>
+    
     <copyField source="publisher" dest="metadata"/>
     <copyField source="place_publish" dest="metadata"/>
     <copyField source="creator" dest="metadata"/>
+    <copyField source="creator_gndNumber" dest="metadata"/>
     <copyField source="person" dest="metadata"/>
     <copyField source="person_gndNumber" dest="metadata"/>
-    <copyField source="creator_gndNumber" dest="metadata"/>
-    <copyField source="genre" dest="metadata"/>
+    
     <copyField source="dc" dest="metadata"/>
-    <copyField source="work" dest="metadata"/>
-    <copyField source="page" dest="metadata"/>
-    <copyField source="id" dest="metadata"/>
-    <copyField source="work_id" dest="metadata"/>
-    <copyField source="ft_of_work" dest="metadata"/>
-    <copyField source="record_identifier" dest="metadata"/>
-    <copyField source="identifier" dest="metadata"/>
-    <copyField source="note" dest="metadata"/>
+    <copyField source="genre" dest="metadata"/>
     <copyField source="subject" dest="metadata"/>
-    <copyField source="summary_name" dest="metadata"/>
+    <copyField source="note" dest="metadata"/>
+    <copyField source="navi_string" dest="metadata"/>
+    
+    <copyField source="id" dest="metadata"/>
+    <copyField source="work" dest="metadata"/>
+    <copyField source="work_id" dest="metadata"/>
+    <copyField source="identifier" dest="metadata"/>
+    <copyField source="record_identifier" dest="metadata"/>
+    <copyField source="page" dest="metadata"/>
     <copyField source="purl" dest="metadata"/>
     <copyField source="catalogue" dest="metadata"/>
-    <copyField source="log_label" dest="metadata"/>
     <copyField source="phys_content_id" dest="metadata"/>
-
-
-
+    <copyField source="issue_number" dest="metadata"/>
+    <copyField source="shelfmark" dest="metadata"/>
+    
     <!-- copy fields into default for search -->
-    <copyField source="fulltext" dest="default"/>
-    <copyField source="ft" dest="default"/>
-    <copyField source="summary_content" dest="default"/>
     <copyField source="title" dest="default"/>
     <copyField source="subtitle" dest="default"/>
+    <copyField source="log_label" dest="default"/>
+    <copyField source="summary_name" dest="default"/>
+    <copyField source="periodical_name" dest="default"/>
+    
     <copyField source="publisher" dest="default"/>
     <copyField source="place_publish" dest="default"/>
     <copyField source="creator" dest="default"/>
+    <copyField source="creator_gndNumber" dest="default"/>
     <copyField source="person" dest="default"/>
     <copyField source="person_gndNumber" dest="default"/>
-    <copyField source="creator_gndNumber" dest="default"/>
-    <copyField source="genre" dest="default"/>
+    
     <copyField source="dc" dest="default"/>
-    <copyField source="work" dest="default"/>
-    <copyField source="page" dest="default"/>
-    <copyField source="id" dest="default"/>
-    <copyField source="work_id" dest="default"/>
-    <copyField source="ft_of_work" dest="default"/>
-    <copyField source="record_identifier" dest="default"/>
-    <copyField source="identifier" dest="default"/>
-    <copyField source="note" dest="default"/>
+    <copyField source="genre" dest="default"/>
     <copyField source="subject" dest="default"/>
+    <copyField source="note" dest="default"/>
+    <copyField source="navi_string" dest="default"/>
+    
+    <copyField source="id" dest="default"/>
+    <copyField source="work" dest="default"/>
+    <copyField source="work_id" dest="default"/>
+    <copyField source="identifier" dest="default"/>
+    <copyField source="record_identifier" dest="default"/>
+    <copyField source="page" dest="default"/>
     <copyField source="purl" dest="default"/>
     <copyField source="catalogue" dest="default"/>
     <copyField source="phys_content_id" dest="default"/>
-
+    <copyField source="issue_number" dest="default"/>
+    <copyField source="shelfmark" dest="default"/>
+    
+    <copyField source="summary_content" dest="default"/>
+    <copyField source="ft" dest="default"/>
+    <copyField source="fulltext" dest="default"/>
+    
     <!-- copy fields into facetfields -->
-
     <copyField source="dc" dest="facet_dc"/>-->
     <copyField source="product" dest="facet_product"/>
 
+    <copyField source="place_publish" dest="facet_place_publish"/>
+    <copyField source="publisher" dest="facet_publisher"/>
+    <copyField source="year_publish" dest="facet_year_publish"/>
 
+    <copyField source="place_digitization" dest="facet_place_digitization"/>
+    <copyField source="publisher_digitization" dest="facet_publisher_digitization"/>
+    <copyField source="year_digitization" dest="facet_year_digitization"/>
+
+    <copyField source="periodical_name" dest="facet_periodical_name"/>
+    
+    <copyField source="log_type" dest="facet_log_type"/>
+        
 </schema>
