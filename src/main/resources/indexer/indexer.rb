@@ -71,24 +71,36 @@ class Indexer
 
     end
 
-    @dc_hsh = {
-        "vd18 digital"   => "vd18.digital",
-        "VD18 digital"   => "vd18.digital",
-        "vd18 göttingen" => "vd18.göttingen",
-        "VD18 göttingen" => "vd18.göttingen"
-    }
+    @dc_hsh = {'vd18 digital' => 'vd18.digital',
+        'VD18 digital' => 'vd18.digital',
+        'vd18 göttingen' => 'vd18.göttingen',
+        'VD18 göttingen' => 'vd18.göttingen'
+      }
 
     @image_format_hsh = {
-        "nlh-eai1" => "jpg",
-        "nlh-eai2" => "tif",
+        "nlh-ahn"  => "gif",
+        "nlh-bcn"  => "tif",
+        "nlh-bln"  => "tif",
+        "nlh-ddr"  => "tif",
+        "nlh-eai1" => "gif",
+        "nlh-eai2" => "gif",
+        "nlh-ecc"  => "tif",
         "nlh-ecj"  => "jpg",
+        "nlh-eha"  => "jpg",
         "nlh-emo"  => "jpg",
+        "nlh-fta"  => "jpg",
+        "nlh-mme"  => "tif",
+        "nlh-mmh"  => "jpg",
+        "nlh-mml"  => "tif",
+        "nlh-mmp"  => "jpg",
+        "nlh-mms"  => "tif",
         "nlh-moc"  => "jpg",
+        "nlh-ncn"  => "tif",
+        "nlh-nid"  => "jpg",
         "nlh-tda1" => "tif",
         "nlh-tda2" => "tif",
-        "nlh-ecc"  => "TIF",
         "nlh-tls"  => "jpg",
-        "nlh-eha"  => "jpg",
+        "nlh-usc"  => "jpg",
         "gdz"      => "tif"
     }
 
@@ -840,7 +852,7 @@ class Indexer
 
       if (@context != nil) && (@context.downcase == "nlh")
         # https://nl.sub.uni-goettingen.de/tei/eai1:0F7AD82E731D8E58:0F7A4A0624995AB0.tei.xml
-        match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*).(tei).(xml)/)
+        match = firstUri.match(/(\S*)\/(\S*):(\S*):(\S*)\.(tei\.xml|txt\.xml|html)/)
         work = match[3]
       elsif (@context != nil) && (@context.downcase == "gdz")
         match = firstUri.match(/(\S*)\/(\S*)\/(\S*)\/(\S*)\.(\S*)/)
@@ -1627,8 +1639,8 @@ class Indexer
     begin
       processFulltexts(fulltext_meta)
     rescue Exception => e
-      @logger.error("[indexer] Problems to resolve full texts for #{@id} \t#{e.message}")
-      @logger.debug("[indexer] Problems to resolve full texts for #{@id} \t#{e.backtrace}")
+      @logger.error("[indexer] Problems to resolve full texts for #{@id} (#{@context}, #{@product})\t#{e.message}")
+      @logger.debug("[indexer] Problems to resolve full texts for #{@id} (#{@context}, #{@product})\t#{e.backtrace}")
     end
   end
 
