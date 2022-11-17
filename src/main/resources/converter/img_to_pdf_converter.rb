@@ -451,12 +451,15 @@ class ImgToPdfConverter
     add_info_str(bookmark_str, 'Shelfmark', disclaimer_info.shelfmark_arr.join(' ')) if check_nil_or_empty_string disclaimer_info.shelfmark_arr
     add_info_str(bookmark_str, 'Digitized at', disclaimer_info.rights_owner_arr.join(' ')) if check_nil_or_empty_string disclaimer_info.rights_owner_arr
 
-    pos = 0
-    disclaimer_info.log_id.each_with_index { |val, index|
-      if val == log
-        pos = index
-      end
-    }
+
+    # pos = 0
+    # if disclaimer_info.log_id.size > 0
+    #   disclaimer_info.log_id.each_with_index { |val, index|
+    #     if val == log
+    #       pos = index
+    #     end
+    #   }
+    # end
 
     if disclaimer_info.log_label_arr != nil
       (0..(disclaimer_info.log_label_arr.size - 1)).each { |index|
@@ -727,7 +730,7 @@ class ImgToPdfConverter
 
     system "pdftk #{pdf_path} cat #{first_page}-#{last_page} output #{to_pdf_dir}/tmp.pdf"
 
-    @logger.debug("[img_converter] Intermediate PDF #{to_pdf_dir}/tmp.pdf created")
+    @logger.debug("[img_converter] Intermediate PDF #{to_pdf_dir}/tmp.pdf (Page: #{first_page}-#{last_page}) created")
 
   end
 
