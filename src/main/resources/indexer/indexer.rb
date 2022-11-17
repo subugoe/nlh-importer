@@ -911,28 +911,28 @@ class Indexer
       ftext = get_fulltext_from_s3(filename,format)
       
       if ftext == nil
-        fulltext.fulltext     = "ERROR"
+        fulltext.fulltext     = ""
         fulltext.fulltext_ref = uri
       elsif ftext == ""
         fulltext.fulltext     = ""
         fulltext.fulltext_ref = uri
       elsif format == "txt"
-	fulltext.fulltext     = ftext
+        fulltext.fulltext     = ftext
         fulltext.fulltext_ref = uri
       else
-        if ftext.root == nil
-	  @logger.error "[indexer] ERROR root element of fulltext is nil (#{work}/#{page}.#{format})"
-	  fulltext.fulltext     = ""
+        if ftext&.root == nil
+          @logger.error "[indexer] ERROR root element of fulltext is nil (#{work}/#{page}.#{format})"
+          fulltext.fulltext     = ""
           fulltext.fulltext_ref = uri
-	else
-	  ftxt = ftext.root.text.gsub(/\s+/, " ").strip
+        else
+          ftxt = ftext.root.text.gsub(/\s+/, " ").strip
           #ftxt.gsub!(/</, "&lt;")
           #ftxt.gsub!(/>/, "&gt;")
           ftxt = CGI.escapeHTML(ftxt)
 
           fulltext.fulltext     = ftxt
           fulltext.fulltext_ref = uri
-	end
+        end
       end
 
       fulltextArr << fulltext
@@ -1270,7 +1270,7 @@ class Indexer
         return Nokogiri::XML(str)
       else
         return str   
-      end
+      end    
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
@@ -1985,7 +1985,7 @@ class Indexer
           @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         else
           @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
-          next
+          # next
         end
 
       end
