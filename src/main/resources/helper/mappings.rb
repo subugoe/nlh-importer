@@ -35,9 +35,6 @@ module Mappings
       "7"  => "07",
       "8"  => "08",
       "9"  => "09",
-      "10"  => "10",
-      "11"  => "11",
-      "12"  => "12",
   }
 
   def Mappings.strctype_month_to_number(month)
