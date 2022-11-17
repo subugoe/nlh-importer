@@ -908,25 +908,37 @@ class Indexer
 
       fulltext.fulltext_page_number = page_number
 
-      ftext = get_fulltext_from_s3(filename)
+      ftext = get_fulltext_from_s3(filename, format)
 
+
+      @logger.error "[indexer]  ftext: '#{ftext}' (#{ftext == ""} #{ftext == nil})"
+      
       if ftext == nil
-        fulltext.fulltext     = "ERROR"
+        fulltext.fulltext     = ""
+        fulltext.fulltext_ref = uri
+      elsif ftext == ""
+        fulltext.fulltext     = ""
+        fulltext.fulltext_ref = uri
+      elsif format == "txt"
+        fulltext.fulltext     = ftext
         fulltext.fulltext_ref = uri
       else
-        ftxt = ftext.root.text.gsub(/\s+/, " ").strip
-        #ftxt.gsub!(/</, "&lt;")
-        #ftxt.gsub!(/>/, "&gt;")
-        ftxt = CGI.escapeHTML(ftxt)
+        if ftext&.root == nil
+          @logger.error "[indexer] ERROR root element of fulltext is nil (#{work}/#{page}.#{format})"
+          fulltext.fulltext     = ""
+          fulltext.fulltext_ref = uri
+        else
+          ftxt = ftext.root.text.gsub(/\s+/, " ").strip
+          #ftxt.gsub!(/</, "&lt;")
+          #ftxt.gsub!(/>/, "&gt;")
+          ftxt = CGI.escapeHTML(ftxt)
 
-        fulltext.fulltext     = ftxt
-        fulltext.fulltext_ref = uri
+          fulltext.fulltext     = ftxt
+          fulltext.fulltext_ref = uri
+        end
       end
 
       fulltextArr << fulltext
-
-      @logger.debug "[indexer] in processFulltexts (id: #{id}) -> used: #{GC.stat[:used]}}\n\n"
-
     }
 
     fulltext_meta.addFulltext = fulltextArr
@@ -1242,7 +1254,7 @@ class Indexer
 
   end
 
-  def get_fulltext_from_s3(file)
+  def get_fulltext_from_s3(file, format)
 
     #s3://gdz/fulltext/<work_id>/<page>.xml
 
@@ -1256,7 +1268,13 @@ class Indexer
     begin
       resp = @s3.get_object({bucket: @s3_bucket, key: s3_fulltext_key})
       str  = resp.body.read.gsub('"', "'")
-      return Nokogiri::XML(str)
+      return "" if str.size == 0
+      if format == "xml"
+        return Nokogiri::XML(str)
+      else
+        return str   
+      end
+      
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
@@ -1971,7 +1989,7 @@ class Indexer
           @logger.info "[indexer] Finish indexing METS: #{@id} \t(#{Java::JavaLang::Thread.current_thread().get_name()})"
         else
           @logger.error "[indexer] Could not process #{@id} metadata, object is nil "
-          next
+          # next
         end
 
       end
