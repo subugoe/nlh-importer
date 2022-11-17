@@ -418,7 +418,6 @@ module Mappings
       "volume"                   => "volume",
       "annotation"               => "annotation",
       "atlas"                    => "atlas",
-      "manuscript"               => "manuscript",
       "monograph"                => "monograph",
       "photograph"               => "photograph",
       "research_paper"           => "section" # ,
