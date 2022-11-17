@@ -100,6 +100,7 @@ class Indexer
         "nlh-tda1" => "tif",
         "nlh-tda2" => "tif",
         "nlh-tls"  => "jpg",
+        "nlh-tcn"  => "tif",
         "nlh-usc"  => "jpg",
         "gdz"      => "tif"
     }

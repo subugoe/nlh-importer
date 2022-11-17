@@ -486,18 +486,30 @@ module Mappings
 
 
   STRCTYPE_PRODUCT_SHORT_TO_LONG_NAME_HASH = {
-      "nlh-eai1" => "Early American Imprints I / EAI I",
-      "nlh-eai2" => "Early American Imprints II / EAI II",
-      "nlh-ecj" => "Eighteenth Century Journals I & II / ECJ I & II",
-      "nlh-emo" => "Empire Online / EMO",
-      "nlh-moc" => "Macmillan Cabinet Papers / MOC",
-
-      "nlh-tda1" => "The Times Digital Archive I / TDA I",
-      "nlh-tda2" => "The Times Digital Archive I / TDA II",
-      "nlh-tls" => "Times Literary Supplement Historical Archive / TLS",
-      "nlh-ecc" => "The Economist: Historical Archive / ECON",
-      #"nlh-eha" => "11",
-      #"nlh-usc" => "12",
+    "nlh-ahn"  => "America's Historical Newspapers / EAN",  
+    "nlh-bcn"  => "17th - 18th Century Burney Collection Newspapers / BCN",
+    "nlh-bln"  => "19th Century British Library Newspapers / BLN",
+    "nlh-ddr"  => "U.S. Declassified Documents Online / USDD",
+    "nlh-eai1" => "Early American Imprints I / EAI I",
+    "nlh-eai2" => "Early American Imprints II / EAI II",
+    "nlh-ecc"  => "Eighteenth Century Collections Online / ECCO",
+    "nlh-ecj" => "Eighteenth Century Journals I & II / ECJ I & II",
+    "nlh-eha" => "The Economist: Historical Archive 1843 - 2007 / ECON",
+    "nlh-emo" => "Empire Online / EMO",
+    "nlh-fta"  => "Financial Times Historical Archive 1888-2006 / FTHA",
+    "nlh-mme"  => "Making of the Modern World: economics, politics and industry / MOME",
+    "nlh-mmh"  => "Making of Modern Law : Trials 1600-1926 / MOML 3 - MMLT",
+    "nlh-mml"  => "Making of Modern Law : Legal Treatises 1800-1926 / MOML 1",
+    "nlh-mmp"  => "Making of Modern Law : Primary Sources (1620-1926) / MOML 4 - MMLP",
+    "nlh-mms"  => "Making of Modern Law : U.S. Supreme Court Records and Briefs, 1832-1978 / MOML 2 - SCRB",
+    "nlh-moc" => "Macmillan Cabinet Papers (1957-1963) / MOC",
+    "nlh-ncn"  => "Nineteenth Century U.S. Newspapers / NCNP",
+    "nlh-nid"  => "Northern Ireland : A Divided Community 1921-1972 / NOIE",
+    "nlh-tda1" => "The Times Digital Archive I / TDA I",
+    "nlh-tda2" => "The Times Digital Archive II / TDA II",
+    "nlh-tls" => "Times Literary Supplement Historical Archive 1902 - 2005 / TLS",
+    "nlh-tcn" => "Twentieth Century North American Drama / TCN",
+    "nlh-usc"  => "U.S. Congressional Serial Set / USC",    
   }
 
   def Mappings.strctype_product_short_to_long_name(short_name)
