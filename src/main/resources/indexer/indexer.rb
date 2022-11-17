@@ -908,10 +908,7 @@ class Indexer
 
       fulltext.fulltext_page_number = page_number
 
-      ftext = get_fulltext_from_s3(filename, format)
-
-
-      @logger.error "[indexer]  ftext: '#{ftext}' (#{ftext == ""} #{ftext == nil})"
+      ftext = get_fulltext_from_s3(filename,format)
       
       if ftext == nil
         fulltext.fulltext     = ""
@@ -1273,8 +1270,7 @@ class Indexer
         return Nokogiri::XML(str)
       else
         return str   
-      end
-      
+      end    
     rescue Exception => e
       attempts = attempts + 1
       if (attempts < MAX_ATTEMPTS)
