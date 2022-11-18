@@ -430,7 +430,8 @@ class Indexer
       c = checkEmptyString dc.text
       c = @dc_hsh[c] unless @dc_hsh[c] == nil
 
-      classification.value     = c.downcase
+      #classification.value     = c.downcase
+      classification.value     = c
       classification.authority = checkEmptyString dc["authority"]
 
       classificationArr << classification
