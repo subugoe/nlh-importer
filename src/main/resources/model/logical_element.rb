@@ -37,10 +37,10 @@ class LogicalElement
   end
 
   def type=(type)
-    #t = Mappings.strctype_type(type)
-    #t = type if t == nil
-    #@type = t
-    @type = type
+    t = Mappings.strctype_type(type)
+    t = type if t == nil
+    @type = t
+    #@type = type
   end
 
   def type
