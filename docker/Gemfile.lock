@@ -1236,7 +1236,7 @@ GEM
     http-accept (1.7.0)
     http-cookie (1.0.4)
       domain_name (~> 0.5)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     json (2.6.1)
     json_pure (2.6.1)
     logger (1.4.4)
